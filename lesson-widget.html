@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>E ʻŌlelo Hawaiʻi — Lesson Practice</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:680px;margin:0 auto;padding:16px;line-height:1.55;color:#1c1917}
+h2{font-size:22px}button{padding:10px 14px;border:1px solid #0f766e;background:#0f766e;color:#fff;border-radius:10px;cursor:pointer;margin:4px 4px 4px 0}
+button.secondary{background:#fff;color:#0f766e}.card{border:1px solid #e7e5e4;border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.hidden{display:none}.correct{color:#15803d;font-weight:700}.wrong{color:#b91c1c;font-weight:700}.big{font-size:28px}
+select{padding:10px;border-radius:8px;border:1px solid #d6d3d1}
+</style></head><body>
+<h2>Practice this lesson</h2>
+<p>Try to recall before you flip. That effort is what makes it stick.</p>
+<label>Choose a lesson: <select id="lesson" onchange="loadLesson()">
+<option value="1">1 — Alphabet, sounds, first sentences</option>
+<option value="2">2 — Essential words and phrases</option>
+<option value="3">3 — ʻOkina, kahakō, and numbers</option>
+<option value="4">4 — Place names and proverbs</option>
+</select></label>
+<div class="card" id="flashcard">
+<p class="big" id="fword">Aloha</p><p id="fmeaning" class="hidden">Hello, love, goodbye</p>
+<button onclick="document.getElementById('fmeaning').classList.toggle('hidden')">Flip card</button>
+<button class="secondary" onclick="hear()">Hear it</button>
+<button class="secondary" onclick="nextCard()">Next card</button>
+</div>
+<div class="card" id="quizcard"><p><strong>Quick quiz</strong></p><p id="q"></p><div id="opts"></div><p id="qresult"></p><button class="secondary" onclick="nextQuiz()">Next question</button></div>
+<script>
+const DATA={
+1:{cards:[["Aloha","Hello, love, goodbye"],["Mahalo","Thank you"],["ʻOhana","Family"],["Aloha kakahiaka","Good morning"]],quiz:[["What does mahalo mean?",["Goodbye","Thank you","Family"],1],["Aloha can mean",["Hello only","Goodbye only","Hello, love, and goodbye"],2]]},
+2:{cards:[["Mahalo","Thank you"],["Aloha","Hello, love, goodbye"],["ʻOhana","Family"],["Keiki","Child"]],quiz:[["What does ʻohana mean?",["Friend","Family","House"],1],["Keiki means",["Child","Ocean","Mountain"],0]]},
+3:{cards:[["ʻEkahi","One"],["ʻElua","Two"],["ʻEkolu","Three"],["ʻOkina","Glottal stop, a consonant"]],quiz:[["ʻEkahi means",["One","Two","Three"],0],["The ʻokina is",["A long vowel mark","A glottal stop","A silent letter"],1]]},
+4:{cards:[["Honolulu","Sheltered harbor"],["Waikīkī","Spouting water"],["Mālama ʻāina","Care for the land"]],quiz:[["Honolulu means",["Spouting water","Sheltered harbor","Gathering place"],1],["Mālama ʻāina means",["Care for the land","Love the ocean","Welcome home"],0]]}};
+let ci=0,qi=0;
+function cur(){return DATA[document.getElementById('lesson').value]}
+function loadLesson(){ci=0;qi=0;showCard();showQuiz()}
+function showCard(){let c=cur().cards[ci];document.getElementById('fword').textContent=c[0];let m=document.getElementById('fmeaning');m.textContent=c[1];m.classList.add('hidden')}
+function nextCard(){ci=(ci+1)%cur().cards.length;showCard()}
+function hear(){try{speechSynthesis.speak(new SpeechSynthesisUtterance(document.getElementById('fword').textContent))}catch(e){}}
+function showQuiz(){let q=cur().quiz[qi];document.getElementById('q').textContent=q[0];let o=document.getElementById('opts');o.innerHTML='';document.getElementById('qresult').textContent='';q[1].forEach((t,i)=>{let b=document.createElement('button');b.textContent=t;b.onclick=()=>{let r=document.getElementById('qresult');r.textContent=i===q[2]?'Correct.':'Not quite, try again.';r.className=i===q[2]?'correct':'wrong'};o.appendChild(b)})}
+function nextQuiz(){qi=(qi+1)%cur().quiz.length;showQuiz()}
+loadLesson();
+</script></body></html>
