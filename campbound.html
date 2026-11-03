@@ -1,0 +1,2024 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>CampBound</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --page:#20392b; --page2:#16281d; --panel:#fff8e7; --panel-ink:#23201a;
+        --frame:#0e1f16; --accent:#e8a13a; --accent2:#7fb069; --danger:#c0392b;
+        --hud:#12291c; --hud-ink:#f3e9cf; --line:#0b0b0b;
+      }
+      @media (prefers-color-scheme: light){
+        :root{ --page:#dcead2; --page2:#bcd3ab; --frame:#274435; --hud:#274435; }
+      }
+      *{ box-sizing:border-box; }
+      html,body{ margin:0; padding:0; }
+      body{
+        font-family:"VT323", ui-monospace, monospace;
+        background:
+          radial-gradient(1200px 500px at 50% -10%, rgba(232,161,58,.18), transparent 60%),
+          linear-gradient(180deg, var(--page), var(--page2));
+        min-height:100vh; color:var(--hud-ink);
+        display:flex; flex-direction:column; align-items:center;
+        padding:14px 10px 30px;
+      }
+      .wrap{ width:100%; max-width:820px; }
+      .topbar{
+        display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;
+        margin-bottom:10px;
+      }
+      .ep-tag{
+        font-family:"Press Start 2P", monospace; font-size:10px; letter-spacing:.5px;
+        background:var(--accent); color:#23180a; padding:8px 10px; border:3px solid var(--line);
+        box-shadow:3px 3px 0 var(--line);
+      }
+      .objective{
+        flex:1 1 260px; font-size:20px; line-height:1.05; color:var(--hud-ink);
+        background:rgba(0,0,0,.28); border:2px dashed rgba(243,233,207,.45);
+        padding:6px 10px; border-radius:4px; min-height:38px;
+      }
+      .objective b{ color:var(--accent); font-weight:normal; }
+      .frame{
+        position:relative; background:var(--frame); border:4px solid var(--line);
+        box-shadow:6px 6px 0 rgba(0,0,0,.45); border-radius:6px; overflow:hidden;
+      }
+      canvas#game{ display:block; width:100%; height:auto; image-rendering:pixelated; background:#4da33e; }
+      /* HUD */
+      .hud{
+        display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center;
+        background:var(--hud); padding:8px 12px; border-top:4px solid var(--line);
+        font-size:21px; line-height:1;
+      }
+      .hud .who{ font-family:"Press Start 2P",monospace; font-size:10px; color:var(--accent); }
+      .meter{ display:inline-block; width:110px; height:12px; background:#000; border:2px solid #f3e9cf; vertical-align:-1px; }
+      .meter i{ display:block; height:100%; background:var(--accent2); transition:width .18s steps(6); }
+      .meter.pp i{ background:#5aa7d6; }
+      .meter.low i{ background:var(--danger); }
+      .hud button, .btn{
+        font-family:"Press Start 2P",monospace; font-size:10px; cursor:pointer;
+        background:var(--panel); color:var(--panel-ink); border:3px solid var(--line);
+        padding:8px 10px; box-shadow:3px 3px 0 var(--line); border-radius:2px;
+      }
+      .hud button:active, .btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line); }
+      .hud .spacer{ flex:1; }
+      .status-chip{ background:var(--danger); color:#fff; padding:2px 8px; border:2px solid var(--line); font-size:18px; display:none; }
+      /* Dialogue — polish: portrait + face */
+      .dialog{
+        position:absolute; left:10px; right:10px; bottom:10px; z-index:30;
+        background:var(--panel); color:var(--panel-ink);
+        border:4px solid var(--line); border-radius:10px;
+        box-shadow:5px 5px 0 rgba(0,0,0,.5), inset 0 0 0 3px #fff8e7, inset 0 0 0 5px #8a7a5c;
+        padding:10px 12px 8px; min-height:108px; display:none;
+        gap:12px; align-items:flex-start;
+      }
+      .dialog.open{ display:flex; }
+      #dialogPortrait{
+        width:64px; height:64px; flex:0 0 64px; image-rendering:pixelated;
+        border:3px solid var(--line); border-radius:6px; background:#bfe3ff;
+        box-shadow:2px 2px 0 rgba(0,0,0,.25);
+      }
+      .dialog-body{ flex:1; min-width:0; }
+      .dialog .name{
+        font-family:"Press Start 2P",monospace; font-size:10px; color:#7a4b12;
+        margin-bottom:6px; line-height:1.4;
+      }
+      .dialog .text{ font-size:24px; line-height:1.12; min-height:52px; white-space:pre-wrap; }
+      .dialog .next{ text-align:right; font-size:18px; color:#7a4b12; animation:bob 0.8s infinite; }
+      .time-chip{
+        font-family:"Press Start 2P",monospace; font-size:9px; letter-spacing:.3px;
+        padding:8px 9px; border:3px solid var(--line); box-shadow:3px 3px 0 var(--line);
+        background:#ffe9a8; color:#23180a; white-space:nowrap;
+      }
+      @media (max-width:520px){
+        .battle .enemyline{ font-size:18px; gap:4px 10px; padding:5px 8px; }
+        .battle .enemyline .meter{ width:64px; }
+        .battle .enemyline .emoves{ display:none; }
+        #dialogPortrait{ width:52px; height:52px; flex-basis:52px; }
+        .dialog .text{ font-size:22px; }
+        .time-chip{ font-size:8px; padding:7px 7px; }
+      }
+      @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(3px);} }
+      @media (prefers-reduced-motion: reduce){ .dialog .next{ animation:none; } }
+      /* Overlays */
+      .overlay{
+        position:fixed; inset:0; z-index:60; display:none;
+        background:rgba(8,18,12,.9); padding:16px; overflow-y:auto;
+      }
+      .overlay.open{ display:block; }
+      .sheet{
+        max-width:560px; margin:4px auto; background:var(--panel); color:var(--panel-ink);
+        border:4px solid var(--line); border-radius:6px; box-shadow:6px 6px 0 rgba(0,0,0,.55);
+        padding:18px 18px 14px;
+        display:flex; flex-direction:column; max-height:calc(100dvh - 32px);
+      }
+      .sheet .scroll-area, #menuBody, #shopBody, #endBody{ overflow-y:auto; min-height:0; }
+      .sheet .row{ flex:none; }
+      .sheet h1,.sheet h2{
+        font-family:"Press Start 2P",monospace; line-height:1.5; margin:0 0 10px;
+      }
+      .sheet h1{ font-size:19px; }
+      .sheet h2{ font-size:13px; }
+      .sheet p{ font-size:22px; line-height:1.15; margin:8px 0; }
+      .sheet label{ display:block; font-size:20px; margin:10px 0 4px; }
+      .sheet input[type="text"]{
+        width:100%; font-family:"VT323",monospace; font-size:24px; padding:6px 8px;
+        border:3px solid var(--line); background:#fff; color:#23201a; border-radius:2px;
+      }
+      .row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+      .fields{ display:grid; gap:4px 14px; }
+      @media (min-width:560px){ .fields{ grid-template-columns:1fr 1fr; } }
+      .field label{ margin:8px 0 3px; }
+      #setupOverlay .sheet{ padding:14px 16px 12px; }
+      #setupOverlay h1{
+        color:#274435; letter-spacing:2px;
+        text-shadow:3px 3px 0 #e8a13a, 6px 6px 0 rgba(11,11,11,.85);
+        border-bottom:4px solid var(--line); padding-bottom:10px;
+      }
+      #setupOverlay .sheet p{ margin:6px 0; }
+      #setupOverlay .sheet input[type="text"]{ padding:4px 8px; }
+      .row .btn{ flex:0 0 auto; }
+      .btn.primary{ background:var(--accent); }
+      .btn:disabled{ opacity:.45; cursor:default; }
+      .menu-list{ display:grid; gap:8px; margin-top:10px; }
+      .menu-list .btn{ text-align:left; font-size:11px; padding:12px; }
+      .quest-item{ border:3px solid var(--line); padding:8px 10px; margin:8px 0; background:#fff; }
+      .quest-item .qname{ font-family:"Press Start 2P",monospace; font-size:10px; }
+      .quest-item p{ margin:4px 0 0; }
+      .quest-item.done{ opacity:.65; }
+      .quest-item.done .qname::after{ content:" — DONE"; color:#3c7a34; }
+      .shop-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; border-bottom:2px dashed #9a8f76; padding:8px 0; }
+      .shop-row .info{ font-size:22px; line-height:1.05; }
+      .shop-row .info small{ display:block; font-size:18px; color:#5c5545; }
+      table.stats{ width:100%; border-collapse:collapse; font-size:22px; }
+      table.stats td{ padding:3px 4px; border-bottom:2px dashed #9a8f76; }
+      table.stats td:last-child{ text-align:right; }
+      /* Battle */
+      .battle{
+        position:absolute; inset:0; z-index:35; display:none; flex-direction:column;
+      }
+      .battle.open{ display:flex; }
+      .battle .sky{ flex:1; position:relative; overflow:hidden; background:#2c1a4d; }
+      .battle .sky canvas#battleBg{ position:absolute; inset:0; left:0; top:0; transform:none; width:100%; height:100%; }
+      .battle .sky canvas#enemyCanvas{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); image-rendering:pixelated; filter:drop-shadow(0 14px 10px rgba(0,0,0,.45)); }
+      .battle .enemy-name{
+        position:absolute; left:50%; top:10px; transform:translateX(-50%);
+        font-family:"Press Start 2P",monospace; font-size:12px; color:#fff;
+        background:rgba(0,0,0,.55); padding:8px 12px; border:3px solid #fff; white-space:nowrap;
+      }
+      .battle .bpanel{
+        background:var(--panel); color:var(--panel-ink); border-top:4px solid var(--line);
+        padding:10px 12px; min-height:172px; display:flex; flex-direction:column; gap:8px;
+      }
+      .battle .partyline{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:21px; align-items:center; }
+      .battle .enemyline{
+        display:flex; flex-wrap:wrap; gap:5px 16px; align-items:center;
+        background:#23201a; color:#f3e9cf; border:3px solid var(--line);
+        padding:6px 10px; font-size:21px; line-height:1;
+      }
+      .battle .enemyline .etag{ font-family:"Press Start 2P",monospace; font-size:9px; color:var(--accent); }
+      .battle .enemyline .meter{ width:96px; }
+      .battle .enemyline .emoves{ flex-basis:100%; font-size:18px; line-height:1.1; opacity:.88; }
+      .battle .blog{ font-size:22px; line-height:1.12; min-height:50px; white-space:pre-wrap; }
+      .battle .cmds{ display:flex; flex-wrap:wrap; gap:8px; }
+      /* Touch controls */
+      .touch{
+        display:none; margin-top:12px; justify-content:space-between; align-items:center; gap:10px;
+      }
+      .dpad{ display:grid; grid-template-columns:52px 52px 52px; grid-template-rows:52px 52px 52px; gap:4px; }
+      .dpad button, .abtns button{
+        font-family:"Press Start 2P",monospace; font-size:13px; cursor:pointer;
+        background:var(--panel); color:var(--panel-ink); border:3px solid var(--line);
+        box-shadow:3px 3px 0 var(--line); border-radius:4px; touch-action:none; user-select:none; -webkit-user-select:none;
+      }
+      .dpad button:active, .abtns button:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line); }
+      .dpad .up{ grid-area:1/2; } .dpad .left{ grid-area:2/1; } .dpad .right{ grid-area:2/3; } .dpad .down{ grid-area:3/2; }
+      .dpad .mid{ grid-area:2/2; background:rgba(0,0,0,.25); border-color:transparent; box-shadow:none; }
+      .abtns{ display:flex; gap:10px; }
+      .abtns button{ width:64px; height:64px; border-radius:50%; font-size:15px; }
+      @media (pointer:coarse){ .touch{ display:flex; } }
+      .help{ margin-top:12px; font-size:20px; line-height:1.25; color:var(--hud-ink); opacity:.92; }
+      .help b{ color:var(--accent); font-weight:normal; }
+      .toast{
+        position:absolute; left:50%; top:12px; transform:translateX(-50%); z-index:45;
+        background:var(--panel); color:var(--panel-ink); border:3px solid var(--line);
+        box-shadow:4px 4px 0 rgba(0,0,0,.5); padding:8px 14px; font-size:22px; display:none; white-space:nowrap;
+      }
+      .toast.open{ display:block; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="ep-tag">EPISODE 1 · ARRIVAL</div>
+        <div class="time-chip" id="timeChip">☀️ MORNING</div>
+        <div class="objective" id="objective"><b>Objective:</b> Settle in. Talk to Mom at the host site.</div>
+      </div>
+
+      <div class="frame" id="frame">
+        <canvas id="game" width="768" height="544" aria-label="CampBound campground world"></canvas>
+
+        <div class="toast" id="toast"></div>
+
+        <div class="dialog" id="dialog" role="dialog" aria-live="polite">
+          <canvas id="dialogPortrait" width="64" height="64" aria-hidden="true"></canvas>
+          <div class="dialog-body">
+            <div class="name" id="dialogName"></div>
+            <div class="text" id="dialogText"></div>
+            <div class="next">▼ press A / tap</div>
+          </div>
+        </div>
+
+        <!-- Battle -->
+        <div class="battle" id="battle">
+          <div class="sky">
+            <canvas id="battleBg" width="480" height="360" aria-hidden="true"></canvas>
+            <div class="enemy-name" id="enemyName">???</div>
+            <canvas id="enemyCanvas" width="224" height="224"></canvas>
+          </div>
+          <div class="bpanel">
+            <div class="enemyline" id="enemyStats" aria-label="Enemy stats">
+              <span class="etag">ENEMY</span>
+              <span>HP <span class="meter" id="eHpMeter"><i></i></span> <span id="eHpText">–</span></span>
+              <span>ATK <span id="eAtkText">–</span></span>
+              <span>XP <span id="eXpText">–</span></span>
+              <span id="eMoneyWrap">TAB <span id="eMoneyText">–</span></span>
+              <span class="emoves" id="eMovesText"></span>
+            </div>
+            <div class="partyline">
+              <span id="bKidName">KID</span>
+              <span>HP <span class="meter" id="bHpMeter"><i></i></span> <span id="bHpText">30</span></span>
+              <span>PP <span class="meter pp" id="bPpMeter"><i></i></span> <span id="bPpText">10</span></span>
+              <span id="bDogLine">🐾</span>
+            </div>
+            <div class="blog" id="battleLog"></div>
+            <div class="cmds" id="battleCmds"></div>
+          </div>
+        </div>
+
+        <!-- Setup / title -->
+        <div class="overlay open" id="setupOverlay">
+          <div class="sheet">
+            <h1>CAMPBOUND</h1>
+            <div class="scroll-area">
+            <p>Summer, 199X. Your folks just took the camp host job at Pine Hollow Campground. Tonight, something bright streaks over the lake — and the critters are about to get <i>strange</i>.</p>
+            <p>Before the season starts, the game needs four things, the old way:</p>
+            <div class="fields">
+              <div class="field">
+                <label for="inKid">Name the kid</label>
+                <input type="text" id="inKid" maxlength="12" value="Rowan" />
+              </div>
+              <div class="field">
+                <label for="inDog">Name the camp dog</label>
+                <input type="text" id="inDog" maxlength="12" value="Pepper" />
+              </div>
+              <div class="field">
+                <label for="inFood">Favorite camp food</label>
+                <input type="text" id="inFood" maxlength="24" value="Foil-packet fish" />
+              </div>
+              <div class="field">
+                <label for="inThing">Favorite thing to do at camp</label>
+                <input type="text" id="inThing" maxlength="24" value="Night fishing" />
+              </div>
+            </div>
+            <p style="font-size:19px;color:#5c5545;">That last one matters. In this game, your favorite thing has a way of becoming your strongest move.</p>
+            </div>
+            <div class="row">
+              <button class="btn primary" data-action="start-game">▶ Start the Summer</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Menu -->
+        <div class="overlay" id="menuOverlay">
+          <div class="sheet">
+            <h2>CAMP NOTEBOOK</h2>
+            <div id="menuBody"></div>
+            <div class="row"><button class="btn" data-action="close-menu">Close</button></div>
+          </div>
+        </div>
+
+        <!-- Shop -->
+        <div class="overlay" id="shopOverlay">
+          <div class="sheet">
+            <h2>CAMP STORE</h2>
+            <p id="shopMoney"></p>
+            <div id="shopBody"></div>
+            <div class="row"><button class="btn" data-action="close-shop">Leave store</button></div>
+          </div>
+        </div>
+
+        <!-- Ending -->
+        <div class="overlay" id="endOverlay">
+          <div class="sheet">
+            <h2>♪ SOUND RECORDED ♪</h2>
+            <div id="endBody"></div>
+            <div class="row">
+              <button class="btn primary" data-action="close-end">Keep Exploring</button>
+              <button class="btn" data-action="restart">New Summer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud" id="hud">
+        <span class="who" id="hudName">ROWAN</span>
+        <span>LV <span id="hudLv">1</span></span>
+        <span>HP <span class="meter" id="hudHpMeter"><i></i></span> <span id="hudHp">30</span></span>
+        <span>PP <span class="meter pp" id="hudPpMeter"><i></i></span> <span id="hudPp">10</span></span>
+        <span>Tab $<span id="hudMoney">0</span></span>
+        <span class="status-chip" id="hudStatus">HOMESICK</span>
+        <span class="spacer"></span>
+        <button data-action="open-menu" data-tab="items">Items</button>
+        <button data-action="open-menu" data-tab="quests">Quests</button>
+        <button data-action="open-menu" data-tab="stats">Stats</button>
+        <button data-action="toggle-music" id="musicBtn">♪ Off</button>
+      </div>
+
+      <div class="touch" aria-hidden="false">
+        <div class="dpad">
+          <button class="up" data-dir="up" aria-label="Move up">▲</button>
+          <button class="left" data-dir="left" aria-label="Move left">◀</button>
+          <div class="mid"></div>
+          <button class="right" data-dir="right" aria-label="Move right">▶</button>
+          <button class="down" data-dir="down" aria-label="Move down">▼</button>
+        </div>
+        <div class="abtns">
+          <button data-action="btn-b" aria-label="Menu button">B</button>
+          <button data-action="btn-a" aria-label="Talk or confirm button">A</button>
+        </div>
+      </div>
+
+      <p class="help">
+        <b>Move:</b> Arrow keys / WASD (or the D-pad) — now with a smooth glide. <b>A button / Space / Enter:</b> talk, check, confirm.
+        <b>B / Esc:</b> notebook. Walk the loops, work the quests, and watch the light change: morning gives way to golden hour, then dusk, then night, and the windows light up as it does.
+        Campfires smoke and spark, leaves drift across the loops, and the shoreline splashes under your sneakers. Campers have faces when they talk now — and in battle, nothing stands still.
+        Critters in the tall woods bite back: battles are turn-based, and your HP rolls down slow, so a bandage used fast can save you.
+        In battle, the enemy's stats stay pinned in the dark strip above your party line — its HP on a live meter, its ATK, the XP it pays, and its attacks — so you can size up a fight before you swing.
+      </p>
+    </div>
+
+<script>
+"use strict";
+/* ============================================================
+   CampBound — Episode 1: Arrival
+   An EarthBound-style campground RPG. One park, three quests,
+   one raccoon king.
+   ============================================================ */
+
+/* ---------- tiny utils ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rng = mulberry32(19950624);
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function $(id){return document.getElementById(id);}
+
+/* ---------- audio (WebAudio bleeps) ---------- */
+let AC=null, musicOn=false, musicTimer=null, musicStep=0;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } } if(AC&&AC.state==="suspended")AC.resume(); return AC; }
+function tone(freq,dur,type,vol,when){
+  const c=ac(); if(!c)return;
+  const t=c.currentTime+(when||0);
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||"square"; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(vol||0.05,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+}
+function blip(){ tone(660,0.06,"square",0.03); }
+function confirmSfx(){ tone(523,0.07,"square",0.04); tone(784,0.09,"square",0.04,0.07); }
+function hurtSfx(){ tone(160,0.15,"sawtooth",0.05); tone(110,0.2,"sawtooth",0.05,0.05); }
+function winJingle(){ [523,659,784,1046].forEach((f,i)=>tone(f,0.12,"square",0.045,i*0.1)); }
+function levelJingle(){ [392,523,659,784,659,784,1046].forEach((f,i)=>tone(f,0.11,"triangle",0.05,i*0.09)); }
+const MUSIC_NOTES=[262,0,330,0,392,0,330,0, 294,0,349,0,440,0,349,0, 262,0,330,0,392,0,494,0, 523,0,494,392,440,0,0,0];
+function musicTick(){
+  if(!musicOn)return;
+  const n=MUSIC_NOTES[musicStep%MUSIC_NOTES.length];
+  if(n)tone(n,0.16,"triangle",0.028);
+  if(musicStep%2===0)tone(MUSIC_NOTES[musicStep%MUSIC_NOTES.length]/2||65,0.2,"sine",0.02);
+  musicStep++;
+}
+function setMusic(on){
+  musicOn=on;
+  $("musicBtn").textContent = on ? "♪ On" : "♪ Off";
+  if(on){ ac(); musicTimer=setInterval(musicTick,170); }
+  else if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
+}
+
+/* ---------- world map ---------- */
+const TILE=32, MW=48, MH=34;
+const grid=[];
+for(let y=0;y<MH;y++){ grid.push(new Array(MW).fill("g")); }
+function rect(x,y,w,h,t){ for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++){ if(i>=0&&i<MW&&j>=0&&j<MH)grid[j][i]=t; } }
+/* lake (top right) + shore */
+rect(35,0,13,11,"w"); rect(34,0,1,11,"s"); rect(35,11,13,1,"s");
+/* dock planks over the water */
+rect(34,6,6,1,"d");
+/* main loop paths */
+rect(2,8,32,2,"p");            /* top road */
+rect(2,8,2,20,"p");            /* west road */
+rect(32,8,2,20,"p");           /* east road */
+rect(2,26,32,2,"p");           /* bottom road */
+rect(16,10,2,16,"p");          /* middle connector */
+rect(4,16,28,2,"p");           /* middle road */
+/* plaza in front of office/store/bathhouse */
+rect(2,2,32,6,"p");
+/* south woods floor */
+rect(12,29,24,5,"f");
+/* north-east trail to the overlook */
+rect(40,12,2,8,"p"); rect(40,12,6,2,"p");
+/* tent meadow */
+rect(20,19,10,6,"g");
+
+/* solid decorative trees */
+const trees=[];
+function addTree(x,y){ trees.push({x:x,y:y}); }
+for(let x=0;x<MW;x++){ addTree(x,0); addTree(x,MH-1); }
+for(let y=1;y<MH-1;y++){ addTree(0,y); addTree(MW-1,y); }
+/* woods clusters */
+[[13,29],[15,30],[18,29],[21,30],[24,29],[27,30],[30,29],[33,30],[35,31],[14,32],[19,32],[25,32],[31,32],[34,29],[12,31],[36,32],[22,31],[28,32],[16,31],[20,29],[26,31],[32,31]]
+ .forEach(p=>{ if(!(p[0]>=26&&p[0]<=30&&p[1]>=30&&p[1]<=32)) addTree(p[0],p[1]); });
+/* scattered shade trees */
+[[10,12],[22,12],[28,20],[8,22],[24,22],[38,16],[44,20],[6,12],[30,12],[44,26],[38,26],[10,20]].forEach(p=>addTree(p[0],p[1]));
+
+/* buildings & fixed objects: {x,y,w,h,kind,label} — all solid */
+const objects=[
+  {x:3,y:3,w:6,h:3,kind:"office", label:"Camp Office"},
+  {x:13,y:3,w:7,h:3,kind:"store", label:"Camp Store"},
+  {x:24,y:3,w:6,h:3,kind:"bath", label:"Bathhouse"},
+  {x:21,y:3,w:2,h:2,kind:"dumpster", label:"Dumpster"},
+  {x:20,y:4,w:1,h:1,kind:"cooler", label:"Possessed Cooler?"},
+  {x:9,y:5,w:1,h:1,kind:"phone", label:"Office Phone"},
+  {x:14,y:13,w:8,h:1,kind:"pavroof", label:"Pavilion"},
+  {x:15,y:16,w:2,h:1,kind:"table", label:"Picnic Table"},
+  {x:19,y:16,w:2,h:1,kind:"table", label:"Picnic Table"},
+  {x:4,y:24,w:5,h:2,kind:"rv", label:"The Host Rig", tint:"#d8cfc0"},
+  {x:24,y:20,w:4,h:2,kind:"rv", label:"Site 12 — RV", tint:"#b9d2e0"},
+  {x:37,y:22,w:4,h:2,kind:"rv", label:"Site 18 — RV", tint:"#e4c98f"},
+  {x:6,y:19,w:3,h:2,kind:"tent", label:"Site 4 — Tent", tint:"#c96f4a"},
+  {x:26,y:23,w:3,h:2,kind:"tent", label:"Site 12 — Tent", tint:"#4a7fc9"},
+  {x:38,y:17,w:3,h:2,kind:"tent", label:"Site 21 — Tent", tint:"#57a773"},
+  {x:41,y:12,w:1,h:2,kind:"gnome", label:"Garden Gnome Statue"},
+  {x:30,y:5,w:1,h:1,kind:"stall", label:"Bathhouse Stall No. 3"},
+  {x:34,y:5,w:1,h:1,kind:"tripod", label:"Survey Tripod"},
+  {x:28,y:31,w:1,h:1,kind:"bear", label:"Something glinting"},
+];
+function objAt(kind){ return objects.find(o=>o.kind===kind); }
+
+/* --- polish pass: campfires, day cycle, particles --- */
+/* Every fire sits on its own grass clearing — never on a tree tile,
+   never on a road tile. Positions verified against trees/roads/objects. */
+const campfires=[
+  {x:10,y:22,label:"Host Site Fire"},  /* host site clearing, south of Mom's rig */
+  {x:27,y:19,label:"Site 12 Fire"},
+  {x:18,y:14,label:"Pavilion Fire"},   /* under the pavilion, off the connector road */
+  {x:37,y:20,label:"Site 18 Fire"},
+];
+let DAY_PHASE=0; /* 0 morning -> 0.5 afternoon -> 0.68 golden -> 0.84 dusk -> 1 night */
+function getDayPhase(){
+  const f=S.flags;
+  let story=0;
+  if(f.soundDone) story=1;
+  else if(f.bossDone) story=0.94;
+  else if(f.bossReady) story=0.86;
+  else if(f.stallDone) story=0.72;
+  else if(f.coolerQ>=2) story=0.58;
+  else if(f.bearQ>=3) story=0.48;
+  const timed = S.started ? clamp(S.playSeconds/340, 0, 0.62) : 0;
+  return Math.max(story, timed, S.started?0.12:0.08);
+}
+function dayLabel(phase){
+  if(phase<0.28) return "☀️ MORNING";
+  if(phase<0.52) return "🌤️ AFTERNOON";
+  if(phase<0.70) return "🌅 GOLDEN HOUR";
+  if(phase<0.88) return "🌆 DUSK";
+  return "🌙 NIGHT • LOONS SOON";
+}
+/* lightweight particle pools — leaves, smoke, sparks, splashes */
+const particles={ leaves:[], smoke:[], sparks:[], splashes:[] };
+let particleTick=0;
+function spawnParticles(){
+  particleTick++;
+  const t=Date.now();
+  /* leaves: always a few drifting across the whole park */
+  if(particles.leaves.length<16 && particleTick%4===0){
+    particles.leaves.push({ x: rng()*MW*TILE, y: rng()*MH*TILE*0.7, vx: -0.25-rng()*0.35, vy: 0.18+rng()*0.28, rot: rng()*6.28, vr:(rng()-0.5)*0.06, life: 420+Math.random()*220, hue: rng() });
+  }
+  /* campfire smoke + sparks */
+  campfires.forEach((cf,ci)=>{
+    const wx=cf.x*TILE+16, wy=cf.y*TILE+14;
+    if(particleTick%9===ci*2){
+      particles.smoke.push({ x: wx+(rng()-0.5)*6, y: wy-6, vx:(rng()-0.5)*0.18, vy:-0.45-rng()*0.25, r:3+rng()*3, life:70, max:70 });
+    }
+    if(rng()<0.55){
+      particles.sparks.push({ x: wx+(rng()-0.5)*10, y: wy-2, vx:(rng()-0.5)*0.5, vy:-0.7-rng()*0.9, life:22+rng()*18, max:30 });
+    }
+  });
+  if(particles.smoke.length>90) particles.smoke.splice(0, particles.smoke.length-90);
+  if(particles.sparks.length>90) particles.sparks.splice(0, particles.sparks.length-90);
+}
+function updateAndDrawParticles(){
+  spawnParticles();
+  const t=Date.now()/1000;
+  /* smoke — soft rising puffs behind flames */
+  for(let i=particles.smoke.length-1;i>=0;i--){
+    const p=particles.smoke[i]; p.x+=p.vx+Math.sin(t*1.4+p.y*0.05)*0.12; p.y+=p.vy; p.r+=0.06; p.life--;
+    if(p.life<=0){ particles.smoke.splice(i,1); continue; }
+    const a=0.16*(p.life/p.max);
+    ctx.fillStyle="rgba(235,235,230,"+a.toFixed(3)+")";
+    ctx.beginPath(); ctx.ellipse(p.x-camX, p.y-camY, p.r, p.r*0.78, 0, 0, Math.PI*2); ctx.fill();
+  }
+  /* splashes — shoreline sparkle at the kid's feet */
+  for(let i=particles.splashes.length-1;i>=0;i--){
+    const p=particles.splashes[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.14; p.life--;
+    if(p.life<=0){ particles.splashes.splice(i,1); continue; }
+    ctx.fillStyle=p.col; ctx.fillRect(Math.round(p.x-camX), Math.round(p.y-camY), 2,2);
+  }
+  /* sparks — bright flecks above fires */
+  particles.sparks.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.012; p.life--; });
+  particles.sparks=particles.sparks.filter(p=>p.life>0);
+  particles.sparks.forEach(p=>{
+    const tw=Math.sin(Date.now()/60+p.x)>0;
+    ctx.fillStyle=tw?"#ffd23e":"#ff8a2a"; ctx.fillRect(Math.round(p.x-camX), Math.round(p.y-camY), 2,2);
+    if(p.life>18){ ctx.fillStyle="rgba(255,210,80,.45)"; ctx.fillRect(Math.round(p.x-camX)-1, Math.round(p.y-camY)-1,4,4); }
+  });
+  /* leaves — drifting, tumbling, in front of the world */
+  for(let i=particles.leaves.length-1;i>=0;i--){
+    const p=particles.leaves[i]; p.x+=p.vx+Math.sin(t*1.2+p.rot)*0.28; p.y+=p.vy; p.rot+=p.vr; p.life--;
+    if(p.life<=0||p.x<-20||p.y>MH*TILE+20){ particles.leaves.splice(i,1); continue; }
+    const sx=p.x-camX, sy=p.y-camY; if(sx<-10||sy<-10||sx>cv.width+10||sy>cv.height+10) continue;
+    const w=Math.abs(Math.sin(p.rot))*7+2;
+    ctx.fillStyle=p.hue>0.66?"#d9a441":(p.hue>0.33?"#7fb069":"#4da138");
+    ctx.save(); ctx.translate(sx,sy); ctx.rotate(p.rot*0.4); ctx.fillRect(-w/2,-2,w,4); ctx.fillStyle="rgba(0,0,0,.18)"; ctx.fillRect(-1,-2,1,4); ctx.restore();
+  }
+}
+function drawCampfire(sx,sy,idx){
+  const t=Date.now()/1000 + idx*1.7;
+  /* scorched-dirt clearing first: a fire pit sits on bare earth, never on
+     grass — the clearing is what makes the ring read as a pit, not a fire
+     that happens to be burning in the lawn */
+  ctx.fillStyle="#8a6a44";
+  ctx.beginPath(); ctx.ellipse(sx+16,sy+19,22,13,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#77572f";
+  ctx.beginPath(); ctx.ellipse(sx+16,sy+19,17,10,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#4c3a26"; /* ash bed */
+  ctx.beginPath(); ctx.ellipse(sx+16,sy+19,10,6,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#8d8272"; ctx.fillRect(sx+12,sy+17,8,3); /* pale ash */
+  /* stone ring — chunky individual stones, lit top / dark base, all the
+     way around so the ring can never be mistaken for part of a tree */
+  const stones=[[0,13],[6,9],[14,7],[22,9],[27,13],[26,20],[20,24],[11,25],[3,21]];
+  stones.forEach(st=>{
+    ctx.fillStyle="#565b61"; ctx.fillRect(sx+st[0],sy+st[1]+2,8,5);
+    ctx.fillStyle="#9aa0a6"; ctx.fillRect(sx+st[0],sy+st[1],8,5);
+    ctx.fillStyle="#ccd2d8"; ctx.fillRect(sx+st[0]+1,sy+st[1]+1,3,2);
+  });
+  /* crossed logs over the ash */
+  ctx.fillStyle="#5d4030"; ctx.fillRect(sx+8,sy+18,17,4); ctx.fillRect(sx+11,sy+15,13,3);
+  ctx.fillStyle="#7a5a34"; ctx.fillRect(sx+8,sy+18,17,1); ctx.fillRect(sx+23,sy+18,3,4);
+  /* flames — layered, flickering */
+  const fl=Math.sin(t*11+idx)*1.6 + Math.sin(t*17)*0.8;
+  const fh=13+fl;
+  ctx.fillStyle="#e85d1a"; ctx.beginPath(); ctx.moveTo(sx+8,sy+20); ctx.lineTo(sx+16,sy+20-fh); ctx.lineTo(sx+24,sy+20); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#ff9a2a"; ctx.beginPath(); ctx.moveTo(sx+11,sy+20); ctx.lineTo(sx+16,sy+20-fh*0.72); ctx.lineTo(sx+21,sy+20); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#ffd23e"; ctx.beginPath(); ctx.moveTo(sx+13,sy+20); ctx.lineTo(sx+16,sy+20-fh*0.42); ctx.lineTo(sx+19,sy+20); ctx.closePath(); ctx.fill();
+  /* warm glow at night/golden hour */
+  if(DAY_PHASE>0.45){
+    const glow=ctx.createRadialGradient(sx+16,sy+14,2,sx+16,sy+14,34);
+    glow.addColorStop(0,"rgba(255,170,60,"+(0.22*DAY_PHASE)+")"); glow.addColorStop(1,"rgba(255,140,40,0)");
+    ctx.fillStyle=glow; ctx.fillRect(sx-18,sy-20,68,58);
+  }
+}
+
+/* signs (interactable, not solid beyond their tile) */
+const signs=[
+  {x:10,y:9,text:"PINE HOLLOW CAMPGROUND — Loops A & B. Quiet hours 10 PM. The raccoon by the dumpster is NOT a pet."},
+  {x:33,y:9,text:"LAKE PINE HOLLOW — No lifeguard. The loons own this lake. We just visit."},
+  {x:17,y:27,text:"SOUTH WOODS — Trail to the old fire tower. Mind the roots. Mind the mosquitoes. Mind everything, honestly."},
+  {x:42,y:13,text:"NORTH OVERLOOK — Trail closed. A giant garden gnome is blocking the path. Nobody knows how. Nobody is asking."},
+];
+
+/* ---------- game state ---------- */
+const S = {
+  started:false, mode:"setup", /* setup | world | dialog | battle | menu | shop | end */
+  kid:"Rowan", dog:"Pepper", food:"Foil-packet fish", thing:"Night fishing",
+  px:5*TILE, py:23*TILE, dir:"up", frame:0, stepTimer:0, vx:0, vy:0, moving:false, splashCooldown:0,
+  trail:[], steps:0, grace:0, playSeconds:0,
+  lv:1, xp:0, hp:30, maxHp:30, pp:10, maxPp:10, atk:6, weapon:0, money:0,
+  homesick:false, battlesSinceMom:0, battlesWon:0,
+  inv:{ granola:2, bandage:1, fish:0, spray:0, smores:0 },
+  flags:{ metMom:false, allowance:false, bearQ:0, coolerQ:0, stallDone:false, hasPlunger:false,
+           gusMet:false, bossReady:false, bossDone:false, soundDone:false, pruittMet:false },
+  checkpoint:{x:5,y:23},
+};
+const ITEMS={
+  granola:{name:"Granola Bar", price:3, desc:"Heals 8 HP. Crunchy courage."},
+  bandage:{name:"Bandage", price:5, desc:"Heals 15 HP. Use it while the HP meter is still rolling!"},
+  fish:{name:"Mom's Foil-Packet Fish", price:0, desc:"Full heal + cures homesick. Best medicine in the park."},
+  spray:{name:"Bug Spray", price:4, desc:"Battle item: 10 damage. Smells like chemicals and victory."},
+  smores:{name:"S'mores Kit", price:6, desc:"Heals 22 HP. Morale in a bag."},
+};
+function xpNext(){ return S.lv*22; }
+
+/* ---------- NPCs ---------- */
+const npcs=[
+  {id:"mom", name:"Mom", x:10, y:25, shirt:"#c95d8f", skin:"#f2c79b", hat:"bun", line:"Your mom. Host site. Smells like foil-packet fish and authority."},
+  {id:"dad", name:"Dad", x:10, y:5, shirt:"#4a7fc9", skin:"#e8b184", hat:"cap", line:"Your dad. Camp host, office division."},
+  {id:"clerk", name:"Fern (Store Clerk)", x:16, y:7, shirt:"#57a773", skin:"#8a5a3b", hat:"visor", line:"Runs the camp store. Knows every price and every secret."},
+  {id:"dale", name:"Dale (Host)", x:27, y:7, shirt:"#e8a13a", skin:"#f2c79b", hat:"cap", line:"Veteran host. Has seen things. Mostly in the bathhouse."},
+  {id:"lily", name:"Lily (Site 12)", x:24, y:23, shirt:"#b388e0", skin:"#f7d7ae", hat:"none", small:true, line:"A camper kid, two sites down. Currently in a state of bear-related distress."},
+  {id:"gus", name:"Old Gus", x:39, y:6, shirt:"#7a7a72", skin:"#e8b184", hat:"bucket", line:"Sells bait. Speaks in riddles. Knows the lake."},
+  {id:"pruitt", name:"Mr. Pruitt", x:33, y:6, shirt:"#e8e4da", skin:"#f2c79b", hat:"none", suit:true, line:"Clean polo. Clipboard. Measuring YOUR campground."},
+  {id:"chad", name:"Chadwick", x:12, y:12, shirt:"#d64545", skin:"#f7d7ae", hat:"cap", small:true, line:"Kid from the gated RV resort across the lake. Nicer everything."},
+  {id:"fisher", name:"A Fisherman", x:34, y:8, shirt:"#3f7a8c", skin:"#8a5a3b", hat:"bucket", line:"Has fished this dock for 30 years."},
+  {id:"birder", name:"A Birder", x:20, y:21, shirt:"#8c6d3f", skin:"#f2c79b", hat:"visor", line:"Here for the loons. Tolerates the humans."},
+];
+function npcAt(tx,ty){ return npcs.find(n=>n.x===tx&&n.y===ty); }
+
+/* ---------- collision ---------- */
+function isSolid(tx,ty){
+  if(tx<0||ty<0||tx>=MW||ty>=MH)return true;
+  const t=grid[ty][tx];
+  if(t==="w")return true;
+  if(trees.some(tr=>tr.x===tx&&tr.y===ty))return true;
+  if(objects.some(o=>tx>=o.x&&tx<o.x+o.w&&ty>=o.y&&ty<o.y+o.h))return true;
+  if(signs.some(s=>s.x===tx&&s.y===ty))return true;
+  if(campfires.some(c=>c.x===tx&&c.y===ty))return true;
+  if(npcAt(tx,ty))return true;
+  return false;
+}
+function boxHitsSolid(px,py){
+  const x0=Math.floor(px/TILE), x1=Math.floor((px+21)/TILE);
+  const y0=Math.floor((py+14)/TILE), y1=Math.floor((py+29)/TILE);
+  for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++) if(isSolid(tx,ty))return true;
+  return false;
+}
+
+/* ---------- rendering ---------- */
+const cv=$("game"), ctx=cv.getContext("2d");
+function hash(x,y){ let h=(x*374761393+y*668265263)^(x*974634211); h=(h^(h>>13))*1274126177; return ((h^(h>>16))>>>0)/4294967295; }
+function px(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
+
+function shadowEllipse(sx,sy,w){
+  ctx.fillStyle="rgba(20,40,16,.28)";
+  ctx.beginPath(); ctx.ellipse(sx,sy,w,w*0.32,0,0,Math.PI*2); ctx.fill();
+}
+function drawTile(x,y,sx,sy){
+  const t=grid[y][x], r=hash(x,y), r2=hash(x*3+7,y*5+1), chk=((x+y)%2===0);
+  if(t==="g"||t==="f"){
+    /* EarthBound checker-dithered grass: two greens alternating, plus noise */
+    const base=t==="f" ? (chk?"#2e6629":"#2a5e26") : (chk?"#55a83f":"#4da138");
+    const lite=t==="f" ? "#38733a" : "#63bc4b";
+    px(sx,sy,32,32,base);
+    if(r>0.45)px(sx+((r*47)%24|0),sy+((r2*41)%24|0),5,3,lite);
+    if(r2>0.5)px(sx+((r2*53)%26|0),sy+((r*37)%26|0),4,2,"rgba(0,0,0,.10)");
+    /* grass tufts */
+    if(r>0.72){ const gx=sx+4+(r*20|0), gy=sy+8+(r2*16|0);
+      px(gx,gy+4,2,5,t==="f"?"#24511f":"#3c8a2f"); px(gx+3,gy+2,2,7,t==="f"?"#2f612b":"#469c38"); px(gx+6,gy+4,2,5,t==="f"?"#24511f":"#3c8a2f"); }
+    /* tiny wildflowers */
+    else if(r>0.60){ const fx2=sx+6+(r2*18|0), fy2=sy+6+(r*18|0);
+      px(fx2,fy2,3,3,"#ffd94f"); px(fx2+7,fy2+5,3,3,"#ff9ecf"); px(fx2+2,fy2+8,3,3,"#ffffff"); }
+    if(t==="f"){ if(r>0.55)px(sx+3,sy+27,26,3,"rgba(0,0,0,.16)"); if(r2>0.8){ px(sx+8,sy+18,4,3,"#7a5a34"); px(sx+20,sy+10,3,3,"#8a6a42"); } }
+  } else if(t==="p"){
+    /* warm gravel road with speckle and soft darker wheel-ruts */
+    px(sx,sy,32,32, chk?"#c2a06b":"#bda065");
+    if(r>0.4)px(sx+((r*43)%26|0),sy+((r2*39)%26|0),3,2,"#a8874f");
+    if(r2>0.45)px(sx+((r2*47)%26|0),sy+((r*31)%26|0),3,2,"#d3b57e");
+    if(r>0.88)px(sx+12,sy+14,6,4,"#9a7a44");
+  } else if(t==="s"){
+    px(sx,sy,32,32, chk?"#e3cd97":"#dec88d");
+    if(r>0.55)px(sx+((r*41)%24|0),sy+((r2*37)%24|0),4,2,"#cbb27a");
+    if(r2>0.8)px(sx+16,sy+18,5,2,"#efe0b0");
+    /* foam edge where sand meets water (tile above is water) */
+    if(y>0&&grid[y-1][x]==="w"){ const f=Math.sin(Date.now()/600+x)>0?0:1; px(sx,sy,32,3+f,"rgba(255,255,255,.65)"); }
+  } else if(t==="w"){
+    /* layered animated lake: deep base, drifting light bands, sparkles */
+    const ph=Math.sin((Date.now()/800)+(x*0.8)+(y*0.55));
+    px(sx,sy,32,32, ph>0.35?"#2f6ba8":"#2b62a0");
+    px(sx,sy+20,32,12,"rgba(18,52,102,.35)");
+    const off=((Date.now()/28)+(x*13)+(y*7))%48-16;
+    px(sx+off-16,sy+8+((x+y)%2)*9,15,2,"rgba(160,215,255,.55)");
+    px(sx+off+6,sy+17+((x*2+y)%2)*7,10,2,"rgba(200,235,255,.4)");
+    if(r>0.82){ const sp=Math.sin(Date.now()/300+r*20)>0.5; if(sp)px(sx+8+(r*14|0),sy+6+(r2*18|0),3,3,"#dff4ff"); }
+  } else if(t==="d"){
+    px(sx,sy,32,32,"#966f3e");
+    px(sx,sy,32,3,"#7a5626"); px(sx,sy+15,32,3,"#7a5626"); px(sx,sy+29,32,3,"#7a5626");
+    px(sx+3,sy+3,3,26,"rgba(0,0,0,.18)"); px(sx+26,sy+3,3,26,"rgba(0,0,0,.18)");
+    px(sx+6,sy+6,20,2,"rgba(255,235,190,.22)");
+    px(sx+14,sy+5,3,3,"#5d3c20"); px(sx+15,sy+21,3,3,"#5d3c20");
+  }
+}
+function drawTree(sx,sy,r){
+  /* tall SNES pine/oak hybrid: ground shadow, trunk, three layered canopy blobs with highlights */
+  shadowEllipse(sx+16,sy+29,15);
+  px(sx+13,sy+18,6,12,"#6b4423"); px(sx+13,sy+18,2,12,"#54331a"); px(sx+18,sy+24,4,3,"#54331a");
+  px(sx+1,sy+2,30,18,"#256b24"); px(sx+4,sy-6,24,15,"#2c7a2a"); px(sx+8,sy-13,16,11,"#35913a");
+  px(sx+5,sy+10,26,4,"rgba(0,0,0,.18)");
+  px(sx+8,sy-9,7,5,"#4fae4a"); px(sx+18,sy-4,6,4,"#4fae4a"); px(sx+6,sy+3,5,4,"#3f9c3e");
+  if(r>0.62){ px(sx+11,sy+5,3,3,"#57b34f"); px(sx+21,sy+9,3,3,"#57b34f"); }
+  if(r>0.9){ px(sx+15,sy-2,3,3,"#e2574c"); px(sx+22,sy+6,3,3,"#e2574c"); } /* apples / berries */
+}
+function drawBuilding(o,sx,sy){
+  const w=o.w*TILE,h=o.h*TILE;
+  /* soft ground shadow under every structure */
+  ctx.fillStyle="rgba(20,40,16,.22)"; ctx.fillRect(sx+4,sy+h-2,w,6);
+  if(o.kind==="office"||o.kind==="store"||o.kind==="bath"){
+    px(sx-2,sy-8,w+4,14,"#7a4a2c"); px(sx-2,sy-12,w+4,6,"#9c6238");
+    px(sx+2,sy-9,w-4,2,"rgba(255,220,170,.35)");
+    for(let rx2=sx+6;rx2<sx+w-4;rx2+=14)px(rx2,sy-3,2,8,"rgba(0,0,0,.18)"); /* roof shingles */
+    px(sx,sy+4,w,h-4, o.kind==="bath" ? "#cfd8d2" : "#a9743f");
+    if(o.kind==="bath"){ for(let bx=sx+8;bx<sx+w-6;bx+=16)px(bx,sy+8,2,h-14,"rgba(90,110,100,.35)"); } /* cinderblock seams */
+    px(sx+4,sy+12,16,14,"#5d3c20"); px(sx+w-22,sy+12,16,14,"#5d3c20");
+    const lit = DAY_PHASE>0.58;
+    const winCol = lit ? "#ffd98a" : "#bfe6f5";
+    px(sx+7,sy+15,10,8,winCol); px(sx+w-19,sy+15,10,8,winCol);
+    if(lit){ ctx.fillStyle="rgba(255,200,90,.28)"; ctx.fillRect(sx+3,sy+11,18,16); ctx.fillRect(sx+w-23,sy+11,18,16); }
+    px(sx+7,sy+15,10,3,"rgba(255,255,255,.65)"); px(sx+w-19,sy+15,10,3,"rgba(255,255,255,.65)");
+    px(sx+w/2-10,sy+h-26,20,26,"#6b4a2a"); px(sx+w/2+6,sy+h-16,3,3,"#e8c95a");
+    const label=o.kind==="office"?"OFFICE":(o.kind==="store"?"CAMP STORE":"BATHHOUSE");
+    ctx.fillStyle="#fff3d6"; ctx.fillRect(sx+w/2-38,sy-4,76,12);
+    ctx.fillStyle="#3a2a16"; ctx.font="bold 9px monospace"; ctx.textAlign="center";
+    ctx.fillText(label,sx+w/2,sy+5);
+  } else if(o.kind==="pavroof"){
+    px(sx,sy+6,w,8,"#8f5836"); px(sx,sy+2,w,5,"#a5663c");
+    px(sx+4,sy+14,5,18,"#6b4a2a"); px(sx+w-9,sy+14,5,18,"#6b4a2a");
+  } else if(o.kind==="table"){
+    px(sx+2,sy+10,w-4,7,"#8a6a42"); px(sx+6,sy+17,4,8,"#6b4a2a"); px(sx+w-10,sy+17,4,8,"#6b4a2a");
+    px(sx,sy+13,w,3,"#75582f");
+  } else if(o.kind==="rv"){
+    px(sx+2,sy+6,w-4,h-14,o.tint||"#ddd");
+    px(sx+2,sy+6,w-4,6,"#8f8f8f"); px(sx+2,sy+6,w-4,2,"#c9c9c9");
+    px(sx+2,sy+30,w-4,3,"rgba(0,0,0,.14)"); /* side stripe shadow */
+    px(sx+4,sy+20,w-8,3,"#c9403c"); /* awning stripe */
+    const rvLit = DAY_PHASE>0.55;
+    const rvWin = rvLit ? "#ffe2a0" : "#bfe6f5";
+    px(sx+8,sy+16,14,10,rvWin); px(sx+w-30,sy+16,14,10,rvWin);
+    px(sx+9,sy+17,6,3,"rgba(255,255,255,.7)"); px(sx+w-29,sy+17,6,3,"rgba(255,255,255,.7)");
+    px(sx+w/2-6,sy+14,12,20,"#b9b0a0"); px(sx+w/2+3,sy+22,3,3,"#e8c95a");
+    /* lit window — soft amber glow that strengthens after golden hour */
+    px(sx+w-46,sy+16,10,10,"#ffd98a"); px(sx+w-46,sy+16,10,3,"rgba(255,255,255,.6)");
+    if(rvLit){ ctx.fillStyle="rgba(255,190,80,"+(0.10+0.18*DAY_PHASE)+")"; ctx.fillRect(sx+w-52,sy+11,22,20); ctx.fillRect(sx+3,sy+11,24,20); }
+    px(sx+10,sy+h-10,10,8,"#1c1c1c"); px(sx+w-20,sy+h-10,10,8,"#1c1c1c");
+    px(sx+13,sy+h-8,4,4,"#9aa0a6"); px(sx+w-17,sy+h-8,4,4,"#9aa0a6");
+  } else if(o.kind==="tent"){
+    ctx.fillStyle="rgba(20,40,16,.22)";
+    ctx.beginPath(); ctx.ellipse(sx+w/2,sy+h-1,w/2,4,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=o.tint||"#c96f4a";
+    ctx.beginPath(); ctx.moveTo(sx+2,sy+h-4); ctx.lineTo(sx+w/2,sy+2); ctx.lineTo(sx+w-2,sy+h-4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="rgba(255,255,255,.18)";
+    ctx.beginPath(); ctx.moveTo(sx+w/2,sy+2); ctx.lineTo(sx+w-2,sy+h-4); ctx.lineTo(sx+w/2+8,sy+h-4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="rgba(0,0,0,.38)";
+    ctx.beginPath(); ctx.moveTo(sx+w/2-7,sy+h-4); ctx.lineTo(sx+w/2,sy+16); ctx.lineTo(sx+w/2+7,sy+h-4); ctx.closePath(); ctx.fill();
+    px(sx+w/2-1,sy+1,2,5,"#5d3c20"); /* pole tip */
+  } else if(o.kind==="dumpster"){
+    px(sx+2,sy+8,w-4,h-10,"#2f6e46"); px(sx,sy+4,w,7,"#265739");
+    px(sx+6,sy+16,3,h-22,"rgba(255,255,255,.18)"); px(sx+w-12,sy+16,3,h-22,"rgba(255,255,255,.18)");
+    if(S.flags.bossReady&&!S.flags.bossDone){
+      const b=Math.sin(Date.now()/300)>0?0:-2;
+      px(sx+10,sy+b,8,7,"#8a8f96"); px(sx+24,sy+b+2,7,6,"#7c8187"); /* raccoon ears peeking */
+      px(sx+11,sy+b+3,2,2,"#111"); px(sx+16,sy+b+3,2,2,"#111");
+    }
+  } else if(o.kind==="cooler"){
+    px(sx+3,sy+8,26,22,"#e8e8e8"); px(sx+3,sy+4,26,6,"#c9403c");
+    px(sx+8,sy+15,16,3,"#9fb6bd");
+    if(S.flags.coolerQ===1){ px(sx+10,sy+20,4,4,"#ff4040"); px(sx+19,sy+20,4,4,"#ff4040"); }
+  } else if(o.kind==="phone"){
+    px(sx+8,sy+6,16,24,"#3a3f44"); px(sx+11,sy+9,10,9,"#c9403c"); px(sx+13,sy+21,6,5,"#222");
+  } else if(o.kind==="stall"){
+    px(sx+4,sy+2,24,30,"#b9c4bd"); px(sx+7,sy+5,18,11,"#d7ded9");
+    ctx.fillStyle="#7a2f27"; ctx.font="bold 8px monospace"; ctx.textAlign="center";
+    ctx.fillText("OCCUPIED",sx+16,sy+26);
+  } else if(o.kind==="gnome"){
+    px(sx+6,sy+26,20,6,"#9a958c");
+    px(sx+10,sy+16,12,11,"#7a4a8c"); px(sx+12,sy+8,8,9,"#f2c79b");
+    ctx.fillStyle="#c9403c"; ctx.beginPath(); ctx.moveTo(sx+9,sy+9); ctx.lineTo(sx+16,sy-6); ctx.lineTo(sx+23,sy+9); ctx.closePath(); ctx.fill();
+    px(sx+12,sy+13,8,4,"#eee");
+  } else if(o.kind==="tripod"){
+    px(sx+14,sy+6,4,10,"#e8a13a"); px(sx+8,sy+16,3,14,"#555"); px(sx+21,sy+16,3,14,"#555"); px(sx+15,sy+16,2,14,"#555");
+  } else if(o.kind==="bear"){
+    if(S.flags.bearQ===1){
+      const tw=Math.sin(Date.now()/250)>0;
+      px(sx+11,sy+12,10,9,"#a5703f"); px(sx+13,sy+8,6,5,"#a5703f");
+      px(sx+13,sy+10,2,2,"#111"); px(sx+17,sy+10,2,2,"#111");
+      if(tw){ px(sx+24,sy+4,3,3,"#fff6a0"); px(sx+4,sy+22,3,3,"#fff6a0"); }
+    }
+  }
+}
+function shade(hex,amt){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&255)+amt, b=(n&255)+amt;
+  r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); b=Math.max(0,Math.min(255,b));
+  return "#"+((r<<16)|(g<<8)|b).toString(16).padStart(6,"0");
+}
+function drawPerson(sx,sy,p,walk){
+  /* Taller SNES sprite (~40px), drawn rising above its tile, dark outline + shirt shading */
+  const sc=p.small?0.82:1, H=40*sc, W=24*sc;
+  const breathe = REDUCED_MOTION ? 0 : Math.sin(Date.now()/620 + p.x*1.3 + p.y*0.7)*0.7;
+  const ox=sx+16-W/2, oy=sy+30-H + breathe;
+  const ph=walk?(Math.floor(Date.now()/150)%2):0;
+  const blink=(Math.floor(Date.now()/900+ (p.x*7+p.y*13))%14===0);
+  shadowEllipse(sx+16,sy+29,p.small?9:11);
+  const dark=shade(p.shirt,-38), lite=shade(p.shirt,26);
+  /* legs with alternating walk step */
+  const lOff=walk?(ph?2:-1):0, rOff=walk?(ph?-1:2):0;
+  px(ox+W*0.30,oy+H-9+lOff*0.4,W*0.17,7,"#3a4a6b"); px(ox+W*0.54,oy+H-9+rOff*0.4,W*0.17,7,"#33425f");
+  px(ox+W*0.28,oy+H-3+lOff*0.4,W*0.20,3,"#4a3421"); px(ox+W*0.53,oy+H-3+rOff*0.4,W*0.20,3,"#4a3421"); /* shoes */
+  /* arms (swing opposite to legs) */
+  px(ox+1,oy+H*0.42+(walk?(ph?-2:1):0),4,H*0.26,p.skin); px(ox+W-5,oy+H*0.42+(walk?(ph?1:-2):0),4,H*0.26,p.skin);
+  px(ox+1,oy+H*0.42+(walk?(ph?-2:1):0),4,5,p.shirt); px(ox+W-5,oy+H*0.42+(walk?(ph?1:-2):0),4,5,p.shirt);
+  /* torso with side shading */
+  px(ox+4,oy+H*0.40,W-8,H*0.36,p.shirt); px(ox+W-8,oy+H*0.40,4,H*0.36,dark); px(ox+4,oy+H*0.40,3,H*0.36,lite);
+  if(p.suit){ px(ox+W/2-2,oy+H*0.40,5,H*0.36,"#f7f3e8"); px(ox+W/2-1,oy+H*0.44,2,H*0.16,"#c9403c"); px(ox+2,oy+H*0.40,3,H*0.36,"#d8d2c4"); px(ox+W-5,oy+H*0.40,3,H*0.36,"#d8d2c4"); }
+  /* head */
+  const hw=W*0.62, hx=ox+W/2-hw/2, hy=oy+2;
+  px(hx,hy,hw,hw*0.92,p.skin);
+  px(hx,hy+hw*0.72,hw,3,"rgba(0,0,0,.08)"); /* jaw shade */
+  px(hx-1,hy+hw*0.34,2,5,p.skin); px(hx+hw-1,hy+hw*0.34,2,5,p.skin); /* ears */
+  if(!blink){ px(hx+hw*0.24,hy+hw*0.44,3,4,"#20242a"); px(hx+hw*0.64,hy+hw*0.44,3,4,"#20242a");
+    px(hx+hw*0.24+1,hy+hw*0.44,1,1,"#fff"); px(hx+hw*0.64+1,hy+hw*0.44,1,1,"#fff"); }
+  else { px(hx+hw*0.24,hy+hw*0.48,3,1,"#20242a"); px(hx+hw*0.64,hy+hw*0.48,3,1,"#20242a"); }
+  px(hx+hw*0.42,hy+hw*0.72,hw*0.18,1,"#a5663a"); /* mouth */
+  px(hx+1,hy+hw*0.60,3,2,"rgba(240,140,120,.45)"); px(hx+hw-4,hy+hw*0.60,3,2,"rgba(240,140,120,.45)"); /* cheeks */
+  /* hair & hats */
+  const hair=p.suit?"#3a332a":(p.hat==="bun"?"#5d3c20":"#4a3421");
+  if(p.hat==="cap"){ px(hx-1,hy-2,hw+2,6,"#31589e"); px(hx+hw-2,hy+3,8,3,"#31589e"); px(hx-1,hy-2,hw+2,2,"#4a78c2"); }
+  else if(p.hat==="bun"){ px(hx+hw/2-4,hy-6,8,6,hair); px(hx-1,hy,hw+2,4,hair); }
+  else if(p.hat==="visor"){ px(hx-1,hy+1,hw+2,4,"#e8e4da"); px(hx+hw-2,hy+4,8,2,"#e8e4da"); px(hx-1,hy-2,hw+2,3,hair); }
+  else if(p.hat==="bucket"){ px(hx-2,hy-3,hw+4,6,"#c9b078"); px(hx-4,hy+2,hw+8,3,"#bfa76c"); }
+  else { px(hx-1,hy-2,hw+2,5,hair); px(hx-1,hy+2,3,5,hair); px(hx+hw-2,hy+2,3,5,hair); }
+}
+function drawKid(sx,sy,dir,walk){
+  /* The hero: Ness-grammar — red cap, blue/yellow striped shirt, shorts, backpack */
+  const ph=walk?(Math.floor(Date.now()/130)%2):0;
+  const y=sy-(walk?(ph?1:0):0);
+  shadowEllipse(sx+16,sy+29,11);
+  const skin="#f2c79b", skinD="#dfa06c";
+  const legL=walk?(ph?3:0):0, legR=walk?(ph?0:3):0;
+  /* legs + red sneakers */
+  px(sx+10,y+25+legL*0.3,5,6,"#31456e"); px(sx+17,y+25+legR*0.3,5,6,"#31456e");
+  px(sx+9,y+30,7,3,"#c9403c"); px(sx+17,y+30,7,3,"#c9403c");
+  px(sx+9,y+30,7,1,"#fff"); px(sx+17,y+30,7,1,"#fff");
+  /* arms */
+  const aL=walk?(ph?-2:1):0, aR=walk?(ph?1:-2):0;
+  if(dir!=="up"){ px(sx+5,y+15+aL,4,10,skin); px(sx+23,y+15+aR,4,10,skin); }
+  /* backpack (sides + behind) */
+  if(dir==="up"||dir==="left")px(sx+4,y+13,6,13,"#e8c832");
+  if(dir==="up"||dir==="right")px(sx+22,y+13,6,13,"#e8c832");
+  if(dir==="up")px(sx+7,y+12,18,15,"#f0d03a");
+  /* striped shirt: yellow with blue bands (EarthBound hero colors) */
+  px(sx+8,y+13,16,13,"#f2c832");
+  px(sx+8,y+16,16,3,"#31589e"); px(sx+8,y+22,16,3,"#31589e");
+  px(sx+20,y+13,4,13,"rgba(0,0,0,.10)");
+  if(dir==="down"||dir==="left")px(sx+6,y+13,4,6,"#31589e");
+  if(dir==="down"||dir==="right")px(sx+22,y+13,4,6,"#31589e");
+  /* head, larger SNES proportions */
+  px(sx+8,y-1,16,15,skin);
+  px(sx+7,y+4,2,6,skin); px(sx+23,y+4,2,6,skin); /* ears */
+  if(dir==="down"){
+    const blink=(Math.floor(Date.now()/1100)%16===0);
+    if(!blink){ px(sx+11,y+6,3,4,"#20242a"); px(sx+18,y+6,3,4,"#20242a"); px(sx+12,y+6,1,1,"#fff"); px(sx+19,y+6,1,1,"#fff"); }
+    else { px(sx+11,y+8,3,1,"#20242a"); px(sx+18,y+8,3,1,"#20242a"); }
+    px(sx+14,y+11,4,1,"#a5663a");
+    px(sx+9,y+9,3,2,"rgba(240,140,120,.5)"); px(sx+20,y+9,3,2,"rgba(240,140,120,.5)");
+    px(sx+10,y+2,12,3,"#3a2c1c"); /* hair under cap */
+  } else if(dir==="left"){
+    px(sx+10,y+6,3,4,"#20242a"); px(sx+13,y+11,3,1,"#a5663a"); px(sx+10,y+2,8,3,"#3a2c1c");
+  } else if(dir==="right"){
+    px(sx+19,y+6,3,4,"#20242a"); px(sx+16,y+11,3,1,"#a5663a"); px(sx+15,y+2,8,3,"#3a2c1c");
+  } else { /* up: back of head, full hair */
+    px(sx+8,y-1,16,13,"#3a2c1c"); px(sx+8,y+9,16,3,skinD);
+  }
+  /* red cap, brim by direction */
+  px(sx+7,y-4,18,5,"#d23b34"); px(sx+7,y-4,18,2,"#e85750");
+  if(dir==="down")px(sx+9,y+1,14,2,"#b02e2a");
+  if(dir==="left")px(sx+2,y-1,8,3,"#b02e2a");
+  if(dir==="right")px(sx+22,y-1,8,3,"#b02e2a");
+  if(dir==="up")px(sx+10,y-6,12,2,"#b02e2a");
+  px(sx+14,y-6,4,2,"#b02e2a"); /* cap button */
+}
+/* the dog faces the way it is actually travelling: render() tracks the facing
+   from the movement of the dog's trail anchor (dogDir/dogLast/dogWalkFrame) */
+let dogDir="down", dogLast=null, dogWalkFrame=-99;
+function drawDog(sx,sy,walk,dir){
+  if(dir==="up") drawDogBack(sx,sy,walk);
+  else if(dir==="down") drawDogFront(sx,sy,walk);
+  else drawDogSide(sx,sy,walk,dir==="left");
+}
+function drawDogSide(sx,sy,walk,flip){
+  const wag=Math.floor(Date.now()/180)%2;
+  const y=sy+6-(walk&&wag?1:0);
+  shadowEllipse(sx+15,sy+27,12);
+  const ph=walk?(Math.floor(Date.now()/150)%2):0;
+  ctx.save();
+  if(flip){ ctx.translate(2*sx+39,0); ctx.scale(-1,1); } /* same profile, head leading left */
+  /* legs, alternating trot */
+  px(sx+7,y+16+(ph?1:0),4,6,"#7a4c22"); px(sx+12,y+16+(ph?0:1),4,6,"#8a5a2e");
+  px(sx+20,y+16+(ph?0:1),4,6,"#7a4c22"); px(sx+25,y+16+(ph?1:0),4,6,"#8a5a2e");
+  /* body with spot + highlight */
+  px(sx+5,y+6,22,11,"#96652f"); px(sx+5,y+6,22,3,"#ab7738");
+  px(sx+16,y+8,8,6,"#7a4c22"); /* spot */
+  /* wagging tail */
+  if(wag)px(sx+1,y+2,6,4,"#96652f"); else px(sx+0,y+5,6,4,"#96652f");
+  /* head + floppy ears + muzzle */
+  px(sx+24,y+1,12,11,"#a06a33"); px(sx+25,y-2,5,7,"#7a4c22"); px(sx+32,y-1,4,6,"#7a4c22");
+  px(sx+33,y+8,5,5,"#c79a5e"); px(sx+36,y+9,3,3,"#241a10"); /* muzzle + nose */
+  px(sx+29,y+5,3,3,"#16181c"); px(sx+30,y+5,1,1,"#fff"); /* eye */
+  px(sx+23,y+11,7,4,"#d23b34"); px(sx+26,y+14,3,3,"#e85750"); /* bandana + knot */
+  ctx.restore();
+}
+function drawDogFront(sx,sy,walk){ /* facing the viewer — walking down toward you */
+  const wag=Math.floor(Date.now()/180)%2;
+  const y=sy+6-(walk&&wag?1:0);
+  shadowEllipse(sx+16,sy+27,12);
+  const ph=walk?(Math.floor(Date.now()/150)%2):0;
+  /* tail peeking out one side, wagging */
+  if(wag)px(sx+26,y+13,6,4,"#96652f"); else px(sx+26,y+16,6,4,"#96652f");
+  /* front legs + paws, alternating trot */
+  px(sx+9,y+19+(ph?1:0),5,6,"#7a4c22"); px(sx+18,y+19+(ph?0:1),5,6,"#7a4c22");
+  px(sx+8,y+24+(ph?1:0),7,3,"#8a5a2e"); px(sx+17,y+24+(ph?0:1),7,3,"#8a5a2e");
+  /* body with pale chest */
+  px(sx+7,y+11,18,12,"#96652f"); px(sx+7,y+11,18,3,"#ab7738");
+  px(sx+12,y+15,8,7,"#c79a5e");
+  /* head + floppy ears */
+  px(sx+8,y-2,16,13,"#a06a33");
+  px(sx+5,y-1,5,11,"#7a4c22"); px(sx+22,y-1,5,11,"#7a4c22");
+  px(sx+18,y-2,6,4,"#7a4c22"); /* spot over one eye */
+  const blink=(Math.floor(Date.now()/1300)%18===0);
+  if(!blink){ px(sx+11,y+4,3,4,"#16181c"); px(sx+18,y+4,3,4,"#16181c"); px(sx+11,y+4,1,1,"#fff"); px(sx+19,y+4,1,1,"#fff"); }
+  else { px(sx+11,y+6,3,1,"#16181c"); px(sx+18,y+6,3,1,"#16181c"); }
+  /* muzzle + nose */
+  px(sx+12,y+8,8,5,"#c79a5e"); px(sx+14,y+8,4,3,"#241a10");
+  /* bandana under the chin + knot */
+  px(sx+9,y+11,14,3,"#d23b34"); px(sx+14,y+14,4,3,"#e85750");
+}
+function drawDogBack(sx,sy,walk){ /* from behind — walking up, away from you */
+  const wag=Math.floor(Date.now()/180)%2;
+  const y=sy+6-(walk&&wag?1:0);
+  shadowEllipse(sx+16,sy+27,12);
+  const ph=walk?(Math.floor(Date.now()/150)%2):0;
+  /* hind legs + paws, alternating trot */
+  px(sx+9,y+19+(ph?1:0),5,6,"#7a4c22"); px(sx+18,y+19+(ph?0:1),5,6,"#8a5a2e");
+  px(sx+8,y+24+(ph?1:0),7,3,"#96652f"); px(sx+17,y+24+(ph?0:1),7,3,"#96652f");
+  /* rump + back with spot */
+  px(sx+7,y+11,18,12,"#96652f"); px(sx+7,y+11,18,3,"#8a5a2e");
+  px(sx+15,y+14,7,6,"#7a4c22"); /* spot */
+  /* tail at the rump, wagging side to side */
+  px(sx+14+(wag?3:-3),y+15,4,8,"#96652f"); px(sx+14+(wag?3:-3),y+21,4,2,"#7a4c22");
+  /* back of the head — ears, no face */
+  px(sx+8,y-2,16,13,"#96652f"); px(sx+8,y-2,16,3,"#8a5a2e");
+  px(sx+5,y-1,5,11,"#7a4c22"); px(sx+22,y-1,5,11,"#7a4c22");
+  /* bandana seen from behind */
+  px(sx+9,y+11,14,3,"#d23b34");
+}
+function drawSignPost(sx,sy){
+  px(sx+14,sy+12,4,16,"#6b4a2a"); px(sx+5,sy+2,22,12,"#8a6a42");
+  px(sx+7,sy+5,18,2,"#5d3c20"); px(sx+7,sy+9,13,2,"#5d3c20");
+}
+function tileKey(x,y){ return grid[y]&&grid[y][x]; }
+
+let camX=0, camY=0, camInit=false;
+function render(){
+  DAY_PHASE=getDayPhase();
+  const chip=$("timeChip"); if(chip){ const lbl=dayLabel(DAY_PHASE); if(chip.textContent!==lbl) chip.textContent=lbl; chip.style.background = DAY_PHASE<0.52?"#ffe9a8":(DAY_PHASE<0.72?"#ffb26b":(DAY_PHASE<0.88?"#8aa8d8":"#22345e")); chip.style.color = DAY_PHASE>=0.88?"#f3e9cf":"#23180a"; }
+  ctx.clearRect(0,0,cv.width,cv.height);
+  /* smooth scrolling — camera eases toward the kid instead of snapping tile to tile */
+  const targetX=clamp(S.px+16-cv.width/2,0,MW*TILE-cv.width);
+  const targetY=clamp(S.py+16-cv.height/2,0,MH*TILE-cv.height);
+  if(!camInit || !S.started){ camX=targetX; camY=targetY; camInit=true; }
+  else if(!REDUCED_MOTION){ camX+=(targetX-camX)*0.14; camY+=(targetY-camY)*0.14; if(Math.abs(targetX-camX)<0.4)camX=targetX; if(Math.abs(targetY-camY)<0.4)camY=targetY; }
+  else { camX=targetX; camY=targetY; }
+  const camRX=Math.round(camX), camRY=Math.round(camY);
+  const x0=Math.floor(camX/TILE), x1=Math.ceil((camX+cv.width)/TILE);
+  const y0=Math.floor(camY/TILE), y1=Math.ceil((camY+cv.height)/TILE);
+  for(let y=y0;y<=y1&&y<MH;y++)for(let x=x0;x<=x1&&x<MW;x++) drawTile(x,y,x*TILE-camRX,y*TILE-camRY);
+  /* draw entities sorted by y — campfires join the sort so sprites pass in front/behind correctly */
+  const drawables=[];
+  trees.forEach(t=>drawables.push({y:t.y*TILE+20,f:()=>drawTree(t.x*TILE-camRX,t.y*TILE-camRY-6,hash(t.x,t.y))}));
+  objects.forEach(o=>drawables.push({y:o.y*TILE+o.h*TILE,f:()=>drawBuilding(o,o.x*TILE-camRX,o.y*TILE-camRY)}));
+  signs.forEach(s=>drawables.push({y:s.y*TILE+16,f:()=>drawSignPost(s.x*TILE-camRX,s.y*TILE-camRY)}));
+  campfires.forEach((cf,i)=>drawables.push({y:cf.y*TILE+18,f:()=>drawCampfire(cf.x*TILE-camRX, cf.y*TILE-camRY, i)}));
+  npcs.forEach(n=>drawables.push({y:n.y*TILE+24,f:()=>drawPerson(n.x*TILE-camRX+1,n.y*TILE-camRY+1,n,false)}));
+  drawables.push({y:S.py+22,f:()=>{ /* dog trails behind, facing its direction of travel */
+    if(S.trail.length>4){
+      const d=S.trail[S.trail.length-5];
+      if(dogLast){
+        const mdx=d.x-dogLast.x, mdy=d.y-dogLast.y;
+        if(Math.abs(mdx)>0.4||Math.abs(mdy)>0.4){
+          dogDir = Math.abs(mdx)>=Math.abs(mdy) ? (mdx<0?"left":"right") : (mdy<0?"up":"down");
+          dogWalkFrame=frameCount;
+        }
+      }
+      dogLast={x:d.x,y:d.y};
+      drawDog(d.x-camRX+2, d.y-camRY+4, frameCount-dogWalkFrame<12, dogDir);
+    } else dogLast=null;
+  }});
+  drawables.push({y:S.py+30,f:()=>drawKid(S.px-camRX,S.py-camRY,S.dir,S.moving)});
+  /* smoke should rise behind the sorted world — draw its update before foreground particles */
+  const savedCamX=camX, savedCamY=camY; camX=camRX; camY=camRY;
+  drawables.sort((a,b)=>a.y-b.y).forEach(d=>d.f());
+  updateAndDrawParticles();
+  camX=savedCamX; camY=savedCamY;
+  /* fireflies — faint in daylight, bright at dusk/night */
+  const tt=Date.now()/1000;
+  const fireflyCount = DAY_PHASE<0.5?8:(DAY_PHASE<0.75?16:26);
+  const fireflyAlpha = 0.18+DAY_PHASE*0.72;
+  for(let i=0;i<fireflyCount;i++){
+    const fx2=((hash(i,3)*MW*TILE + Math.sin(tt*0.4+i*1.7)*22) - camRX), fy2=((hash(i,9)*MH*TILE + Math.cos(tt*0.3+i*2.3)*14) - camRY);
+    if(fx2<-6||fy2<-6||fx2>cv.width+6||fy2>cv.height+6)continue;
+    const tw=Math.sin(tt*2.1+i*1.3)>0.25;
+    ctx.fillStyle=tw?("rgba(255,244,150,"+fireflyAlpha+")"):("rgba(255,244,150,"+(fireflyAlpha*0.3)+")");
+    ctx.fillRect(Math.round(fx2),Math.round(fy2),2,2);
+    if(DAY_PHASE>0.78&&tw){ ctx.fillStyle="rgba(255,244,150,.14)"; ctx.fillRect(Math.round(fx2)-2,Math.round(fy2)-2,6,6); }
+  }
+  /* day-to-night wash: gold -> amber -> blue -> deep night, plus vignette */
+  let tint=null;
+  if(DAY_PHASE<0.45){ tint="rgba(255,214,120,"+(0.04+DAY_PHASE*0.06)+")"; }
+  else if(DAY_PHASE<0.68){ const k=(DAY_PHASE-0.45)/0.23; tint="rgba(255,"+Math.round(170-30*k)+",60,"+(0.10+0.10*k)+")"; }
+  else if(DAY_PHASE<0.86){ const k=(DAY_PHASE-0.68)/0.18; tint="rgba(" + Math.round(70+ (18-70)*k) + ","+Math.round(90+(32-90)*k)+","+Math.round(150+(86-150)*k)+","+(0.14+0.14*k)+")"; }
+  else { tint="rgba(10,18,52,"+(0.28+ (DAY_PHASE-0.86)*0.9)+")"; }
+  if(tint){ ctx.fillStyle=tint; ctx.fillRect(0,0,cv.width,cv.height); }
+  const lg=ctx.createLinearGradient(0,0,0,cv.height);
+  lg.addColorStop(0,"rgba(255,214,120,.05)"); lg.addColorStop(0.55,"rgba(0,0,0,0)"); lg.addColorStop(1,"rgba(24,52,20,"+(0.08+DAY_PHASE*0.10)+")");
+  ctx.fillStyle=lg; ctx.fillRect(0,0,cv.width,cv.height);
+  /* enemy bob & breathe — transform the canvas element so the sprite lives */
+  if(B){
+    drawBattleBg();
+    const ec=$("enemyCanvas");
+    if(ec && !REDUCED_MOTION){
+      const bob=Math.sin(Date.now()/380)*5;
+      const br=1+Math.sin(Date.now()/540)*0.018;
+      ec.style.transform="translate(-50%,-50%) translateY("+bob.toFixed(1)+"px) scale("+br.toFixed(3)+")";
+    }
+    if(frameCount%7===0) drawEnemy(B.def.sprite);
+  }
+  updateHud();
+}
+function updateHud(){
+  $("hudName").textContent=S.kid.toUpperCase();
+  $("hudLv").textContent=S.lv;
+  $("hudHp").textContent=Math.max(0,Math.ceil(S.hp));
+  $("hudPp").textContent=S.pp;
+  $("hudMoney").textContent=S.money;
+  const hpM=$("hudHpMeter"); hpM.firstElementChild.style.width=clamp(S.hp/S.maxHp*100,0,100)+"%";
+  hpM.classList.toggle("low",S.hp/S.maxHp<0.3);
+  $("hudPpMeter").firstElementChild.style.width=clamp(S.pp/S.maxPp*100,0,100)+"%";
+  $("hudStatus").style.display=S.homesick?"inline-block":"none";
+}
+function setObjective(html){ $("objective").innerHTML="<b>Objective:</b> "+html; }
+function toast(msg,ms){
+  const t=$("toast"); t.textContent=msg; t.classList.add("open");
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("open"),ms||2200);
+}
+
+/* ---------- dialogue portraits (polish pass) ---------- */
+function drawPortrait(who){
+  const c=$("dialogPortrait"); if(!c) return;
+  const g=c.getContext("2d"); const W=64,H=64;
+  g.clearRect(0,0,W,H);
+  const w=(who||"").toString();
+  const lower=w.toLowerCase();
+  /* backgrounds by mood / location */
+  let bg="#bfe3ff";
+  if(lower.includes("raccoon")||lower.includes("???")) bg="#3a2a4d";
+  else if(lower.includes("cooler")) bg="#d6eef7";
+  else if(lower.includes("stall")||lower.includes("bathhouse")) bg="#d8ddd6";
+  else if(lower.includes("mom")||lower.includes("dad")) bg="#ffe4b8";
+  else if(lower.includes("pruitt")) bg="#e8e4da";
+  else if(lower===S.dog.toLowerCase()||lower.includes("dog")) bg="#cfe8b8";
+  g.fillStyle=bg; g.fillRect(0,0,W,H);
+  function R(x,y,ww,hh,col){ g.fillStyle=col; g.fillRect(x,y,ww,hh); }
+  /* dog portrait */
+  if(lower===S.dog.toLowerCase()){
+    R(14,28,36,18,"#96652f"); R(18,18,28,20,"#a06a33"); R(16,12,10,14,"#7a4c22"); R(40,12,9,13,"#7a4c22");
+    R(42,30,10,8,"#c79a5e"); R(49,32,5,5,"#141414"); R(26,26,5,5,"#141414"); R(27,26,2,2,"#fff");
+    R(22,40,16,6,"#d23b34"); return;
+  }
+  /* raccoon king / critters */
+  if(lower.includes("raccoon")){
+    R(16,22,32,26,"#9aa0a7"); R(15,12,10,12,"#7c8187"); R(39,12,10,12,"#7c8187");
+    R(18,28,28,9,"#26262a"); R(23,30,6,5,"#fff"); R(36,30,6,5,"#fff"); R(25,31,3,3,"#111"); R(38,31,3,3,"#111");
+    R(18,6,28,8,"#e8c95a"); R(20,2,6,6,"#e8c95a"); R(29,1,6,7,"#e8c95a"); R(38,2,6,6,"#e8c95a"); return;
+  }
+  /* cooler */
+  if(lower.includes("cooler")){
+    R(14,10,36,44,"#eef1f2"); R(14,10,36,8,"#d23b34"); R(20,28,6,6,"#ff4040"); R(38,28,6,6,"#ff4040"); R(22,42,20,4,"#7e99a3"); return;
+  }
+  /* generic object / sign / phone */
+  if(!w || w==="???" || lower.includes("sign")||lower.includes("phone")||lower.includes("dumpster")||lower.includes("gnome")||lower.includes("stall")||lower.includes("lake")||lower.includes("dock")){
+    g.fillStyle="#274435"; g.font="bold 28px monospace"; g.textAlign="center"; g.fillText("!",32,42);
+    g.font="bold 9px monospace"; g.fillText((w||"???").slice(0,10).toUpperCase(),32,56); return;
+  }
+  /* human portraits — map speaker to look */
+  let skin="#f2c79b", shirt="#57a773", hat="none", hair="#4a3421";
+  if(lower.startsWith("mom")){ skin="#f2c79b"; shirt="#c95d8f"; hat="bun"; hair="#5d3c20"; }
+  else if(lower.startsWith("dad")||lower.includes("camp office")){ skin="#e8b184"; shirt="#4a7fc9"; hat="cap"; }
+  else if(lower.startsWith("fern")){ skin="#8a5a3b"; shirt="#57a773"; hat="visor"; hair="#222222"; }
+  else if(lower.startsWith("dale")){ skin="#f2c79b"; shirt="#e8a13a"; hat="cap"; }
+  else if(lower.startsWith("lily")){ skin="#f7d7ae"; shirt="#b388e0"; hat="none"; hair="#7a4a12"; }
+  else if(lower.startsWith("old gus")||lower.startsWith("gus")){ skin="#e8b184"; shirt="#7a7a72"; hat="bucket"; hair="#dddddd"; }
+  else if(lower.includes("pruitt")){ skin="#f2c79b"; shirt="#e8e4da"; hat="none"; hair="#3a332a"; }
+  else if(lower.includes("chadwick")){ skin="#f7d7ae"; shirt="#d64545"; hat="cap"; hair="#c9a86a"; }
+  else if(lower.includes("fisherman")){ skin="#8a5a3b"; shirt="#3f7a8c"; hat="bucket"; }
+  else if(lower.includes("birder")){ skin="#f2c79b"; shirt="#8c6d3f"; hat="visor"; }
+  else if(w===S.kid){ skin="#f2c79b"; shirt="#f2c832"; hat="hero"; hair="#3a2c1c"; }
+  /* face */
+  R(18,14,28,30,skin); R(17,22,3,8,skin); R(44,22,3,8,skin);
+  R(24,26,4,5,"#20242a"); R(36,26,4,5,"#20242a"); R(25,26,1,1,"#fff"); R(37,26,1,1,"#fff");
+  R(29,36,6,2,"#a5663a"); R(20,32,4,3,"rgba(240,140,120,.55)"); R(40,32,4,3,"rgba(240,140,120,.55)");
+  /* torso */
+  R(12,46,40,18,shirt); R(12,46,40,3,"rgba(255,255,255,.22)");
+  if(hat==="hero"){ R(16,8,32,8,"#d23b34"); R(20,15,24,3,"#b02e2a"); R(28,6,8,3,"#b02e2a"); R(18,16,28,4,hair); }
+  else if(hat==="cap"){ R(16,9,32,7,"#31589e"); R(38,14,12,3,"#31589e"); }
+  else if(hat==="bun"){ R(26,4,12,9,hair); R(16,11,32,5,hair); }
+  else if(hat==="visor"){ R(16,13,32,4,"#e8e4da"); R(38,16,11,2,"#e8e4da"); R(16,9,32,4,hair); }
+  else if(hat==="bucket"){ R(17,8,30,7,"#c9b078"); R(13,14,38,3,"#bfa76c"); }
+  else { R(16,9,32,6,hair); R(16,14,4,8,hair); R(44,14,4,8,hair); }
+  if(lower.includes("pruitt")){ R(29,46,6,14,"#f7f3e8"); R(30,48,4,6,"#c9403c"); }
+}
+
+/* ---------- dialogue ---------- */
+let dlgQueue=[], dlgCb=null, dlgOpen=false;
+function say(lines,cb){
+  dlgQueue=lines.slice(); dlgCb=cb||null; dlgOpen=true; S.mode="dialog";
+  $("dialog").classList.add("open"); nextLine();
+}
+function nextLine(){
+  if(!dlgQueue.length){
+    dlgOpen=false; $("dialog").classList.remove("open");
+    if(S.mode==="dialog")S.mode="world";
+    const cb=dlgCb; dlgCb=null; if(cb)cb();
+    return;
+  }
+  const l=dlgQueue.shift();
+  $("dialogName").textContent=l.who||"";
+  $("dialogText").textContent=l.text||"";
+  drawPortrait(l.who||"");
+  blip();
+}
+
+/* ---------- interactions & quests ---------- */
+function frontTile(){
+  const cx=S.px+16, cy=S.py+22;
+  let fx=cx, fy=cy;
+  if(S.dir==="up")fy-=26; if(S.dir==="down")fy+=26;
+  if(S.dir==="left")fx-=26; if(S.dir==="right")fx+=26;
+  return {tx:Math.floor(fx/TILE), ty:Math.floor(fy/TILE)};
+}
+function giveItem(k,n){ S.inv[k]=(S.inv[k]||0)+(n||1); toast("Got: "+ITEMS[k].name,1800); confirmSfx(); }
+function gainXp(n){
+  S.xp+=n; toast("+"+n+" XP",1500);
+  while(S.xp>=xpNext()){
+    S.xp-=xpNext(); S.lv++; S.maxHp+=4; S.maxPp+=2; S.atk+=1;
+    S.hp=Math.min(S.maxHp,S.hp+Math.ceil(S.maxHp*0.35)); S.pp=S.maxPp;
+    levelJingle();
+    toast("LEVEL UP! "+S.kid+" is now level "+S.lv+" — Max HP and PP grew!",3000);
+  }
+}
+function refreshObjective(){
+  const f=S.flags;
+  if(f.soundDone) setObjective("Episode 1 complete. The park is yours to wander — the gnome still judges you.");
+  else if(f.bossDone) setObjective("Head to the dock. Gus is waiting. Bring the recorder.");
+  else if(f.bossReady) setObjective("Something big is in the dumpster behind the store. Go look. Carefully.");
+  else if(f.bearQ===1) setObjective("Find Lily's bear, Biscuit — glinting somewhere in the south woods.");
+  else if(f.bearQ===2) setObjective("Return Biscuit the bear to Lily at Site 12.");
+  else if(f.coolerQ===1&&!f.stallDone) setObjective("Deal with whatever the camp store cooler has become.");
+  else if(f.coolerQ===2&&!f.stallDone) setObjective("Take the Legendary Plunger to Bathhouse Stall No. 3.");
+  else if(f.bearQ===3&&!f.stallDone) setObjective("Dale at the bathhouse has a problem only a host's kid would get handed.");
+  else if(f.bearQ===0) setObjective("Explore the loops. Somebody at Site 12 sounds upset.");
+  else setObjective("Talk to the campers. Pine Hollow provides.");
+}
+function checkBossReady(){
+  const f=S.flags;
+  if(f.bearQ===3&&f.stallDone&&!f.bossReady&&!f.bossDone){
+    f.bossReady=true;
+    say([{who:"???",text:"From behind the camp store comes a sound like forty raccoons opening forty trash cans at once."},
+         {who:S.dog,text:"(growls at the dumpster) Something big has moved in back there."},
+         {who:"",text:"The dumpster situation has escalated. This is a boss now."}]);
+  }
+  refreshObjective();
+}
+
+function talkNpc(n){
+  const f=S.flags;
+  if(n.id==="mom"){
+    S.hp=S.maxHp; S.pp=S.maxPp; S.homesick=false; S.battlesSinceMom=0;
+    if(!f.metMom){
+      f.metMom=true;
+      say([{who:"Mom",text:"There you are. Host site rules: you're not staff, you're family, which is worse — you don't get days off."},
+           {who:"Mom",text:"Eat something before you wander. And "+S.kid+"? The critters have been acting strange since that light over the lake last night."},
+           {who:"",text:"(Mom's cooking fixed you right up. HP and PP fully restored!)"},
+           {who:"Mom",text:"Dale's been run ragged and somebody down at Site 12 was crying about a bear. Go be useful, kiddo."}],
+          ()=>{ giveItem("fish",1); refreshObjective(); });
+    } else {
+      say([{who:"Mom",text:"Sit. Eat. That's the whole speech."},
+           {who:"",text:"(Foil-packet fish. HP and PP fully restored. Homesick cured.)"},
+           {who:"Mom",text:"Off you go. If the raccoon by the dumpster has a crown on, do NOT engage. ...Why do I feel like that needed saying?"}]);
+    }
+  }
+  else if(n.id==="dad"){
+    if(!f.allowance){
+      f.allowance=true; S.money+=10;
+      say([{who:"Dad",text:"Office phone's how you check in, kiddo. Call me, I log your progress, allowance goes on your camp store tab."},
+           {who:"",text:"($10 allowance added to your store tab!)"},
+           {who:"Dad",text:"Your "+ "recorder's on the counter too. Gus says the lake makes sounds worth keeping. Eight of them, park-wide. We've got one lake. Start there."}]);
+    } else {
+      say([{who:"Dad",text:"Progress noted. (He writes it in the big office logbook, in pencil, like a man who respects erasable history.) Tab's at $"+S.money+"."}]);
+      S.checkpoint={x:Math.floor(S.px/TILE),y:Math.floor(S.py/TILE)};
+    }
+  }
+  else if(n.id==="clerk"){
+    if(f.coolerQ===0){
+      f.coolerQ=1;
+      say([{who:"Fern",text:"Welcome to the camp store, where everything costs a little and the cooler has been humming in a key it should not know."},
+           {who:"Fern",text:"Last night it started... watching campers. If you make it stop being haunted, the Legendary Plunger from the back shelf is yours. Dale needs it. Don't ask."}],
+          ()=>refreshObjective());
+    } else if(f.coolerQ===1){
+      say([{who:"Fern",text:"The cooler. Out front. It's the one with the eyes now. Good luck, sweetie."}]);
+    } else if(f.coolerQ===2&&!f.hasPlunger){
+      f.hasPlunger=true; S.weapon+=3;
+      say([{who:"Fern",text:"You actually did it. The ice cream sandwiches are visible again. As promised:"},
+           {who:"",text:"(Got the LEGENDARY PLUNGER! Attack +3. It has plunged things no plunger should.)"},
+           {who:"Fern",text:"Take it to Dale's bathhouse. Stall No. 3. Whatever's in there has been in there since Tuesday."}],
+          ()=>refreshObjective());
+    } else {
+      openShop();
+    }
+  }
+  else if(n.id==="dale"){
+    if(f.stallDone){
+      say([{who:"Dale",text:"Stall No. 3 is free. The park breathes again. You're alright, kid."}]);
+    } else if(f.hasPlunger){
+      say([{who:"Dale",text:"Is that— that's the Legendary Plunger. Kid. Stall No. 3. It's your destiny now. Go."}]);
+    } else if(f.coolerQ===0){
+      f.coolerQ=1;
+      say([{who:"Dale",text:"Don't go in the bathhouse. Stall No. 3's been occupied since Tuesday. No knocking answers. No feet under the door. NOTHING."},
+           {who:"Dale",text:"I'd fix it myself but I left the good plunger at the store, and Fern won't hand it over till somebody deals with her haunted cooler. Host life, kid."}],
+          ()=>refreshObjective());
+    } else {
+      say([{who:"Dale",text:"Cooler first, plunger second, stall third. That's the whole quest chain. I believe in you."}]);
+    }
+  }
+  else if(n.id==="lily"){
+    if(f.bearQ===0){
+      f.bearQ=1;
+      say([{who:"Lily",text:"Have you seen Biscuit? He's my bear. He's brown and brave and I dropped him in the south woods and now the woods have him."},
+           {who:"Lily",text:"Mom says 'he'll turn up' but mom also said the lake monster was 'probably a log' and she did NOT sound sure."},
+           {who:"",text:"QUEST STARTED: The Lost Bear — search the south woods for a glinting spot."}],
+          ()=>refreshObjective());
+    } else if(f.bearQ===1){
+      say([{who:"Lily",text:"South woods! Past the sign! Biscuit glints in the sun, he's fancy like that."}]);
+    } else if(f.bearQ===2){
+      f.bearQ=3; S.money+=4;
+      say([{who:"Lily",text:"BISCUIT! You smell like pine needles and danger. You're perfect."},
+           {who:"",text:"(Lily pays you $4 of lemonade-stand money and one (1) entire granola bar.)"},
+           {who:"Lily",text:"He says the raccoons in the woods have a KING now. Bears hear things."}],
+          ()=>{ giveItem("granola",1); gainXp(12); checkBossReady(); });
+    } else {
+      say([{who:"Lily",text:"Biscuit guards Site 12 now. Nothing gets past Biscuit. Nothing."}]);
+    }
+  }
+  else if(n.id==="gus"){
+    if(f.bossDone&&!f.soundDone){
+      endEpisode();
+      return;
+    }
+    if(!f.gusMet){
+      f.gusMet=true;
+      say([{who:"Old Gus",text:"You're the host kid. Hm. Lake's been wrong since the light fell. Fish won't bite, loons won't call, and the raccoons hold court at the dumpster like they pay taxes."},
+           {who:"Old Gus",text:"That recorder your dad mentioned? Point it at this lake when the park's gone quiet and the wrongness is dealt with. First sound's a loon. She's saving her voice."},
+           {who:"Old Gus",text:"Also: a man in a clean polo was measuring the shoreline. Men like that pave things, boy. Mind him."}]);
+    } else if(f.bossReady){
+      say([{who:"Old Gus",text:"Dumpster first. Loon second. That's the order of the evening, and evenings have rules."}]);
+    } else if(f.bossDone){
+      say([{who:"Old Gus",text:"Point the recorder at the water, kid."}]);
+    } else {
+      say([{who:"Old Gus",text:"Riddle: what's got four paws, a striped tail, and the whole park's trash schedule memorized? ...You already know. Everybody knows."}]);
+    }
+  }
+  else if(n.id==="pruitt"){
+    if(!f.pruittMet){
+      f.pruittMet=true;
+      say([{who:"Mr. Pruitt",text:"Ah, a camper! Pruitt. Pruitt Development. Just taking in the... potential. Lovely parcel. Shame about the management situation."},
+           {who:"Mr. Pruitt",text:"Forty condos. A marina. A gate, so the right people feel right. You'd love it. Everyone loves a gate."},
+           {who:S.kid,text:"(He smiled like a survey stake. The critters aren't the only strange thing this summer.)"}]);
+    } else {
+      say([{who:"Mr. Pruitt",text:"Still measuring. Still smiling. 'Underutilized waterfront,' he mutters, to nobody, happily."}]);
+    }
+  }
+  else if(n.id==="chad"){
+    say([{who:"Chadwick",text:"Oh, you camp HERE? Cute. Across the lake we have a wave pool and the raccoons are, like, staff."},
+         {who:"Chadwick",text:"My dad says this place will be condos by next summer. Anyway — nice stick. Is that a weapon or a cry for help?"},
+         {who:"",text:"(Some rivalries are written in the stars. This one was written in boat shoes.)"}]);
+  }
+  else if(n.id==="fisher"){
+    say([{who:"A Fisherman",text:"Thirty years off this dock. Best advice I got: in a fight, use the bandage BEFORE the meter runs out. Rolling HP waits for no one."},
+         {who:"A Fisherman",text:"Second best advice: the woods south of here? The critters mean it down there."}]);
+  }
+  else if(n.id==="birder"){
+    say([{who:"A Birder",text:"Shh. ...Sorry. Birder reflex. The loons haven't called since the light fell. Fix whatever's wrong and this lake will sing again."},
+         {who:"A Birder",text:"Also there's a statue of a gnome on the north trail and I have simply decided not to think about it."}]);
+  }
+}
+
+function interactObject(o){
+  const f=S.flags;
+  if(o.kind==="phone"){
+    S.checkpoint={x:8,y:6};
+    say([{who:"Camp Office Phone",text:"You call Dad. He logs your progress in the big book and says he's proud in a normal amount of words, which for Dad is a flood."},
+         {who:"",text:"(Checkpoint set at the office. If you get dragged home, you'll wake up here-ish.)"}]);
+  }
+  else if(o.kind==="cooler"){
+    if(f.coolerQ===1){
+      say([{who:"Possessed Cooler",text:"(The cooler hums. The hum has a melody. The melody is the camp store jingle, backwards.)"},
+           {who:"",text:"The lid opens by itself. A cold fog rolls out. It knows your name, somehow."}],
+          ()=>startBattle("cooler",{scripted:"cooler"}));
+    } else if(f.coolerQ>=2){
+      say([{who:"Camp Store Cooler",text:"Just a cooler now. Ice cream sandwiches: visible. Haunting: discontinued."}]);
+    } else {
+      say([{who:"Camp Store Cooler",text:"A normal cooler. Probably. It hums the way coolers hum. Probably."}]);
+    }
+  }
+  else if(o.kind==="stall"){
+    if(f.stallDone){
+      say([{who:"Stall No. 3",text:"Empty. Clean. Free. A small plaque could go here someday."}]);
+    } else if(f.hasPlunger){
+      f.stallDone=true;
+      say([{who:"Stall No. 3",text:"You raise the Legendary Plunger. From behind the door: a sound like a drain remembering every sin."},
+           {who:"",text:"FWOOMPH. Then silence. Then — unbelievably — a flush of pure relief."},
+           {who:"Dale (from outside)",text:"IT'S FREE. THE STALL IS FREE. Kid, you just saved the whole park's morning."},
+           {who:"",text:"(Dale teaches you FIRST AID in gratitude, and slips you a foil-packet fish. QUEST DONE!)"}],
+          ()=>{ S.skills.firstaid=true; giveItem("fish",1); gainXp(16); checkBossReady(); });
+    } else {
+      say([{who:"Stall No. 3",text:"Occupied. Since Tuesday. You knock. Nothing knocks back, and somehow that's worse."},
+           {who:"",text:"(You'll need a serious plunger. A legendary one, say.)"}]);
+    }
+  }
+  else if(o.kind==="dumpster"){
+    if(f.bossDone){
+      say([{who:"The Dumpster",text:"Quiet now. Just trash, being trash, at a normal volume. The crown is gone. The legend remains."}]);
+    } else if(f.bossReady){
+      say([{who:"???",text:"The dumpster lid rises on its own. Out climbs the biggest raccoon you have ever seen, wearing a crown made of bottle caps and pure authority."},
+           {who:"The Raccoon King",text:"(He regards you the way landlords regard tenants. You are ON his dumpster. Everything is his dumpster.)"},
+           {who:S.dog,text:"(stands very tall for a dog) This one's ours, boss."}],
+          ()=>startBattle("king",{boss:true,scripted:"king"}));
+    } else {
+      say([{who:"The Dumpster",text:"A normal dumpster. It smells like a raccoon reads it as a menu. Something rustles inside, then thinks better of it. For now."}]);
+    }
+  }
+  else if(o.kind==="bear"){
+    if(f.bearQ===1){
+      f.bearQ=2;
+      say([{who:"",text:"Under a pine, half-buried in needles: a brown bear. Stuffed. Brave. Slightly damp."},
+           {who:"",text:"(Got BISCUIT THE BEAR! Return him to Lily at Site 12.)"}],
+          ()=>refreshObjective());
+    } else if(f.bearQ===0){
+      say([{who:"",text:"Something glints under the pines. Could be anything. Somebody probably lost it. Somebody probably cares."}]);
+    }
+  }
+  else if(o.kind==="gnome"){
+    say([{who:"Garden Gnome Statue",text:"A giant gnome. Stone. Smiling. Blocking the north trail completely."},
+         {who:"",text:"There is no plaque. There is no explanation. Moving it will clearly require a tool you do not have, from a man who does not explain things either."}]);
+  }
+  else if(o.kind==="office"){ say([{who:"Camp Office",text:"The office. Big logbook, bigger coffee pot, and the season's whole plan held together with sticky notes."}]); }
+  else if(o.kind==="store"){ openShopHint(); }
+  else if(o.kind==="bath"){ say([{who:"Bathhouse",text:"Cinderblock, echoes, and one stall with a legend growing around it."}]); }
+  else if(o.kind==="rv"||o.kind==="tent"){ say([{who:o.label,text:"Somebody's home-for-the-weekend. Neat site. Fire ring cold, chairs squared away — a well-run camp."}]); }
+  else if(o.kind==="tripod"){ say([{who:"Survey Tripod",text:"It's pointed at the lake like it's already sold. Rude, for an instrument."}]); }
+  else { say([{who:o.label,text:"It's a perfectly good "+o.label.toLowerCase()+"."}]); }
+}
+function openShopHint(){
+  if(S.flags.coolerQ>=2) openShop();
+  else say([{who:"Camp Store",text:"The door's propped open. Fern runs it — she's the one out front with all the answers."}]);
+}
+function tryInteract(){
+  const ft=frontTile();
+  const n=npcAt(ft.tx,ft.ty);
+  if(n){ talkNpc(n); return; }
+  const o=objects.find(o=>ft.tx>=o.x&&ft.tx<o.x+o.w&&ft.ty>=o.y&&ft.ty<o.y+o.h);
+  if(o){ interactObject(o); return; }
+  const s=signs.find(s=>s.x===ft.tx&&s.y===ft.ty);
+  if(s){ say([{who:"Sign",text:s.text}]); return; }
+  const cf=campfires.find(c=>c.x===ft.tx&&c.y===ft.ty);
+  if(cf){ say([{who:"",text:cf.label+" — a proper stone ring on bare dirt, logs crossed, ready for matches. No tree was consulted in the building of this fire."}]); return; }
+  const t=tileKey(ft.tx,ft.ty);
+  if(t==="w"){ say([{who:"Lake Pine Hollow",text:"The water is that green-black that means deep. Something out there is deciding whether to be a loon or a log."}]); }
+  else if(t==="d"){ say([{who:"The Dock",text:"Old boards, good creaks. Gus says a dock you can't hear is a dock you can't trust."}]); }
+}
+S.skills={ firstaid:false, firecraft:false };
+
+/* ---------- enemies & battle ---------- */
+const ENEMIES={
+  mosquito:{id:"mosquito", sprite:"mosquito", name:"Mosquito Swarm", hp:12, atk:3, xp:6, money:2,
+    intro:"A Mosquito Swarm drafted you as a donor!",
+    moves:[["whined in perfect harmony",2],["bit in places bug spray fears to go",3]]},
+  raccoon:{id:"raccoon", sprite:"raccoon", name:"Territorial Raccoon", hp:18, atk:4, xp:9, money:3,
+    intro:"A Territorial Raccoon has claimed you as its territory!",
+    moves:[["rummaged through your pack",3],["hissed in property law",4]]},
+  hornet:{id:"hornet", sprite:"hornet", name:"Off-Duty Yellow Jacket", hp:15, atk:5, xp:11, money:2,
+    intro:"An Off-Duty Yellow Jacket is working anyway!",
+    moves:[["stung with weekend energy",4],["buzzed a warning, then ignored it",3]]},
+  cooler:{id:"cooler", sprite:"cooler", name:"Possessed Cooler", hp:26, atk:5, xp:16, money:0,
+    intro:"The Possessed Cooler hums your name, backwards!",
+    moves:[["exhaled haunted fog",4],["launched a frozen juice box",5]]},
+  king:{id:"king", sprite:"king", name:"THE RACCOON KING", hp:58, atk:6, xp:45, money:25,
+    intro:"THE RACCOON KING accepts your challenge, peasant!",
+    moves:[["unleashed a Trash Tornado",6],["rummaged through your pack",4],["summoned the court of raccoons",5]]},
+};
+let B=null, hpShown=S.hp, battleTicker=null;
+/* --- EarthBound-style distorted battle background ---
+   A checker/diamond pattern scrolled in horizontal slices, each slice
+   offset by a sine wave — the classic wavy psychedelic backdrop. */
+const BB_PALETTES={
+  mosquito:["#3b1d5e","#5e2a84","#2a7d4f","#173a5e"],
+  raccoon:["#1d3a6e","#2a5e9e","#7d2a6e","#241a4d"],
+  hornet:["#6e5410","#a87d1d","#3a2a6e","#7d2a2a"],
+  cooler:["#104f6e","#1d84a8","#5e2a84","#173a5e"],
+  king:["#5e1d2a","#8c2a3f","#a8741d","#2a1a5e"],
+};
+const bbPattern=document.createElement("canvas"); bbPattern.width=128; bbPattern.height=128;
+let bbPalKey="";
+function bbBuildPattern(key){
+  const g=bbPattern.getContext("2d"), pal=BB_PALETTES[key]||BB_PALETTES.raccoon;
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+    g.fillStyle=pal[(x+y)%pal.length]; g.fillRect(x*16,y*16,16,16);
+    g.fillStyle="rgba(255,255,255,.10)"; g.fillRect(x*16,y*16,16,3);
+    g.fillStyle="rgba(0,0,0,.14)"; g.fillRect(x*16,y*16+13,16,3);
+  }
+  /* diamond overlay pass for that woven EB texture */
+  g.fillStyle="rgba(255,255,255,.07)";
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++){ g.beginPath(); g.moveTo(x*16+8,y*16+2); g.lineTo(x*16+14,y*16+8); g.lineTo(x*16+8,y*16+14); g.lineTo(x*16+2,y*16+8); g.closePath(); g.fill(); }
+  bbPalKey=key;
+}
+const REDUCED_MOTION=(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+function drawBattleBg(){
+  const c=$("battleBg"); if(!c||!B)return;
+  if(bbPalKey!==B.def.sprite)bbBuildPattern(B.def.sprite);
+  const g=c.getContext("2d"), W=c.width, H=c.height;
+  const t=REDUCED_MOTION?0:Date.now()/1000;
+  const scroll=(t*22)%128;
+  for(let y=0;y<H;y+=4){
+    const off=Math.sin(y*0.045+t*1.6)*16 + Math.sin(y*0.013-t*0.7)*9;
+    const sy=((y+scroll)%128+128)%128, h1=Math.min(4,128-sy);
+    for(let x=-160;x<W;x+=128){
+      g.drawImage(bbPattern,0,sy,128,h1, x+off, y, 128, h1);
+      if(h1<4)g.drawImage(bbPattern,0,0,128,4-h1, x+off, y+h1, 128, 4-h1);
+    }
+  }
+  /* slow radial pulse behind the enemy */
+  const pulse=0.10+0.05*Math.sin(t*1.3);
+  const rg=g.createRadialGradient(W/2,H*0.44,10,W/2,H*0.44,H*0.62);
+  rg.addColorStop(0,"rgba(255,255,255,"+pulse+")"); rg.addColorStop(1,"rgba(0,0,0,.22)");
+  g.fillStyle=rg; g.fillRect(0,0,W,H);
+}
+function drawEnemy(kind){
+  const c=$("enemyCanvas"), g=c.getContext("2d");
+  g.clearRect(0,0,224,224);
+  function q(x,y,w,h,col){ g.fillStyle=col; g.fillRect(x,y,w,h); }
+  if(kind==="mosquito"){
+    for(let i=0;i<5;i++){
+      const bx=34+i*34, by=64+((i%2)*40)+((i===2)?14:0), s2=(i===2)?1.25:1;
+      q(bx+4*s2,by+12*s2,14*s2,4*s2,"rgba(0,0,0,.25)");      /* shadow */
+      q(bx,by,18*s2,11*s2,"#4a4a52"); q(bx,by,18*s2,3*s2,"#63636e"); /* body */
+      q(bx+4*s2,by+2*s2,2*s2,8*s2,"#2e2e36"); q(bx+9*s2,by+2*s2,2*s2,8*s2,"#2e2e36"); /* stripes */
+      q(bx+3*s2,by-14*s2,4*s2,14*s2,"rgba(255,255,255,.8)"); q(bx+10*s2,by-15*s2,4*s2,15*s2,"rgba(220,240,255,.65)"); /* wings */
+      q(bx+2*s2,by+3*s2,4*s2,4*s2,"#ff4040"); q(bx+3*s2,by+4*s2,1,1,"#fff"); /* eye */
+      q(bx+18*s2,by+4*s2,13*s2,2,"#1c1c22");                 /* needle */
+      q(bx+4*s2,by+11*s2,2,8,"#33333c"); q(bx+12*s2,by+11*s2,2,8,"#33333c"); /* legs */
+    }
+  } else if(kind==="cooler"){
+    q(52,186,120,10,"rgba(0,0,0,.3)");                     /* ground shadow */
+    q(62,60,100,120,"#eef1f2"); q(62,60,14,120,"#ffffff"); q(148,60,14,120,"#c3ccd1"); /* body + shading */
+    q(62,44,100,20,"#d23b34"); q(62,44,100,5,"#e87a72");
+    q(78,90,68,6,"#9fb6bd"); q(78,93,68,2,"#7e99a3");
+    q(84,116,14,14,"#ff4040"); q(126,116,14,14,"#ff4040"); /* eyes */
+    q(88,120,4,4,"#ffd7d7"); q(130,120,4,4,"#ffd7d7");
+    q(88,152,48,8,"#7e99a3"); q(92,145,6,6,"#5e7683"); q(124,145,6,6,"#5e7683"); /* vent teeth */
+    q(40,180,144,10,"rgba(160,220,255,.5)"); q(58,176,60,4,"rgba(220,245,255,.6)"); /* cold fog */
+  } else if(kind==="hornet"){
+    /* Off-Duty Yellow Jacket — its own sprite: a big striped wasp.
+       (This branch is why a raccoon can never wear this name again.) */
+    const flap = REDUCED_MOTION ? 0 : (Math.sin(Date.now()/70)>0 ? 0 : 5);
+    q(62,188,100,10,"rgba(0,0,0,.3)");                     /* ground shadow */
+    q(38,58+flap,52,14,"rgba(235,248,255,.75)"); q(44,50+flap,40,8,"rgba(255,255,255,.85)"); /* wings */
+    q(134,58-flap,52,14,"rgba(235,248,255,.75)"); q(140,50-flap,40,8,"rgba(255,255,255,.85)");
+    q(84,150,5,26,"#2a2118"); q(100,156,5,22,"#2a2118"); q(122,156,5,22,"#2a2118"); q(136,150,5,26,"#2a2118"); /* legs */
+    q(78,104,68,58,"#f2c832"); q(78,104,68,6,"#ffe97a");   /* striped abdomen */
+    q(90,104,10,58,"#23201c"); q(112,104,10,58,"#23201c"); q(134,104,9,58,"#23201c");
+    q(104,162,16,8,"#23201c"); q(108,170,8,10,"#23201c"); q(110,180,4,8,"#111111"); /* stinger */
+    q(88,74,48,34,"#e0b52a"); q(88,74,48,6,"#23201c"); q(104,80,16,28,"#23201c");   /* thorax */
+    q(86,34,52,42,"#f2c832"); q(86,34,52,6,"#ffe97a");     /* head */
+    q(93,48,13,14,"#17130c"); q(118,48,13,14,"#17130c"); q(95,50,4,4,"#ffffff"); q(120,50,4,4,"#ffffff"); /* eyes */
+    q(104,66,16,4,"#8a6a1a");                              /* jaw */
+    q(92,20,4,16,"#23201c"); q(86,16,10,5,"#23201c"); q(128,20,4,16,"#23201c"); q(128,16,10,5,"#23201c"); /* antennae */
+    q(150,128,20,26,"#c9403c"); q(150,128,20,5,"#e8e8e8"); q(154,138,12,3,"#ffffff"); /* off-duty soda can */
+  } else if(kind==="raccoon"||kind==="king"){
+    const big=kind==="king", s=big?1.35:1;
+    const ox=112-52*s, oy=big?38:64;
+    q(ox+8*s,oy+104*s,88*s,10*s,"rgba(0,0,0,.3)");         /* ground shadow */
+    q(ox+18*s,oy+52*s,64*s,52*s,"#8a8f96");                 /* body */
+    q(ox+30*s,oy+66*s,40*s,36*s,"#c9ccd1");                 /* pale belly */
+    q(ox+18*s,oy+52*s,10*s,52*s,"#a8adb4");                 /* body highlight */
+    q(ox+26*s,oy+8*s,48*s,48*s,"#9aa0a7");                  /* head */
+    q(ox+26*s,oy+8*s,10*s,48*s,"#b2b7bd");                  /* head highlight */
+    q(ox+26*s,oy+2*s,12*s,14*s,"#7c8187"); q(ox+62*s,oy+2*s,12*s,14*s,"#7c8187"); /* ears */
+    q(ox+29*s,oy+5*s,6*s,7*s,"#d8b7c3"); q(ox+65*s,oy+5*s,6*s,7*s,"#d8b7c3");    /* inner ears */
+    q(ox+30*s,oy+24*s,40*s,12*s,"#26262a");                 /* mask */
+    q(ox+36*s,oy+27*s,7*s,6*s,"#fff"); q(ox+57*s,oy+27*s,7*s,6*s,"#fff");
+    q(ox+38*s,oy+28*s,3*s,3*s,"#14161c"); q(ox+59*s,oy+28*s,3*s,3*s,"#14161c"); /* pupils */
+    q(ox+44*s,oy+38*s,12*s,8*s,"#d9cfc4");                  /* muzzle */
+    q(ox+47*s,oy+39*s,6*s,5*s,"#1c1c1c");                   /* nose */
+    q(ox+49*s,oy+46*s,3*s,3*s,"#8a7a68");                   /* mouth */
+    q(ox+78*s,oy+66*s,36*s,13*s,"#8a8f96");                 /* tail */
+    q(ox+85*s,oy+63*s,7*s,17*s,"#33333a"); q(ox+97*s,oy+64*s,7*s,16*s,"#33333a"); q(ox+108*s,oy+66*s,6*s,13*s,"#33333a"); /* tail rings */
+    q(ox+24*s,oy+100*s,14*s,10*s,"#6f7378"); q(ox+62*s,oy+100*s,14*s,10*s,"#6f7378");
+    q(ox+26*s,oy+107*s,10*s,3*s,"#4c5054"); q(ox+64*s,oy+107*s,10*s,3*s,"#4c5054"); /* feet */
+    if(big){
+      q(ox+30*s,oy-14*s,40*s,12*s,"#e8c95a"); q(ox+30*s,oy-14*s,40*s,3*s,"#f7e08a");
+      q(ox+30*s,oy-22*s,8*s,10*s,"#e8c95a"); q(ox+46*s,oy-24*s,8*s,12*s,"#e8c95a"); q(ox+62*s,oy-22*s,8*s,10*s,"#e8c95a");
+      q(ox+47*s,oy-18*s,6*s,6*s,"#d23b34");
+      const tw=Math.sin(Date.now()/280)>0; if(tw){ q(ox+78*s,oy-16*s,4*s,4*s,"#fff6a0"); q(ox+18*s,oy-4*s,3*s,3*s,"#fff6a0"); } /* crown sparkle */
+    }
+  } else {
+    /* Unknown kind: a plain mystery silhouette. Borrowing another enemy's
+       sprite here is exactly how the raccoon/Yellow Jacket mix-up happened. */
+    q(72,180,80,10,"rgba(0,0,0,.3)");
+    q(82,60,60,100,"#3a3f44"); q(92,36,40,32,"#3a3f44");
+    g.fillStyle="#f3e9cf"; g.font="bold 44px monospace"; g.textAlign="center"; g.fillText("?",112,128);
+  }
+}
+function startBattle(enemyId,opts){
+  opts=opts||{};
+  /* Single source of truth: callers pass an enemy ID, and the name, sprite,
+     battle palette, and stats ALL come from that one ENEMIES record — a
+     name and a sprite can never be picked independently again. */
+  const def=ENEMIES[enemyId];
+  if(!def){ return; }
+  B={ def:def, hp:def.hp, maxHp:def.hp, boss:!!opts.boss, scripted:opts.scripted||null, busy:true, over:false };
+  S.mode="battle"; hpShown=S.hp;
+  $("battle").classList.add("open");
+  $("enemyName").textContent=def.name.toUpperCase();
+  drawEnemy(def.sprite);
+  setBlog(def.intro+"\nWhat will "+S.kid+" do?");
+  renderBattleCmds("main");
+  updateBattlePanel();
+  clearInterval(battleTicker);
+  battleTicker=setInterval(()=>{
+    if(hpShown>S.hp)hpShown=Math.max(S.hp,hpShown-0.4);
+    else if(hpShown<S.hp)hpShown=Math.min(S.hp,hpShown+1.2);
+    updateBattlePanel();
+    if(B&&!B.over&&S.hp<=0&&hpShown<=0){ faint(); }
+  },50);
+  setTimeout(()=>{ if(B)B.busy=false; },600);
+}
+function updateBattlePanel(){
+  /* Enemy stats stay pinned for the whole fight: current/max HP on a live
+     meter, attack power, and what winning pays out — all read straight
+     from the same ENEMIES record the battle itself runs on. */
+  if(B&&B.def){
+    const eHp=Math.max(0,Math.ceil(B.hp));
+    $("eHpText").textContent=eHp+" / "+B.maxHp;
+    const em=$("eHpMeter");
+    em.firstElementChild.style.width=clamp(B.hp/B.maxHp*100,0,100)+"%";
+    em.classList.toggle("low",B.hp/B.maxHp<0.3);
+    $("eAtkText").textContent=B.def.atk;
+    $("eXpText").textContent=B.def.xp;
+    $("eMoneyWrap").style.display=B.def.money>0?"":"none";
+    if(B.def.money>0)$("eMoneyText").textContent="$"+B.def.money;
+    $("eMovesText").textContent="Attacks: "+B.def.moves.map(m=>m[0]).join(" · ");
+  }
+  $("bKidName").textContent=S.kid.toUpperCase()+" · LV "+S.lv;
+  $("bHpText").textContent=Math.max(0,Math.ceil(hpShown));
+  $("bPpText").textContent=S.pp;
+  const m=$("bHpMeter"); m.firstElementChild.style.width=clamp(hpShown/S.maxHp*100,0,100)+"%";
+  m.classList.toggle("low",hpShown/S.maxHp<0.3);
+  $("bPpMeter").firstElementChild.style.width=clamp(S.pp/S.maxPp*100,0,100)+"%";
+  $("bDogLine").textContent=S.dog+" (the dog) is ready";
+}
+function setBlog(t){ $("battleLog").textContent=t; }
+function renderBattleCmds(which){
+  const c=$("battleCmds"); c.innerHTML="";
+  function add(label,act,arg,dis){
+    const b=document.createElement("button");
+    b.className="btn"; b.textContent=label; b.disabled=!!dis;
+    b.setAttribute("data-battle",act); if(arg)b.setAttribute("data-arg",arg);
+    c.appendChild(b);
+  }
+  if(!B||B.over)return;
+  if(which==="main"){
+    add("Fight","fight");
+    add("Skills","menu-skills");
+    add("Items","menu-items");
+    if(!B.boss)add("Run","run");
+  } else if(which==="skills"){
+    add("PK "+S.thing+" (4 PP)","skill-pk","",S.pp<4);
+    if(S.skills.firecraft)add("Firecraft (3 PP)","skill-fire","",S.pp<3);
+    if(S.skills.firstaid)add("First Aid (3 PP)","skill-aid","",S.pp<3);
+    add("← Back","menu-main");
+  } else if(which==="items"){
+    let any=false;
+    Object.keys(ITEMS).forEach(k=>{
+      if(S.inv[k]>0){ any=true; add(ITEMS[k].name+" ×"+S.inv[k],"use-item",k); }
+    });
+    if(!any){ const s=document.createElement("span"); s.textContent="(pack's empty!)"; s.style.fontSize="22px"; c.appendChild(s); }
+    add("← Back","menu-main");
+  }
+}
+function dmgRoll(base,spread){ return base+Math.floor(rng()*(spread+1)); }
+function playerAttack(kind){
+  if(!B||B.busy||B.over)return;
+  B.busy=true; renderBattleCmds("none");
+  let lines=[], dmg=0;
+  if(kind==="fight"){
+    dmg=dmgRoll(S.atk+S.weapon+(S.homesick?-2:0),3);
+    lines.push(S.kid+" swung the marshmallow stick! "+dmg+" damage to the "+B.def.name+"!");
+    tone(220,0.08,"square",0.04);
+  } else if(kind==="pk"){
+    S.pp-=4; dmg=dmgRoll(11+S.lv*2,4);
+    lines.push("PK "+S.thing.toUpperCase()+"!! "+S.kid+"'s favorite thing in the world, weaponized: "+dmg+" damage!");
+    tone(880,0.15,"square",0.05); tone(1174,0.2,"square",0.05,0.1);
+  } else if(kind==="fire"){
+    S.pp-=3; dmg=dmgRoll(8,3);
+    lines.push(S.kid+" used Firecraft — a perfect one-match fire, aimed responsibly. "+dmg+" damage!");
+    tone(330,0.12,"sawtooth",0.04);
+  } else if(kind==="aid"){
+    S.pp-=3; const heal=13;
+    S.hp=Math.min(S.maxHp,S.hp+heal);
+    lines.push(S.kid+" used First Aid. +"+heal+" HP. Dale would be proud.");
+    confirmSfx();
+  }
+  if(dmg>0)B.hp-=dmg;
+  updateBattlePanel();
+  setBlog(lines.join("\n"));
+  if(B.hp<=0){ setTimeout(()=>winBattle(),850); return; }
+  setTimeout(dogTurn,850);
+}
+function dogTurn(){
+  if(!B||B.over)return;
+  if(rng()<0.78){
+    const dmg=dmgRoll(3,3);
+    B.hp-=dmg;
+    setBlog($("battleLog").textContent+"\n"+S.dog+" charged in, all heart and bandana! "+dmg+" damage!");
+    tone(180,0.08,"square",0.04);
+  } else {
+    setBlog($("battleLog").textContent+"\n"+S.dog+" sat down and scratched an ear. Timing is a strategy, probably.");
+  }
+  updateBattlePanel();
+  if(B.hp<=0){ setTimeout(()=>winBattle(),850); return; }
+  setTimeout(enemyTurn,900);
+}
+function enemyTurn(){
+  if(!B||B.over)return;
+  const mv=B.def.moves[Math.floor(rng()*B.def.moves.length)];
+  let dmg=Math.max(1,dmgRoll(B.def.atk,2)-Math.floor(S.lv/2));
+  if(B.def.id==="king"&&rng()<0.25){
+    const keys=Object.keys(S.inv).filter(k=>S.inv[k]>0);
+    if(keys.length){
+      const k=keys[Math.floor(rng()*keys.length)]; S.inv[k]--;
+      setBlog("The Raccoon King rummaged through your pack and stole your "+ITEMS[k].name+"! Royalty has its privileges.");
+      hurtSfx();
+      setTimeout(()=>{ if(B&&!B.over){ B.busy=false; renderBattleCmds("main"); setBlog($("battleLog").textContent+"\nWhat will "+S.kid+" do?"); } },900);
+      return;
+    }
+  }
+  S.hp-=dmg;
+  setBlog($("battleLog").textContent+"\nThe "+B.def.name+" "+mv[0]+"! "+dmg+" damage — watch the HP meter roll!");
+  hurtSfx();
+  updateBattlePanel();
+  setTimeout(()=>{
+    if(B&&!B.over&&S.hp>0){ B.busy=false; renderBattleCmds("main"); setBlog($("battleLog").textContent+"\nWhat will "+S.kid+" do?"); }
+  },950);
+}
+function useItemBattle(k){
+  if(!B||B.busy||B.over||S.inv[k]<=0)return;
+  B.busy=true; renderBattleCmds("none");
+  S.inv[k]--;
+  if(k==="granola"){ S.hp=Math.min(S.maxHp,S.hp+8); setBlog(S.kid+" ate a Granola Bar. +8 HP. Crunchy courage."); }
+  else if(k==="bandage"){ S.hp=Math.min(S.maxHp,S.hp+15); setBlog(S.kid+" slapped on a Bandage. +15 HP — fast hands beat the rolling meter!"); }
+  else if(k==="fish"){ S.hp=S.maxHp; S.homesick=false; setBlog(S.kid+" ate Mom's Foil-Packet Fish. Fully healed. Homesickness: cured by dinner."); }
+  else if(k==="smores"){ S.hp=Math.min(S.maxHp,S.hp+22); setBlog("S'mores Kit deployed. +22 HP. Morale has never been higher."); }
+  else if(k==="spray"){ B.hp-=10; setBlog("Bug Spray, used as intended (arguably). 10 damage to the "+B.def.name+"!"); tone(500,0.1,"square",0.03); }
+  confirmSfx(); updateBattlePanel();
+  if(B.hp<=0){ setTimeout(()=>winBattle(),850); return; }
+  setTimeout(dogTurn,850);
+}
+function tryRun(){
+  if(!B||B.busy||B.over||B.boss)return;
+  B.busy=true; renderBattleCmds("none");
+  if(rng()<0.62){
+    setBlog(S.kid+" and "+S.dog+" booked it, heroically, in the other direction.");
+    setTimeout(()=>endBattle(false),800);
+  } else {
+    setBlog("Couldn't get away! The "+B.def.name+" cut you off at the fire ring.");
+    setTimeout(enemyTurn,850);
+  }
+}
+function winBattle(){
+  if(!B||B.over)return;
+  B.over=true; S.battlesWon++; S.battlesSinceMom++;
+  const def=B.def, scripted=B.scripted;
+  clearInterval(battleTicker);
+  winJingle();
+  setBlog("You won! The "+def.name+" has been defeated.\n+"+def.xp+" XP"+(def.money?", +$"+def.money+" on your tab.":"."));
+  S.money+=def.money;
+  $("battleCmds").innerHTML="";
+  const b=document.createElement("button");
+  b.className="btn primary"; b.textContent="▶ Onward";
+  b.setAttribute("data-battle","close-win");
+  $("battleCmds").appendChild(b);
+  B.afterWin=()=>{
+    if(scripted==="cooler"){
+      S.flags.coolerQ=2;
+      say([{who:"Fern (from the store door)",text:"IT STOPPED. The humming stopped! Kid — back shelf. Legendary Plunger. You've earned it. Take it to Dale before Stall No. 3 achieves sentience."}],
+        ()=>{ refreshObjective(); });
+    } else if(scripted==="king"){
+      S.flags.bossDone=true;
+      say([{who:"The Raccoon King",text:"(He removes his bottle-cap crown. He places it on the ground between you. A king, acknowledging a park.)"},
+           {who:"",text:"(Got the BOTTLE-CAP CROWN! The dumpster is just a dumpster again. Somewhere across the park, a loon clears her throat.)"},
+           {who:"Old Gus (distant)",text:"DOCK. NOW. BRING THE RECORDER."}],
+          ()=>{ refreshObjective(); });
+    }
+    if(S.battlesSinceMom>=3&&rng()<0.5&&!S.homesick){
+      S.homesick=true;
+      toast(S.kid+" is feeling homesick… Mom's cooking fixes that.",2600);
+    }
+    const xp=def.xp;
+    if(xp)gainXp(xp);
+  };
+}
+function endBattle(won){
+  clearInterval(battleTicker);
+  $("battle").classList.remove("open");
+  B=null; S.mode="world"; S.grace=10;
+  if(won){ /* handled by afterWin dialogs */ }
+}
+function faint(){
+  if(!B)return;
+  B.over=true; clearInterval(battleTicker);
+  $("battle").classList.remove("open"); B=null;
+  S.hp=Math.ceil(S.maxHp/2); S.pp=S.maxPp;
+  S.px=6*TILE; S.py=23*TILE; S.dir="down"; S.trail=[];
+  S.mode="world"; S.grace=14;
+  say([{who:"Dad",text:"Found you out cold by flashlight and dragged you home, kiddo. Whatever got you — it's still out there."},
+       {who:"",text:"(You wake at the host site with half your HP and all of your dignity negotiable. Eat at Mom's. Go again.)"}]);
+}
+
+/* ---------- episode ending ---------- */
+function endEpisode(){
+  S.flags.soundDone=true; S.mode="end";
+  const mins=Math.floor(S.playSeconds/60), secs=S.playSeconds%60;
+  $("endBody").innerHTML=
+    "<p>Old Gus nods at the water. You hold up the recorder.</p>"+
+    "<p>Silence. Then — across Lake Pine Hollow, rising over the docks and the dark loops and every sleeping site — <b>a loon calls</b>. The first sound of eight.</p>"+
+    "<p>♪ <b>SOUND 1 / 8 — LOON OVER THE WATER</b> ♪</p>"+
+    "<table class='stats'>"+
+    "<tr><td>Battles won</td><td>"+S.battlesWon+"</td></tr>"+
+    "<tr><td>Level reached</td><td>"+S.lv+"</td></tr>"+
+    "<tr><td>Steps walked</td><td>"+S.steps+"</td></tr>"+
+    "<tr><td>Time in the park</td><td>"+mins+"m "+secs+"s</td></tr>"+
+    "<tr><td>Store tab</td><td>$"+S.money+"</td></tr></table>"+
+    "<p><b>Next episode:</b> The cabins by the caverns — and whatever glows down there. Plus a gnome situation that is NOT resolving itself.</p>";
+  $("endOverlay").classList.add("open");
+  winJingle();
+  refreshObjective();
+}
+
+/* ---------- shop & menu ---------- */
+const SHOP_ITEMS=["granola","bandage","spray","smores"];
+function openShop(){
+  S.mode="shop";
+  const carrying=Object.keys(ITEMS).filter(k=>S.inv[k]>0).map(k=>ITEMS[k].name+" ×"+S.inv[k]).join(", ");
+  $("shopMoney").textContent="Your camp store tab: $"+S.money+" · You carry: "+(carrying||"nothing yet");
+  const body=$("shopBody"); body.innerHTML="";
+  SHOP_ITEMS.forEach(k=>{
+    const it=ITEMS[k];
+    const row=document.createElement("div"); row.className="shop-row";
+    const info=document.createElement("div"); info.className="info";
+    info.innerHTML="<b>"+it.name+"</b> — $"+it.price+"<small>"+it.desc+"</small>";
+    const btn=document.createElement("button"); btn.className="btn";
+    btn.textContent="Buy"; btn.disabled=S.money<it.price;
+    btn.setAttribute("data-action","buy"); btn.setAttribute("data-item",k);
+    row.appendChild(info); row.appendChild(btn); body.appendChild(row);
+  });
+  $("shopOverlay").classList.add("open");
+}
+function openMenu(tab){
+  S.mode="menu";
+  const body=$("menuBody"); body.innerHTML="";
+  if(tab==="items"){
+    let html="<h2>PACK</h2>";
+    const owned=Object.keys(ITEMS).filter(k=>S.inv[k]>0);
+    if(!owned.length)html+="<p>Nothing but lint and confidence.</p>";
+    body.innerHTML=html;
+    const list=document.createElement("div"); list.className="menu-list";
+    owned.forEach(k=>{
+      const b=document.createElement("button"); b.className="btn";
+      b.textContent=ITEMS[k].name+" ×"+S.inv[k]+" — "+ITEMS[k].desc;
+      b.setAttribute("data-action","use-item"); b.setAttribute("data-item",k);
+      list.appendChild(b);
+    });
+    body.appendChild(list);
+  } else if(tab==="quests"){
+    const f=S.flags;
+    const qs=[
+      {n:"The Lost Bear", d: f.bearQ===3?"Biscuit is home. Site 12 sleeps soundly.":(f.bearQ===2?"Return Biscuit to Lily at Site 12.":(f.bearQ===1?"Search the south woods for a glinting spot.":"A kid at Site 12 has lost something small and brave.")), done:f.bearQ===3},
+      {n:"The Occupied Stall", d: f.stallDone?"Stall No. 3 is free. Dale tells the story weekly.":(f.hasPlunger?"Take the Legendary Plunger to the bathhouse stall.":(f.coolerQ>=1?"Something's wrong with the camp store cooler. Fern and Dale both need it handled.":"The bathhouse has a mystery. Dale has the details.")), done:f.stallDone},
+      {n:"Sounds of the Park (1 of 8)", d: f.soundDone?"Sound 1 recorded: Loon Over the Water. Seven remain, in parks yet to come.":(f.bossDone?"The lake is ready. See Gus at the dock.":(f.bossReady?"The dumpster behind the store. Go.":"The critters went strange the night the light fell. The dumpster behind the store smells like a finale. Finish the park's business first.")), done:f.soundDone},
+    ];
+    body.innerHTML="<h2>QUEST LOG</h2>"+qs.map(q=>"<div class='quest-item"+(q.done?" done":"")+"'><span class='qname'>"+q.n+"</span><p>"+q.d+"</p></div>").join("");
+  } else {
+    body.innerHTML="<h2>"+S.kid.toUpperCase()+" — HOST KID, LV "+S.lv+"</h2>"+
+      "<table class='stats'>"+
+      "<tr><td>HP</td><td>"+Math.ceil(S.hp)+" / "+S.maxHp+"</td></tr>"+
+      "<tr><td>PP</td><td>"+S.pp+" / "+S.maxPp+"</td></tr>"+
+      "<tr><td>Attack</td><td>"+(S.atk+S.weapon)+(S.weapon?" (Legendary Plunger equipped)":" (marshmallow stick)")+"</td></tr>"+
+      "<tr><td>XP</td><td>"+S.xp+" / "+xpNext()+" to next level</td></tr>"+
+      "<tr><td>Store tab</td><td>$"+S.money+"</td></tr>"+
+      "<tr><td>Faithful dog</td><td>"+S.dog+"</td></tr>"+
+      "<tr><td>Signature move</td><td>PK "+S.thing+"</td></tr>"+
+      "<tr><td>Status</td><td>"+(S.homesick?"HOMESICK (see Mom)":"Feeling park-strong")+"</td></tr></table>"+
+      "<p>Skills: "+(S.skills.firstaid?"First Aid · ":"")+(S.skills.firecraft?"Firecraft · ":"")+"PK "+S.thing+"</p>";
+  }
+  $("menuOverlay").classList.add("open");
+}
+function closeOverlays(){
+  $("menuOverlay").classList.remove("open");
+  $("shopOverlay").classList.remove("open");
+  $("endOverlay").classList.remove("open");
+  if(S.mode==="menu"||S.mode==="shop"||S.mode==="end")S.mode="world";
+}
+function useItemWorld(k){
+  if(S.inv[k]<=0)return;
+  if(k==="spray"){ toast("Save the bug spray for something with wings.",2000); return; }
+  S.inv[k]--;
+  if(k==="granola")S.hp=Math.min(S.maxHp,S.hp+8);
+  if(k==="bandage")S.hp=Math.min(S.maxHp,S.hp+15);
+  if(k==="smores")S.hp=Math.min(S.maxHp,S.hp+22);
+  if(k==="fish"){ S.hp=S.maxHp; S.homesick=false; }
+  confirmSfx(); toast(ITEMS[k].name+" used. HP: "+Math.ceil(S.hp)+"/"+S.maxHp,1800);
+  closeOverlays();
+}
+
+/* ---------- input ---------- */
+const keys={};
+document.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();
+  if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k)||e.key===" ")e.preventDefault();
+  keys[k]=true;
+  if(e.key===" "||e.key==="Enter"){ pressA(); }
+  if(e.key==="Escape"){ pressB(); }
+});
+document.addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; });
+const dpadHeld={};
+document.querySelectorAll(".dpad button[data-dir]").forEach(b=>{
+  const d=b.getAttribute("data-dir");
+  const on=e=>{ e.preventDefault(); dpadHeld[d]=true; };
+  const off=e=>{ e.preventDefault(); dpadHeld[d]=false; };
+  b.addEventListener("pointerdown",on); b.addEventListener("pointerup",off);
+  b.addEventListener("pointerleave",off); b.addEventListener("pointercancel",off);
+});
+function pressA(){
+  ac();
+  if(!S.started)return;
+  if(dlgOpen){ nextLine(); return; }
+  if(S.mode==="world")tryInteract();
+}
+function pressB(){
+  if(!S.started)return;
+  if(S.mode==="menu"||S.mode==="shop")closeOverlays();
+  else if(S.mode==="world")openMenu("stats");
+}
+/* one delegated click handler for every button in the game */
+document.addEventListener("click",e=>{
+  const bt=e.target.closest("[data-battle]");
+  if(bt&&B&&!bt.disabled){
+    const a=bt.getAttribute("data-battle");
+    if(a==="fight")playerAttack("fight");
+    else if(a==="skill-pk")playerAttack("pk");
+    else if(a==="skill-fire")playerAttack("fire");
+    else if(a==="skill-aid")playerAttack("aid");
+    else if(a==="menu-skills")renderBattleCmds("skills");
+    else if(a==="menu-items")renderBattleCmds("items");
+    else if(a==="menu-main")renderBattleCmds("main");
+    else if(a==="use-item")useItemBattle(bt.getAttribute("data-arg"));
+    else if(a==="run")tryRun();
+    else if(a==="close-win"){ const cb=B.afterWin; endBattle(true); if(cb)cb(); }
+    return;
+  }
+  const t=e.target.closest("[data-action]");
+  if(!t||t.disabled)return;
+  const a=t.getAttribute("data-action");
+  ac();
+  if(a==="start-game"){
+    S.kid=($("inKid").value||"Rowan").trim()||"Rowan";
+    S.dog=($("inDog").value||"Pepper").trim()||"Pepper";
+    S.food=($("inFood").value||"Foil-packet fish").trim()||"Foil-packet fish";
+    S.thing=($("inThing").value||"Night fishing").trim()||"Night fishing";
+    S.started=true; S.mode="world";
+    S.px=8*TILE; S.py=26*TILE; S.dir="up";
+    $("setupOverlay").classList.remove("open");
+    confirmSfx();
+    say([{who:"",text:"PINE HOLLOW CAMPGROUND — the first morning of the rest of your summer."},
+         {who:S.kid,text:"(New park. New loop. Mom's already got the host site squared away, and "+S.dog+" has already claimed the good rug.)"},
+         {who:"",text:"Last night, something bright streaked over the lake. Nobody's talking about it. The raccoons, however, have been talking all night."},
+         {who:"",text:"Talk to Mom at the host site, then go meet your park."}],
+        ()=>refreshObjective());
+  }
+  else if(a==="open-menu")openMenu(t.getAttribute("data-tab")||"stats");
+  else if(a==="close-menu"||a==="close-shop")closeOverlays();
+  else if(a==="close-end")closeOverlays();
+  else if(a==="restart"){ location.reload(); }
+  else if(a==="toggle-music")setMusic(!musicOn);
+  else if(a==="buy"){
+    const k=t.getAttribute("data-item");
+    if(S.money>=ITEMS[k].price){ S.money-=ITEMS[k].price; S.inv[k]++; confirmSfx(); openShop(); }
+  }
+  else if(a==="use-item")useItemWorld(t.getAttribute("data-item"));
+  else if(a==="btn-a")pressA();
+  else if(a==="btn-b")pressB();
+});
+$("dialog").addEventListener("click",()=>{ if(dlgOpen)nextLine(); });
+
+/* ---------- main loop ---------- */
+let lastTile={x:-1,y:-1}, frameCount=0;
+const ENCOUNTERS=["mosquito","raccoon","hornet"];
+setInterval(()=>{ if(S.started&&S.mode!=="battle")S.playSeconds++; },1000);
+function loop(){
+  requestAnimationFrame(loop);
+  if(!S.started){ render(); return; }
+  frameCount++;
+  if(S.mode==="world"&&!dlgOpen){
+    let dx=0, dy=0;
+    if(keys["arrowup"]||keys["w"]||dpadHeld["up"])dy-=1;
+    if(keys["arrowdown"]||keys["s"]||dpadHeld["down"])dy+=1;
+    if(keys["arrowleft"]||keys["a"]||dpadHeld["left"])dx-=1;
+    if(keys["arrowright"]||keys["d"]||dpadHeld["right"])dx+=1;
+    if(dx&&dy){ dx*=0.72; dy*=0.72; }
+    const spd=2.45;
+    /* smooth acceleration / glide — velocity eases in and out instead of snapping */
+    const ease = REDUCED_MOTION ? 1 : 0.32;
+    S.vx += (dx*spd - S.vx)*ease;
+    S.vy += (dy*spd - S.vy)*ease;
+    if(Math.abs(S.vx)<0.08 && dx===0) S.vx=0;
+    if(Math.abs(S.vy)<0.08 && dy===0) S.vy=0;
+    S.moving = Math.abs(S.vx)>0.25 || Math.abs(S.vy)>0.25 || !!(dx||dy);
+    const embedded=boxHitsSolid(S.px,S.py); /* if ever wedged inside a solid, let him walk out */
+    if(Math.abs(S.vx)>0.05){
+      const nx=S.px+S.vx;
+      if(embedded||!boxHitsSolid(nx,S.py))S.px=nx; else S.vx=0;
+      if(dx) S.dir=dx<0?"left":"right";
+    }
+    if(Math.abs(S.vy)>0.05){
+      const ny=S.py+S.vy;
+      if(embedded||!boxHitsSolid(S.px,ny))S.py=ny; else S.vy=0;
+      if(dy) S.dir=dy<0?"up":"down";
+    }
+    /* shoreline splashes — sand tile at the water's edge kicks up droplets */
+    if(S.moving && S.splashCooldown<=0){
+      const ftx=Math.floor((S.px+16)/TILE), fty=Math.floor((S.py+28)/TILE);
+      const ft=tileKey(ftx,fty);
+      const nearWater = ft==="s" || ft==="d" || (fty>0 && tileKey(ftx,fty-1)==="w") || tileKey(ftx,fty)==="s";
+      if(ft==="s"){
+        for(let sp=0; sp<3; sp++){
+          particles.splashes.push({ x:S.px+10+rng()*12, y:S.py+28+rng()*4, vx:(rng()-0.5)*0.9, vy:-0.6-rng()*0.9, life:12+rng()*8, col: rng()>0.5?"rgba(255,255,255,.9)":"rgba(170,220,255,.9)" });
+        }
+        S.splashCooldown=7;
+      } else if(nearWater && ft==="d" && frameCount%18===0){
+        particles.splashes.push({ x:S.px+14, y:S.py+30, vx:0, vy:-0.4, life:8, col:"rgba(200,235,255,.7)" });
+      }
+    }
+    if(S.splashCooldown>0) S.splashCooldown--;
+    if(S.moving){
+      if(frameCount%3===0){
+        S.trail.push({x:S.px,y:S.py});
+        if(S.trail.length>26)S.trail.shift();
+      }
+      const tx=Math.floor((S.px+16)/TILE), ty=Math.floor((S.py+22)/TILE);
+      if(tx!==lastTile.x||ty!==lastTile.y){
+        lastTile={x:tx,y:ty}; S.steps++;
+        if(S.grace>0)S.grace--;
+        const t=tileKey(tx,ty);
+        const danger=(t==="f")||(t==="g"&&(ty>=28));
+        if(danger&&S.grace<=0&&rng()<0.13){
+          startBattle(ENCOUNTERS[Math.floor(rng()*ENCOUNTERS.length)]);
+        }
+        /* learn Firecraft from Mom's fire ring once bear quest done */
+        if(S.flags.bearQ===3&&!S.skills.firecraft){
+          S.skills.firecraft=true;
+          toast("Learned FIRECRAFT from watching Mom build a one-match fire.",2800);
+        }
+      }
+    }
+  } else {
+    S.moving=false; S.vx=0; S.vy=0;
+  }
+  render();
+}
+S.px=8*TILE; S.py=26*TILE;
+render();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
