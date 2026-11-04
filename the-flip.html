@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>The Flip — Site Turnover Mini-Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0E6; --surface:#FFFFFF; --surface2:#F7F5EC; --ink:#182A1E; --muted:#5C6B5E; --line:#D8DDCE;
+  --green:#2F5D3A; --green2:#3E7A4B; --amber:#D97706; --amber-bg:#FEF3C7; --red:#B42318; --red-bg:#FEF2F2;
+  --blue:#175CD3; --shadow:0 10px 30px rgba(24,42,30,.12); --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#101812; --surface:#1A261C; --surface2:#222F24; --ink:#EDF2E8; --muted:#A8B8A6; --line:#334236; --green:#7FBF8A; --green2:#5FA86E; --amber:#F2A93B; --amber-bg:#3A2E12; --red:#FF8A7A; --red-bg:#3A1A16; --shadow:0 10px 30px rgba(0,0,0,.4); }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+h1,h2,h3{font-family:"Archivo",sans-serif;margin:0;line-height:.95;letter-spacing:-.02em}
+.mono{font-family:"JetBrains Mono",monospace}
+/* TOP STRIP */
+.topstrip{background:#14251A;color:#EAF2E6;padding:14px 18px 16px}
+.topstrip-inner{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:12px;align-items:center}
+.mark{width:44px;height:44px;border-radius:10px;background:#F59E0B;display:grid;place-items:center;font-family:"Archivo";font-weight:900;font-size:22px;color:#14251A;transform:rotate(-4deg)}
+.brand h1{font-size:28px;color:#fff;text-transform:uppercase}
+.brand p{margin:2px 0 0;color:#BFD3BE;font-size:13px}
+.dayclock{background:#fff;color:#14251A;border-radius:12px;padding:8px 12px;display:flex;gap:14px;align-items:center}
+.dayclock b{font-family:"JetBrains Mono";font-size:22px}
+.dayclock small{display:block;color:#667085;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.deadline{font-size:13px;font-weight:700;background:#FEF3C7;color:#92400E;padding:8px 10px;border-radius:999px}
+/* LAYOUT */
+.wrap{max-width:1180px;margin:0 auto;padding:16px 14px 40px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat small{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat strong{display:block;font-size:26px;font-family:"Archivo";margin-top:2px}
+.stat span{font-size:12px;color:var(--muted)}
+.progress{height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:8px}
+.progress i{display:block;height:100%;background:var(--green2);width:0%;transition:width .4s}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.panel-head{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-size:18px;text-transform:uppercase}
+.panel-head span{font-size:12px;color:var(--muted)}
+.panel-body{padding:12px}
+/* SITE QUEUE */
+.site-card{width:100%;text-align:left;background:var(--surface2);border:1.5px solid var(--line);border-radius:12px;padding:12px;margin-bottom:9px;display:block;color:var(--ink)}
+.site-card:hover{border-color:var(--green)}
+.site-card.active{border-color:var(--amber);background:var(--amber-bg)}
+.site-card.done{opacity:.75;border-color:var(--green)}
+.site-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.site-top b{font-family:"Archivo";font-size:17px}
+.pill{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:999px;background:#E6EFE3;color:#2F5D3A;white-space:nowrap}
+@media(prefers-color-scheme:dark){.pill{background:#2A3D2C;color:#BFE3C2}}
+.pill.warn{background:#FEF3C7;color:#92400E}.pill.bad{background:#FEE4E2;color:#B42318}.pill.done{background:#2F5D3A;color:#fff}
+.site-card p{margin:6px 0 0;font-size:13px;line-height:1.45;color:var(--muted)}
+.site-card p b{color:var(--ink)}
+.arrival{margin-top:7px;font-size:12px;background:var(--surface);border:1px dashed var(--line);border-radius:8px;padding:7px 8px}
+/* HOSTS */
+.hosts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.host{border:1.5px solid var(--line);background:var(--surface2);border-radius:11px;padding:9px 8px;text-align:left;color:var(--ink)}
+.host.selected{border-color:var(--amber);background:var(--amber-bg)}
+.host b{display:block;font-size:14px}.host span{font-size:11px;color:var(--muted);line-height:1.35;display:block;margin-top:2px}
+.stamina{height:5px;background:var(--line);border-radius:999px;margin-top:7px;overflow:hidden}.stamina i{display:block;height:100%;background:var(--green2)}
+/* YARD */
+.yard-wrap{padding:12px}
+.yard{position:relative;height:380px;border-radius:14px;overflow:hidden;background:#7A9A5B;border:2px solid #4A6B35;background-image:radial-gradient(circle at 15% 20%, #8FB06E 0 40px, transparent 41px),radial-gradient(circle at 88% 12%, #8FB06E 0 52px, transparent 53px),linear-gradient(#86A963,#749454)}
+@media(prefers-color-scheme:dark){.yard{background-color:#3E5A33;border-color:#2A4022}}
+.road{position:absolute;left:0;right:0;bottom:0;height:52px;background:#4B4B48;color:#FDE68A;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono";font-size:11px;letter-spacing:.18em}
+.road:before{content:"";position:absolute;left:0;right:0;top:24px;border-top:3px dashed #D6D3A8}
+.pad{position:absolute;left:8%;top:16%;width:56%;height:56%;background:#CFC7B0;border:2px solid #A99F83;border-radius:10px;background-image:radial-gradient(#B8AE94 1px, transparent 1.5px);background-size:14px 14px}
+.pad-label{position:absolute;left:10px;top:8px;font-family:"JetBrains Mono";font-size:11px;font-weight:700;color:#6B6350}
+/* OCCUPANCY GRAPHICS — what is (or isn't) actually on the pad */
+.rv{position:absolute;left:11%;top:19%;width:47%;height:23%;z-index:2}
+.rv-body{position:relative;height:76%;background:#F4F6F0;border:3px solid #2F3B33;border-radius:14px 18px 8px 8px;display:flex;align-items:center;gap:6px;padding:0 10px;box-shadow:0 6px 14px rgba(0,0,0,.28)}
+.rv-win{width:17%;height:44%;background:#7FB3C8;border:2px solid #2F3B33;border-radius:4px;flex:none}
+.rv-door{width:11%;height:72%;background:#E7EBE0;border:2px solid #2F3B33;border-radius:3px;flex:none;align-self:flex-end}
+.rv-body b{font-size:11px;font-weight:900;letter-spacing:.04em;color:#B42318;line-height:1.25}
+.rv-wheel{position:absolute;bottom:0;width:26px;height:26px;border-radius:50%;background:#1F2937;border:5px solid #9CA3AF;z-index:3}
+.placard{position:absolute;right:6%;top:12.5%;z-index:4;background:#FFFDF5;border:2.5px solid #6B6350;border-radius:8px;padding:7px 9px;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;color:#574F3D;max-width:172px;line-height:1.4;box-shadow:0 4px 10px rgba(0,0,0,.22)}
+.placard.occ{border-color:#B42318;color:#B42318;background:#FEF2F2}
+.placard.paid{border-color:#D97706;color:#92400E;background:#FFFBEB}
+.placard.clear{border-color:#2F5D3A;color:#2F5D3A;background:#F0F7EE}
+.rug{position:absolute;left:19%;top:53%;width:31%;height:13%;background:repeating-linear-gradient(45deg,#B4552D 0 10px,#D97706 10px 20px);border:2px solid #7C2D12;border-radius:4px;z-index:1}
+.rug-label{position:absolute;left:19%;top:67.5%;z-index:3;font-size:10.5px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.chairs{position:absolute;left:51%;top:46%;z-index:3;font-size:27px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
+.chairs-label{position:absolute;left:51%;top:57.5%;z-index:3;font-size:10.5px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.cord{position:absolute;left:20%;bottom:19%;z-index:3;background:#111827;color:#FDE68A;font-size:10.5px;font-weight:800;padding:5px 9px;border-radius:999px;box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.fire{position:absolute;left:38%;top:38%;width:74px;height:74px;margin:-37px;border-radius:50%;background:#57534E;border:6px solid #78716C;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;text-align:center;z-index:3}
+.fire.ember{background:#7C2D12;border-color:#9A3412;box-shadow:0 0 0 0 rgba(245,158,11,.6);animation:pulse 1.1s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 16px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+@media(prefers-reduced-motion:reduce){.fire.ember{animation:none}}
+.fire.doused{background:#44403C}.fire.cleaned{background:#2F5D3A;border-color:#22452B}
+.table{position:absolute;right:16%;top:22%;width:110px;height:62px;background:#8B5E34;border:3px solid #6B4423;border-radius:6px;display:grid;place-items:center;color:#FFF7ED;font-size:11px;font-weight:800;text-align:center;z-index:2}
+.table.dirty{background:#7A4A22}.table.clean{background:#2F5D3A;border-color:#22452B}
+.pedestal{position:absolute;left:12%;bottom:26%;width:52px;background:#334155;color:#fff;border-radius:8px;padding:7px 4px;text-align:center;font-size:10px;font-weight:800;z-index:2}
+.pedestal.dead{background:#B42318}.pedestal.ok{background:#2F5D3A}
+.tree{position:absolute;font-size:28px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.25))}
+.trash{position:absolute;width:30px;height:30px;border-radius:50%;border:2px solid #fff;background:#B42318;color:#fff;font-weight:900;display:grid;place-items:center;font-size:14px;z-index:4;box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.trash:hover{transform:scale(1.12)}
+.finditem{position:absolute;right:22%;bottom:30%;background:#F59E0B;color:#111827;border:2px solid #fff;border-radius:10px;padding:8px 10px;font-weight:800;font-size:12px;z-index:5;box-shadow:0 8px 18px rgba(0,0,0,.3)}
+.yard-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:#fff}
+.yard-empty h3{font-size:28px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+.yard-empty p{max-width:420px;line-height:1.5;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+/* TASKS */
+.mode-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.mode-btn{flex:1;border:1.5px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:10px;padding:9px;font-weight:700;font-size:13px}
+.mode-btn.on{border-color:var(--amber);background:var(--amber-bg)}
+.task{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;background:var(--surface)}
+.task.locked{opacity:.5}.task.done{border-color:var(--green);background:#F0F7EE}
+@media(prefers-color-scheme:dark){.task.done{background:#223324}}
+.task-num{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.task.done .task-num{background:var(--green);color:#fff}
+.task b{font-size:14px}.task p{margin:2px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+.task button{margin-left:auto;flex:none;background:var(--green);color:#fff;border:0;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
+.task button:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+.task button.warnbtn{background:var(--amber);color:#111827}
+.choice-row{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.choice{border:1.5px solid var(--amber);background:var(--amber-bg);border-radius:11px;padding:11px;text-align:left;color:var(--ink)}
+.choice b{display:block;font-size:14px}.choice span{font-size:12px;color:var(--muted);line-height:1.4;display:block;margin-top:2px}
+.ready-btn{width:100%;background:#F59E0B;color:#14251A;border:0;border-radius:12px;padding:15px;font-family:"Archivo";font-weight:900;font-size:18px;text-transform:uppercase;margin-top:6px}
+.ready-btn:disabled{opacity:.45;cursor:not-allowed}
+.log{max-height:210px;overflow:auto;font-size:13px;line-height:1.5}
+.log div{padding:8px 0;border-bottom:1px dashed var(--line)}
+.log b{font-family:"JetBrains Mono";font-size:11px;color:var(--amber)}
+.alert{border-radius:11px;padding:11px 12px;font-size:13px;line-height:1.5;margin-bottom:10px}
+.alert.warn{background:var(--amber-bg);border:1px solid var(--amber)}
+.alert.bad{background:var(--red-bg);border:1px solid var(--red);color:var(--ink)}
+.alert.good{background:#DCFCE7;border:1px solid var(--green);color:#14532D}
+@media(prefers-color-scheme:dark){.alert.good{color:#D1FAE5}}
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(10,18,12,.72);display:none;place-items:center;padding:16px;z-index:50;overflow-y:auto}
+.overlay.show{display:grid}
+.modal{background:var(--surface);color:var(--ink);max-width:640px;width:100%;border-radius:18px;padding:22px;max-height:92vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.modal-flex{display:flex;flex-direction:column;overflow:hidden;padding:0}
+.modal-body{overflow-y:auto;padding:22px 22px 8px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.modal-foot{flex:none;padding:12px 22px 20px;border-top:1px solid var(--line);background:var(--surface)}
+@media(max-width:560px){.modal-body{padding:18px 18px 6px}.modal-foot{padding:10px 18px calc(14px + env(safe-area-inset-bottom))}.modal h2{font-size:26px}}
+.modal h2{font-size:30px;text-transform:uppercase}
+.modal p{line-height:1.6;color:var(--muted)}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}
+@media(max-width:560px){.rules{grid-template-columns:1fr}}
+.rule{background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:11px;font-size:13px;line-height:1.5}
+.rule b{display:block;margin-bottom:3px}
+.bigbtn{width:100%;background:#F59E0B;color:#14251A;border:0;border-radius:12px;padding:14px;font-family:"Archivo";font-weight:900;font-size:17px;text-transform:uppercase}
+.scoregrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.scorebox{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.scorebox small{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.scorebox strong{display:block;font-size:28px;font-family:"Archivo"}
+.stars{font-size:30px;letter-spacing:2px;color:#F59E0B}
+.gear{display:flex;gap:8px;flex-wrap:wrap}
+.gear span{border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:700}
+.foot{font-size:12px;color:var(--muted);line-height:1.6;margin-top:14px}
+</style>
+</head>
+<body>
+<header class="topstrip">
+  <div class="topstrip-inner">
+    <div class="brand">
+      <div class="mark">↻</div>
+      <div><h1>The Flip</h1><p>Checkout to check-in. The site turnover mini-game.</p></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="deadline">⏱ Arrivals start 2:00 PM — every site ready or somebody waits at the gate</span>
+      <div class="dayclock"><div><small id="clockDay">Friday • Park clock</small><b id="clock">11:00 AM</b></div><div><small>Day</small><b id="dayCount">1 / 3</b></div></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="stats" aria-label="Day stats">
+    <div class="stat"><small>Ready by check-in</small><strong id="statReady">0 / 5</strong><span id="statReadyPct">0% — the number the day is graded on</span><div class="progress"><i id="readyBar"></i></div></div>
+    <div class="stat"><small>Fees collected</small><strong id="statFees">$0</strong><span>Late fees, damage &amp; late checkout — vs. waived</span></div>
+    <div class="stat"><small>Avg Flip Score</small><strong id="statScore">—</strong><span id="statStreak">Best streak: 0 perfect flips</span></div>
+    <div class="stat"><small>Tonight's reviews (projected)</small><strong id="statStars">★★★★★</strong><span id="statReviewNote">Clean, tested sites = quiet nights</span></div>
+  </section>
+
+  <div class="layout">
+    <!-- LEFT: BOARD -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <section class="panel">
+        <div class="panel-head"><h2>Today's Flips</h2><span>Pick a site to start</span></div>
+        <div class="panel-body" id="siteQueue"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Crew on duty</h2><span>Pick who runs it</span></div>
+        <div class="panel-body">
+          <div class="hosts" id="hosts"></div>
+          <p style="font-size:12px;color:var(--muted);line-height:1.5;margin:10px 0 0">Traits matter: Maya cleans faster, Dale tests &amp; repairs faster, Sam is best for knocks, calls and grumpy overstayers. Every flip costs stamina — rotate the crew.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Band-aid log</h2><span>A promise to come back</span></div>
+        <div class="panel-body"><div id="bandaidLog" style="font-size:13px;line-height:1.6;color:var(--muted)">No band-aids yet today. If you patch something to beat the clock, it gets written down here — not forgotten.</div></div>
+      </section>
+    </div>
+
+    <!-- RIGHT: THE FLIP -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <section class="panel">
+        <div class="panel-head"><h2 id="stageTitle">The Site</h2><span id="stageSub">Select a site from Today's Flips</span></div>
+        <div class="yard-wrap">
+          <div class="yard" id="yard">
+            <div class="yard-empty" id="yardEmpty">
+              <div><h3>One site. One guest gone.<br>One guest coming.</h3><p>Pick a site on the board, pick your host, then work the flip in the real order: verify it's empty, safety first, clean, test, handle what they left behind — before the clock hits check-in.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body" style="padding-top:2px">
+          <div id="alertBox"></div>
+          <div class="mode-row" id="modeRow" style="display:none">
+            <button class="mode-btn on" id="modeCareful" data-act="mode" data-arg="careful">🐢 Thorough — slower, nothing missed</button>
+            <button class="mode-btn" id="modeRush" data-act="mode" data-arg="rush">⚡ Rush it — faster, might miss the butts in the gravel</button>
+          </div>
+          <div id="taskList"></div>
+          <div id="choiceBox"></div>
+          <button class="ready-btn" id="readyBtn" style="display:none" data-act="ready">Mark Site Ready →</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Park Log</h2><span>Everything, timestamped</span></div>
+        <div class="panel-body"><div class="log" id="log"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">Prototype — a full weekend at a Honeycomb-style park: three days, five flips a day — an overstayer, a ghost site, and a dead pedestal each day. Built from real turnover work: a site is occupied until checkout or confirmation — not until it looks empty. Safety outranks the clock, every time.</p>
+</main>
+
+<!-- INTRO -->
+<div class="overlay show" id="introOverlay">
+  <div class="modal modal-flex">
+   <div class="modal-body">
+    <p id="introKicker" style="margin:0 0 6px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-size:12px">Camp Host Central presents</p>
+    <h2>The Flip</h2>
+    <p id="introText">It's 11:00 AM Friday. Five sites turned over this morning — or they were supposed to. Check-out was an hour ago, check-in is at <b style="color:var(--ink)">2:00 PM</b>, and you're the dispatcher. Work each site in the real order and get it honestly Ready.</p>
+    <div class="rules">
+      <div class="rule"><b>1 · Verify first</b>A site is occupied until checkout or confirmation — not until it looks empty. Read the pad: an RV gone isn't a site empty when the chairs are still out, the rug's still down, or the cord's still plugged in — and the placard sign tells you if a departure's actually been verified. Skip this and a ghost site will burn you.</div>
+      <div class="rule"><b>2 · Safety before everything</b>A smoldering fire ring gets doused before trash, before anything. Out of order costs you.</div>
+      <div class="rule"><b>3 · Clean, then test</b>Trash, ring, table, gravel — then pedestal, water, sewer. A clean site with no power isn't Ready. It's a 7 PM complaint.</div>
+      <div class="rule"><b>4 · Handle the finds</b>Lost gear, damage, dead pedestals: return it, charge or waive it, fix it or band-aid it — and log the promise.</div>
+    </div>
+    <p>The park clock is always running. Thorough is safe, rushing is fast — until the arrival finds what you missed in tonight's review.</p>
+   </div>
+   <div class="modal-foot"><button class="bigbtn" id="startBtn" data-act="start">Start Friday — 11:00 AM</button></div>
+  </div>
+</div>
+
+<!-- END OF DAY -->
+<div class="overlay" id="endOverlay">
+  <div class="modal modal-flex">
+   <div class="modal-body">
+    <p id="endKicker" style="margin:0 0 6px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-size:12px">Friday — in the books</p>
+    <h2 id="endTitle">Day 1 Complete</h2>
+    <div class="stars" id="endStars">★★★★★</div>
+    <p id="endSummary"></p>
+    <div class="scoregrid">
+      <div class="scorebox"><small>Ready by check-in</small><strong id="endReady">—</strong></div>
+      <div class="scorebox"><small>Fees collected</small><strong id="endFees">—</strong></div>
+      <div class="scorebox"><small>Average Flip Score</small><strong id="endAvg">—</strong></div>
+      <div class="scorebox"><small>Best perfect streak</small><strong id="endStreak">—</strong></div>
+    </div>
+    <p id="gearLead" style="margin-bottom:6px"><b style="color:var(--ink)">Between-days gear shop</b> — Flip earnings buy better hands tomorrow:</p>
+    <div class="gear"><span>🍃 Leaf Blower — clean 20% faster · 120 coins</span><span>🔌 Pro Tester Kit — tests never misread · 150 coins</span><span>💦 Power Washer — cabin flips unlocked · 200 coins</span></div>
+    <p id="endCoins" style="font-weight:700;color:var(--ink)"></p>
+   </div>
+   <div class="modal-foot"><button class="bigbtn" id="againBtn" data-act="day2">Start Day 2 — Saturday →</button></div>
+  </div>
+</div>
+
+<script>
+var DAY_DEFS={1:[
+ {id:'23',label:'Site 23',loop:'Lake Loop • Full Hookup',out:'Fishing family · 3 nights · left tackle & ash',inn:'Johnson — 40ft fifth wheel, 50A, 2 dogs',arr:'2:00 PM',trash:4,ember:true,lost:'Tackle box',damage:null,fail:null,target:28},
+ {id:'12',label:'Site 12',loop:'Pine Loop • Water / Electric',out:'Party weekend · 2 nights · heavy trash',inn:'Nguyen — 28ft travel trailer, wants shade',arr:'2:15 PM',trash:6,ember:true,lost:null,damage:'Cracked picnic bench slat',fail:null,target:32},
+ {id:'33',label:'Site 33',loop:'River Loop • Full Hookup',out:'Overstayer — was due out at 10:00 AM',inn:'Miller — Class A, late arrival',arr:'4:00 PM',trash:3,ember:false,lost:null,damage:null,fail:null,target:26,overstayer:true},
+ {id:'7',label:'Site 7',loop:'Lake Loop • Tent / Electric',out:'RV gone — but chairs, rug & cord still on the pad',inn:'Park — pop-up camper, early check-in request',arr:'1:30 PM early',trash:2,ember:false,lost:'Camp chairs (2)',damage:null,fail:null,target:20,ghost:true},
+ {id:'41',label:'Site 41',loop:'Hill Loop • Full Hookup',out:'Snowbird · 14 nights · long-stay ash mountain',inn:'Garcia — 38ft fifth wheel, 50A',arr:'2:30 PM',trash:3,ember:true,lost:null,damage:null,fail:'pedestal',target:34}],
+2:[
+ {id:'18',label:'Site 18',loop:'Lake Loop • Full Hookup',out:'Weekend warriors · 1 night · left the ring loaded',inn:'Okafor — 32ft travel trailer, 30A, 1 dog',arr:'2:00 PM',trash:5,ember:true,lost:'Fishing rod',damage:null,fail:null,target:30},
+ {id:'9',label:'Site 9',loop:'Pine Loop • Water / Electric',out:'Scout troop · 2 nights · tidy kids, bent grate',inn:'Delgado — tent + screen room, wants a level pad',arr:'2:15 PM',trash:3,ember:true,lost:null,damage:'Bent fire-ring grate',fail:null,target:28},
+ {id:'27',label:'Site 27',loop:'River Loop • Full Hookup',out:'Overstayer — was due out at 10:00 AM',inn:'Whitfield — Class C, late arrival',arr:'3:30 PM',trash:4,ember:false,lost:null,damage:null,fail:null,target:28,overstayer:true},
+ {id:'15',label:'Site 15',loop:'Hill Loop • Tent / Electric',out:'RV gone — but hammock, cooler & string lights still up',inn:'Beaumont — roof-top tent, early check-in request',arr:'1:45 PM early',trash:2,ember:false,lost:'Hammock & cooler',damage:null,fail:null,target:22,ghost:true},
+ {id:'44',label:'Site 44',loop:'Lake Loop • Full Hookup',out:'Full-timers · 21 nights · everything worn smooth',inn:'Kowalski — 42ft fifth wheel, 50A',arr:'2:30 PM',trash:4,ember:true,lost:null,damage:null,fail:'pedestal',target:36}],
+3:[
+ {id:'5',label:'Site 5',loop:'Lake Loop • Water / Electric',out:'Grandparents & grandkids · 2 nights · left the ring tidy, gear behind',inn:'Foster — 26ft travel trailer, 30A, 1 dog',arr:'2:00 PM',trash:3,ember:true,lost:'Camp kettle',damage:null,fail:null,target:26},
+ {id:'31',label:'Site 31',loop:'River Loop • Full Hookup',out:'Overstayer — was due out at 10:00 AM',inn:'Tran — Class B van, late arrival',arr:'3:45 PM',trash:3,ember:false,lost:null,damage:null,fail:null,target:26,overstayer:true},
+ {id:'20',label:'Site 20',loop:'Pine Loop • Tent / Electric',out:'RV gone — but canopy, chairs & cooler still up on the pad',inn:'Ngata — tent trailer, early check-in request',arr:'1:30 PM early',trash:2,ember:false,lost:'Shade canopy & chairs',damage:null,fail:null,target:20,ghost:true},
+ {id:'48',label:'Site 48',loop:'Hill Loop • Full Hookup',out:'Monthly regulars · 28 nights · everything worn smooth and sandy',inn:'Delacroix — 40ft fifth wheel, 50A',arr:'2:30 PM',trash:4,ember:true,lost:null,damage:null,fail:'pedestal',target:36},
+ {id:'11',label:'Site 11',loop:'Lake Loop • Full Hookup',out:'Fishing crew · 3 nights · tackle & ash, like always',inn:'Osei — 34ft travel trailer, 2 dogs',arr:'2:15 PM',trash:5,ember:true,lost:null,damage:'Busted sewer cap',fail:null,target:30}
+]};
+function loadSites(n){return JSON.parse(JSON.stringify(DAY_DEFS[n]));}
+var SITES=loadSites(1);
+var HOSTS=[
+ {id:'maya',name:'Maya',trait:'Clean Machine',desc:'Cleaning 40% faster',clean:.6,test:1,people:.9},
+ {id:'dale',name:'Dale',trait:'Fix-It',desc:'Tests & repairs 50% faster',clean:1,test:.5,people:.8},
+ {id:'sam',name:'Sam',trait:'People Person',desc:'Best knocks & calls',clean:1,test:1,people:.6}
+];
+var state={day:1,mins:660,started:false,fees:0,waived:0,scores:[],streak:0,bestStreak:0,coins:0,bandaids:[],missed:0,readyCount:0,host:'maya',mode:'careful',stamina:{maya:100,dale:100,sam:100}};
+var cur=null, flip=null, timer=null;
+var YARD_EMPTY_HTML=document.getElementById('yard').innerHTML;
+function freshState(day){return {day:day,mins:660,started:false,fees:0,waived:0,scores:[],streak:0,bestStreak:0,coins:0,bandaids:[],missed:0,readyCount:0,host:'maya',mode:'careful',stamina:{maya:100,dale:100,sam:100}};}
+function renderBandaids(){var el=document.getElementById('bandaidLog');el.innerHTML=state.bandaids.length?state.bandaids.map(function(b){return '🩹 '+b+'<br>';}).join(''):'No band-aids yet today. If you patch something to beat the clock, it gets written down here — not forgotten.';}
+function dayName(n){return n===1?'Friday':n===2?'Saturday':'Sunday';}
+function resetBoardUI(){cur=null;flip=null;clearInterval(timer);document.getElementById('clock').textContent=fmt(state.mins);document.getElementById('clockDay').textContent=dayName(state.day)+' • Park clock';document.getElementById('dayCount').textContent=state.day+' / 3';document.getElementById('stageTitle').textContent='The Site';document.getElementById('stageSub').textContent='Select a site from Today\u2019s Flips';document.getElementById('yard').innerHTML=YARD_EMPTY_HTML;document.getElementById('taskList').innerHTML='';document.getElementById('choiceBox').innerHTML='';alertBox('');document.getElementById('readyBtn').style.display='none';document.getElementById('modeRow').style.display='none';setMode('careful');renderBandaids();renderQueue();renderHosts();renderStats();}
+function showIntro(day){var k=document.getElementById('introKicker'),p=document.getElementById('introText'),b=document.getElementById('startBtn');if(day===3){k.textContent='Day 3 · Sunday';p.innerHTML='It\u2019s 11:00 AM Sunday — the last board of the weekend. Saturday\u2019s guests are settled in and a fresh five sites turned over this morning — or were supposed to. Check-out was an hour ago, check-in is at <b style="color:var(--ink)">2:00 PM</b>, and the trouble has a familiar shape: Site 31 is still occupied, Site 20 looks a little too empty, and Site 48\u2019s pedestal died in the night. Same order, same rules — finish the weekend the way you started it.';b.textContent='Start Sunday — 11:00 AM';}else if(day===2){k.textContent='Day 2 · Saturday';p.innerHTML='It\u2019s 11:00 AM Saturday. Friday\u2019s guests are settled in and a fresh five sites turned over this morning — or were supposed to. Check-out was an hour ago, check-in is at <b style="color:var(--ink)">2:00 PM</b>, and the board has new trouble: Site 27 is still occupied, Site 15 looks a little too empty, and Site 44\u2019s pedestal quit in the night. Same order, same rules.';b.textContent='Start Saturday — 11:00 AM';}else{k.textContent='Camp Host Central presents';p.innerHTML='It\u2019s 11:00 AM Friday. Five sites turned over this morning — or they were supposed to. Check-out was an hour ago, check-in is at <b style="color:var(--ink)">2:00 PM</b>, and you\u2019re the dispatcher. Work each site in the real order and get it honestly Ready.';b.textContent='Start Friday — 11:00 AM';}document.getElementById('introOverlay').classList.add('show');}
+window.startDay2=function(){var keep={coins:state.coins,bandaids:state.bandaids.slice(),bestStreak:state.bestStreak};state=freshState(2);state.coins=keep.coins;state.bandaids=keep.bandaids;state.bestStreak=keep.bestStreak;SITES=loadSites(2);document.getElementById('endOverlay').classList.remove('show');resetBoardUI();log('<b>Saturday morning.</b> Stamina restored, board reset — and yesterday\u2019s band-aids are still on the books below. Promises don\u2019t take weekends off.');showIntro(2);};
+window.startDay3=function(){var keep={coins:state.coins,bandaids:state.bandaids.slice(),bestStreak:state.bestStreak};state=freshState(3);state.coins=keep.coins;state.bandaids=keep.bandaids;state.bestStreak=keep.bestStreak;SITES=loadSites(3);document.getElementById('endOverlay').classList.remove('show');resetBoardUI();log('<b>Sunday morning.</b> Stamina restored, last board of the weekend — and the band-aids from Friday and Saturday are still on the books below. Promises don\u2019t take weekends off.');showIntro(3);};
+window.resetWeekend=function(){state=freshState(1);SITES=loadSites(1);document.getElementById('endOverlay').classList.remove('show');resetBoardUI();log('<b>New weekend.</b> Fresh Friday board — same park, same rules.');showIntro(1);};
+
+function fmt(m){var h=Math.floor(m/60),mm=m%60,ap=h>=12?'PM':'AM';h=h%12;if(h===0)h=12;return h+':'+(mm<10?'0':'')+mm+' '+ap;}
+function host(){return HOSTS.find(function(h){return h.id===state.host;});}
+function log(msg){var el=document.getElementById('log');var d=document.createElement('div');d.innerHTML='<b>'+fmt(state.mins)+'</b> &nbsp;'+msg;el.prepend(d);}
+function alertBox(html,kind){document.getElementById('alertBox').innerHTML=html?'<div class="alert '+(kind||'warn')+'">'+html+'</div>':'';}
+function advance(mins){state.mins+=mins;document.getElementById('clock').textContent=fmt(state.mins);if(state.mins>=840&&state.started){/* after 2pm penalty note once */}}
+function setMode(m){state.mode=m;document.getElementById('modeCareful').classList.toggle('on',m==='careful');document.getElementById('modeRush').classList.toggle('on',m==='rush');}
+
+function renderQueue(){
+ var q=document.getElementById('siteQueue');q.innerHTML='';
+ SITES.forEach(function(s){
+   var done=s.done, active=cur&&cur.id===s.id;
+   var pill=s.done?'<span class="pill done">✓ Ready '+s.score+'</span>':s.overstayer&&!s.resolved?'<span class="pill bad">Overstayer</span>':s.ghost&&!s.resolved?'<span class="pill warn">Looks empty?</span>':'<span class="pill">Needs Flip</span>';
+   var b=document.createElement('button');b.className='site-card'+(active?' active':'')+(done?' done':'');
+   b.innerHTML='<div class="site-top"><b>'+s.label+'</b>'+pill+'</div><p><b>Out:</b> '+s.out+'<br><span style="font-size:12px">'+s.loop+'</span></p><div class="arrival">➜ <b>In '+s.arr+':</b> '+s.inn+'</div>';
+   b.onclick=function(){selectSite(s.id);};q.appendChild(b);
+ });
+}
+function renderHosts(){
+ var w=document.getElementById('hosts');w.innerHTML='';
+ HOSTS.forEach(function(h){
+  var b=document.createElement('button');b.className='host'+(state.host===h.id?' selected':'');
+  b.innerHTML='<b>'+h.name+'</b><span><b style="display:inline;font-size:11px;color:var(--amber)">'+h.trait+'</b><br>'+h.desc+'</span><div class="stamina"><i style="width:'+state.stamina[h.id]+'%"></i></div><span>'+Math.round(state.stamina[h.id])+'% stamina</span>';
+  b.onclick=function(){state.host=h.id;renderHosts();log(h.name+' assigned to the next flip.');};w.appendChild(b);
+ });
+}
+function renderStats(){
+ document.getElementById('statReady').textContent=state.readyCount+' / '+SITES.length;
+ var pct=Math.round(state.readyCount/SITES.length*100);
+ document.getElementById('statReadyPct').textContent=pct+'% — the number the day is graded on';
+ document.getElementById('readyBar').style.width=pct+'%';
+ document.getElementById('statFees').textContent='$'+state.fees;
+ if(state.scores.length){var avg=Math.round(state.scores.reduce(function(a,b){return a+b;},0)/state.scores.length);document.getElementById('statScore').textContent=avg+' / 100';}
+ document.getElementById('statStreak').textContent='Best streak: '+state.bestStreak+' perfect flip'+(state.bestStreak===1?'':'s');
+ var missed=state.missed||0;
+ var stars=missed>=3?'★★★☆☆':missed>=1?'★★★★☆':'★★★★★';
+ document.getElementById('statStars').textContent=stars;
+ document.getElementById('statReviewNote').textContent=missed===0?'Clean, tested sites = quiet nights':missed+' missed item(s) will show up in tonight\u2019s reviews';
+}
+
+function selectSite(id){
+ if(!state.started)return;
+ var s=SITES.find(function(x){return x.id===id;});
+ if(s.done){alertBox('Site '+s.id+' is already Ready. Pick a site that still needs a flip.','good');return;}
+ cur=s;
+ flip={verified:false,doused:!s.ember,cleaned:0,ring:false,table:false,raked:false,tests:{},findHandled:!s.lost&&!s.damage,failHandled:!s.fail,violations:0,missed:0,fees:0,startedAt:state.mins,ghostStage:false,overStage:false};
+ document.getElementById('stageTitle').textContent=s.label+' — The Flip';
+ document.getElementById('stageSub').textContent=s.loop+' • Arrival '+s.arr;
+ document.getElementById('modeRow').style.display='flex';
+ alertBox('');document.getElementById('choiceBox').innerHTML='';
+ if(s.overstayer&&!s.resolved){showOverstayer(s);}
+ renderYard();renderTasks();renderQueue();
+ log('<b>Site '+s.id+'</b> opened for flip — '+host().name+' on it.');
+}
+function showOverstayer(s){
+ var c=document.getElementById('choiceBox');
+ c.innerHTML='<div class="alert bad"><b>⛺ Overstayer on Site '+s.id+'.</b> Checkout was 10:00 AM. They\u2019re still set up. Work the ladder in order — don\u2019t jump to threats.</div><div class="choice-row">'
+ +'<button class="choice" data-act="over" data-arg="knock"><b>1 · The Knock — friendly reminder</b><span>Most people just lost track of time. Sam is fastest at this. No fee, fastest clear if it works.</span></button>'
+ +'<button class="choice" data-act="over" data-arg="late"><b>2 · Offer late checkout — $25</b><span>Legal here: Site '+s.id+'\u2019s arrival isn\u2019t until '+s.arr+'. Easy money, site flips later, clock +30 min.</span></button>'
+ +'<button class="choice" data-act="over" data-arg="meter"><b>3 · Start the meter — $12/hr late fee</b><span>They stay past grace with no deal. +$24 collected, but their review ticks down and the flip starts rushed.</span></button></div>';
+}
+window.resolveOver=function(kind){
+ var s=cur;s.resolved=true;
+ if(kind==='knock'){var cost=state.host==='sam'?8:14;advance(cost);log('Site '+s.id+': the knock worked — “Sorry, lost track!” They\u2019re packing now. +'+cost+' min.');alertBox('The knock worked. They\u2019re out — now flip the site normally.','good');}
+ if(kind==='late'){advance(30);state.fees+=25;flip.fees+=25;log('Site '+s.id+': late checkout sold for <b>$25</b>. No arrival conflict ('+s.arr+'). Clock +30 min.');alertBox('+$25 late checkout. Site is yours now — flip it.','good');}
+ if(kind==='meter'){advance(20);state.fees+=24;flip.fees+=24;flip.violations+=1;log('Site '+s.id+': meter ran — <b>$24</b> late fee collected. Guest left annoyed. Review risk up.');alertBox('+$24 in late fees, but that guest is writing tonight\u2019s review. Flip it perfectly to save the stars.','warn');}
+ document.getElementById('choiceBox').innerHTML=kind==='knock'||kind==='late'||kind==='meter'?document.getElementById('choiceBox').innerHTML.split('<div class="choice-row">')[0]:'';
+ if(kind!==''){document.getElementById('choiceBox').innerHTML='';}
+ renderStats();renderTasks();
+};
+
+function renderYard(){
+ var y=document.getElementById('yard');
+ if(!cur){return;}
+ var trashHtml='';
+ if(flip){for(var i=0;i<cur.trash-flip.cleaned;i++){var pos=[{l:'22%',t:'30%'},{l:'58%',t:'58%'},{l:'30%',t:'62%'},{l:'66%',t:'28%'},{l:'48%',t:'22%'},{l:'18%',t:'52%'}][i%6];trashHtml+='<button class="trash" style="left:'+pos.l+';top:'+pos.t+'" data-act="trash" aria-label="Trash item">×</button>';}}
+ var findHtml=(flip&&flip.cleaned>=cur.trash&&cur.lost&&!flip.findHandled)?'<button class="finditem" data-act="find">🎒 Found: '+cur.lost+'</button>':'';
+ /* Occupancy must be readable from the pad itself:
+    - Overstayer (unresolved): the RV is still parked on the pad.
+    - Ghost site (unverified): no RV, but the pad is NOT cleared — chairs and rug
+      still out, power cord still plugged into the pedestal, placard still paid.
+    - Everyone: the placard sign shows whether departure has been verified yet,
+      so an RV-less pad never reads as "confirmed empty" before Step 1. */
+ var occHtml='';
+ if(cur.overstayer&&!cur.resolved){
+   occHtml='<div class="rv"><div class="rv-body"><span class="rv-win"></span><span class="rv-win"></span><span class="rv-door"></span><b>RV — STILL<br>PARKED</b></div><i class="rv-wheel" style="left:16%"></i><i class="rv-wheel" style="right:14%"></i></div>'
+   +'<div class="placard occ">🚩 PLACARD: OCCUPIED<br>Paid thru tonight · No checkout</div>';
+ } else if(cur.ghost&&!flip.verified){
+   occHtml='<div class="rug"></div><span class="rug-label">Rug still down</span>'
+   +'<div class="chairs">🪑🪑</div><span class="chairs-label">Chairs still out</span>'
+   +'<span class="cord">🔌 Cord still plugged in</span>'
+   +'<div class="placard paid">🚩 PLACARD: PAID THRU TONIGHT<br>No checkout — pad not cleared</div>';
+ } else if(cur.ghost&&!flip.findHandled){
+   occHtml='<div class="rug"></div><span class="rug-label">Rug left behind</span>'
+   +'<div class="chairs">🪑🪑</div><span class="chairs-label">Chairs left behind</span>'
+   +'<div class="placard clear">🚩 PLACARD: ✓ VERIFIED EMPTY<br>Departure confirmed</div>';
+ } else {
+   occHtml='<div class="placard '+(flip.verified?'clear':'')+'">'+(flip.verified?'🚩 PLACARD: ✓ VERIFIED EMPTY<br>Departure confirmed':'🚩 PLACARD: DUE OUT TODAY<br>Departure not yet verified')+'</div>';
+ }
+ y.innerHTML='<div class="road">PARK ROAD — ARRIVALS THIS WAY →</div>'
+ +'<div class="pad"><span class="pad-label">SITE '+cur.id+' · GRAVEL PAD</span></div>'
+ +occHtml
+ +'<div class="tree" style="left:6%;top:6%">🌲</div><div class="tree" style="right:6%;top:8%">🌲</div><div class="tree" style="right:12%;bottom:22%">🌳</div>'
+ +'<div class="fire '+(cur.ember&&!flip.doused?'ember':flip.ring?'cleaned':'doused')+'">'+(cur.ember&&!flip.doused?'🔥 EMBER':'FIRE<br>RING')+'</div>'
+ +'<div class="table '+(flip.table?'clean':'dirty')+'">PICNIC<br>TABLE</div>'
+ +'<div class="pedestal '+(cur.fail==='pedestal'&&flip.tests.pedestal&&!flip.failHandled?'dead':flip.tests.pedestal?'ok':'')+'">⚡<br>PEDESTAL</div>'
+ +trashHtml+findHtml;
+}
+window.clickTrash=function(){
+ if(!flip)return;
+ if(!flip.verified){violate('Hold on — verify the site is actually empty before you touch anything. That\u2019s how ghost sites burn you.');return;}
+ if(cur.ember&&!flip.doused){violate('Safety first. That fire ring is still smoldering — douse it before you clean around it.');return;}
+ doCleanOne();
+};
+function violate(msg){flip.violations++;alertBox('⚠️ <b>Order violation.</b> '+msg+' (−8 Flip Score)','bad');log('⚠️ Order violation on Site '+cur.id+'.');renderTasks();}
+function focusFind(){var el=document.getElementById('task-find');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+
+function taskRow(num,title,desc,btnLabel,done,locked,act,id,warn){
+ var ap=(act||'').split(':');var an=ap[0],ag=ap[1]||'';
+ return '<div class="task '+(done?'done':'')+(locked?' locked':'')+'" '+(id?'id="'+id+'"':'')+'><div class="task-num">'+(done?'✓':num)+'</div><div style="flex:1"><b>'+title+'</b><p>'+desc+'</p></div>'+(done?'<span class="pill done">Done</span>':'<button '+(locked?'disabled':'')+' class="'+(warn?'warnbtn':'')+'" data-act="'+an+'" data-arg="'+ag+'">'+btnLabel+'</button>')+'</div>';
+}
+function renderTasks(){
+ var t=document.getElementById('taskList');if(!cur||!flip){t.innerHTML='';return;}
+ var s=cur,h='';
+ var blockedOver=s.overstayer&&!s.resolved;
+ h+=taskRow(1,'Verify it\u2019s actually empty','Knock, check the placard &amp; checkout list. Occupied until confirmed — not until it looks empty.','Verify',flip.verified,blockedOver,'verify');
+ var emberDone=flip.doused&&(!s.ember||flip.ring||true);
+ h+=taskRow(2,s.ember?'Douse the smoldering fire ring':'Check the fire ring — cold','Safety before everything. Ember first, always.',s.ember?'Douse it':'Confirm cold',flip.doused,!flip.verified,'douse');
+ var cleanDone=flip.cleaned>=s.trash&&flip.ring&&flip.table&&flip.raked;
+ h+=taskRow(3,'Clean the site — trash ('+flip.cleaned+'/'+s.trash+'), ring, table, rake','Tap the red trash on the site itself, then finish the ring, table and gravel. Mode above sets speed vs. care.','Pick up trash',flip.cleaned>=s.trash,!(flip.verified&&flip.doused),'clean');
+ if(flip.cleaned>=s.trash){
+   h+=taskRow('3b','Shovel the fire ring','Ash out, ring clean. Long-stay sites are a mountain.','Shovel',flip.ring,false,'sub:ring');
+   h+=taskRow('3c','Wipe the picnic table','Sticky tables are the #1 “site was filthy” review line.','Wipe',flip.table,false,'sub:table');
+   h+=taskRow('3d','Rake the gravel','Butts, line, hooks and caps hide here — fishing families especially.','Rake',flip.raked,false,'sub:raked');
+ }
+ var testDone=flip.tests.pedestal&&flip.tests.water&&flip.tests.sewer&&flip.failHandled;
+ h+=taskRow(4,'Test: pedestal · water · sewer','Plug the tester in. A clean site with a dead pedestal isn\u2019t Ready.','Test pedestal',!!flip.tests.pedestal,!cleanDone,'test:pedestal');
+ if(flip.tests.pedestal){h+=taskRow('4b','Test water pressure','Run it clear.','Test water',!!flip.tests.water,false,'test:water');}
+ if(flip.tests.water){h+=taskRow('4c','Check sewer cap &amp; connection','Cracked cap = smell at Site 30 all over again.','Check sewer',!!flip.tests.sewer,false,'test:sewer');}
+ if(s.lost||s.damage){h+=taskRow(5,'Handle what they left behind',(s.lost?'Found: <b>'+s.lost+'</b>. ':'')+(s.damage?'Damage: <b>'+s.damage+'</b>.':'')+' Decide below — don\u2019t just leave it.','Decide ↓',flip.findHandled,!testDone&&!cleanDone,'find','task-find');}
+ t.innerHTML=h;
+ /* find choices */
+ var c=document.getElementById('choiceBox');
+ if((s.lost||s.damage)&&!flip.findHandled&&cleanDone){
+   var ch='<div class="choice-row">';
+   if(s.lost)ch+='<button class="choice" data-act="findact" data-arg="return"><b>🎒 Log “'+s.lost+'” to Lost &amp; Found</b><span>Tag it, log it, text the guest. Returning gear is a goodwill payout — it comes back as a 5-star mention.</span></button>';
+   if(s.damage)ch+='<button class="choice" data-act="findact" data-arg="charge"><b>📸 Photo it &amp; charge damage — $35</b><span>Documented, fair, by the book. Fee collected, no argument later.</span></button><button class="choice" data-act="findact" data-arg="waive"><b>🤝 Waive the damage</b><span>Goodwill call. No fee, better review odds — but waived money is gone. Dale can swap the slat in the off-season log.</span></button>';
+   ch+='</div>';c.innerHTML=ch;
+ } else if(!(s.overstayer&&!s.resolved)){ if(!((s.fail&&flip.tests.pedestal&&!flip.failHandled))) c.innerHTML=''; }
+ var ready=flip.verified&&flip.doused&&cleanDone&&testDone&&flip.findHandled&&!blockedOver;
+ var rb=document.getElementById('readyBtn');rb.style.display=ready?'block':'none';
+ renderYard();
+}
+window.doVerify=function(){
+ if(cur.ghost&&!cur.resolved){
+   flip.ghostStage=true;
+   var c=document.getElementById('choiceBox');
+   c.innerHTML='<div class="alert bad"><b>👻 Ghost site.</b> The RV\u2019s gone — but look at the pad again: the chairs and rug are still out and the cord is still plugged into the pedestal. They never checked out, and the placard says paid through tonight. An RV gone is not a site empty. Give this site away and they may roll back in at 4 PM to a stranger on their site.</div><div class="choice-row"><button class="choice" data-act="ghost" data-arg="call"><b>📞 Call the guest — confirm they\u2019re gone</b><span>The right move. '+(state.host==='sam'?'Sam smooths this in 8 minutes.':'10 minutes on the clock.')+' If they confirm, the flip proceeds clean.</span></button><button class="choice" data-act="ghost" data-arg="give"><b>🎲 Give it away anyway — it looks empty</b><span>Fast now. If they come back, it\u2019s the worst incident in the game: comp, shuffle, 1-star review.</span></button></div>';
+   return;
+ }
+ var cost=state.host==='sam'?4:6;advance(cost);flip.verified=true;log('Site '+cur.id+': verified empty — checkout confirmed on the list. +'+cost+' min.');alertBox('Verified empty. Now safety, then clean.','good');renderTasks();
+};
+window.resolveGhost=function(kind){
+ if(kind==='call'){var cost=state.host==='sam'?8:10;advance(cost);cur.resolved=true;flip.verified=true;log('Site '+cur.id+': guest confirmed by phone — headed home, gear is yours to log. Ghost avoided.');alertBox('Guest confirmed gone. Their gear goes to Lost &amp; Found in step 5. Flip proceeds.','good');}
+ else{advance(2);cur.resolved=true;flip.verified=true;flip.violations+=2;state.missed=(state.missed||0)+1;log('Site '+cur.id+': given away unverified. <b>4:12 PM — the guest returned.</b> Comp + shuffle + 1-star review.');alertBox('🎲 It burned you. The guest came back at 4:12 PM to a stranger on their paid site. Comp issued, review dinged. Verify first — always.','bad');}
+ document.getElementById('choiceBox').innerHTML='';renderStats();renderTasks();renderQueue();
+};
+window.doDouse=function(){
+ if(!flip.verified){violate('Verify first, then safety. Order matters.');return;}
+ var cost=6;advance(cost);flip.doused=true;log('Site '+cur.id+': fire ring doused &amp; confirmed cold. Safety cleared.');alertBox('Ring is cold. Clean away.','good');renderTasks();
+};
+window.doCleanOne=function(){
+ if(!flip.verified||!flip.doused){violate('Work the order: verify, safety, then clean.');return;}
+ if(flip.cleaned>=cur.trash)return;
+ var base=state.mode==='rush'?2:4;var cost=Math.max(1,Math.round(base*host().clean));advance(cost);flip.cleaned++;
+ if(state.mode==='rush'&&Math.random()<0.3){flip.missed++;state.missed=(state.missed||0)+1;log('Site '+cur.id+': rushed a pickup — something small got left in the gravel. It\u2019ll be in tonight\u2019s review.');}
+ else log('Site '+cur.id+': trash '+flip.cleaned+'/'+cur.trash+' picked up ('+host().name+', '+(state.mode==='rush'?'rush':'thorough')+').');
+ renderTasks();
+};
+window.doSub=function(kind){
+ var cost=Math.max(2,Math.round((state.mode==='rush'?3:5)*host().clean));advance(cost);flip[kind]=true;
+ if(kind==='raked'&&state.mode==='rush'&&Math.random()<0.3){flip.missed++;state.missed=(state.missed||0)+1;log('Site '+cur.id+': fast rake missed the cigarette butts by the ring.');}
+ log('Site '+cur.id+': '+(kind==='ring'?'fire ring shoveled':kind==='table'?'table wiped':'gravel raked')+'.');renderTasks();
+};
+window.doTest=function(kind){
+ var cost=Math.max(2,Math.round(5*host().test));advance(cost);flip.tests[kind]=true;
+ if(kind==='pedestal'&&cur.fail==='pedestal'){
+   log('Site '+cur.id+': pedestal is <b>DEAD</b>. No power — and the arrival needs it at '+cur.arr+'.');
+   var c=document.getElementById('choiceBox');
+   c.innerHTML='<div class="alert bad"><b>⚡ Dead pedestal on Site '+cur.id+'.</b> A clean site with no power isn\u2019t Ready — it\u2019s a complaint scheduled for 7 PM. Two honest ways through:</div><div class="choice-row"><button class="choice" data-act="fail" data-arg="fix"><b>🔧 Call Dale — proper fix now (20 min)</b><span>Pedestal swapped &amp; tested. Site is honestly Ready. Clock bleeds, score doesn\u2019t.</span></button><button class="choice" data-act="fail" data-arg="bandaid"><b>🩹 Band-aid it &amp; log the promise (5 min)</b><span>Temporary feed from the spare, site works tonight — and it goes in the Band-Aid Log for a proper off-season fix. A band-aid is a promise to come back.</span></button></div>';
+   renderTasks();return;
+ }
+ log('Site '+cur.id+': '+kind+' tested OK.');renderTasks();
+};
+window.resolveFail=function(kind){
+ if(kind==='fix'){advance(state.host==='dale'?12:20);flip.failHandled=true;log('Site '+cur.id+': Dale swapped the pedestal — power tested good. Proper fix, done.');alertBox('Pedestal fixed properly. Test water &amp; sewer to finish step 4.','good');}
+ else{advance(5);flip.failHandled=true;state.bandaids.push('Site '+cur.id+' pedestal — temporary feed, proper swap due off-season');renderBandaids();log('Site '+cur.id+': band-aided &amp; <b>logged</b>. Temporary feed live, promise written down.');alertBox('Band-aid logged. That\u2019s the rule: patch to beat the clock, write it down, come back and fix it right.','warn');}
+ document.getElementById('choiceBox').innerHTML='';renderTasks();
+};
+window.doFind=function(kind){
+ if(kind==='return'){advance(4);flip.findHandled=true;log('Site '+cur.id+': '+cur.lost+' tagged to Lost &amp; Found, guest texted. Goodwill banked.');}
+ if(kind==='charge'){advance(5);state.fees+=35;flip.fees+=35;flip.findHandled=true;log('Site '+cur.id+': damage photographed &amp; charged — <b>$35</b> collected.');}
+ if(kind==='waive'){advance(3);state.waived+=35;flip.findHandled=true;log('Site '+cur.id+': damage waived as a goodwill call. $35 waived, noted for off-season repair.');}
+ renderStats();renderTasks();
+};
+window.markReady=function(){
+ var elapsed=state.mins-flip.startedAt;
+ var score=100-flip.violations*8-flip.missed*10-Math.max(0,elapsed-cur.target);
+ if(flip.modeBonus)score+=0;
+ score=Math.max(35,Math.min(100,Math.round(score)));
+ cur.done=true;cur.score=score;state.scores.push(score);state.readyCount++;
+ state.coins+=Math.round(score*1.2)+flip.fees;
+ if(score>=88){state.streak++;state.bestStreak=Math.max(state.bestStreak,state.streak);}else state.streak=0;
+ state.stamina[state.host]=Math.max(35,state.stamina[state.host]-18);
+ var late=state.mins>=840;
+ log('<b>Site '+cur.id+' READY</b> — Flip Score <b>'+score+'/100</b> in '+elapsed+' min'+(late?' (after 2:00 PM — arrival waited at the gate)':'')+(score>=88?'. Perfect flip — streak '+state.streak+'.':'.'));
+ alertBox('<b>Site '+cur.id+' is Ready.</b> Flip Score '+score+'/100. '+(score>=88?'Perfect flip — that\u2019s the standard.':'Done is done; the deductions are in the log if you want them.'),'good');
+ cur=null;flip=null;document.getElementById('taskList').innerHTML='';document.getElementById('choiceBox').innerHTML='';document.getElementById('readyBtn').style.display='none';document.getElementById('modeRow').style.display='none';
+ document.getElementById('stageTitle').textContent='The Site';document.getElementById('stageSub').textContent='Select the next site';
+ document.getElementById('yard').innerHTML='<div class="yard-empty"><div><h3>'+state.readyCount+' of '+SITES.length+' ready.</h3><p>'+(state.readyCount===SITES.length?'Every site flipped. Time to grade the day.':'Pick the next site on the board — the clock didn\u2019t stop.')+'</p></div></div>';
+ renderQueue();renderHosts();renderStats();
+ if(state.readyCount===SITES.length)setTimeout(endDay,700);
+};
+function endDay(){
+ clearInterval(timer);
+ var avg=Math.round(state.scores.reduce(function(a,b){return a+b;},0)/state.scores.length);
+ var missed=state.missed||0;var stars=missed>=3?'★★★☆☆':missed>=1?'★★★★☆':'★★★★★';
+ var last=state.day>=3;
+ document.getElementById('endKicker').textContent=dayName(state.day)+' — in the books';
+ document.getElementById('endTitle').textContent=last?'Weekend Complete':'Day '+state.day+' Complete';
+ document.getElementById('endStars').textContent=stars;
+ document.getElementById('endReady').textContent=state.readyCount+' / '+SITES.length+' ('+Math.round(state.readyCount/SITES.length*100)+'%)';
+ document.getElementById('endFees').textContent='$'+state.fees+(state.waived?' ($'+state.waived+' waived)':'');
+ document.getElementById('endAvg').textContent=avg+' / 100';
+ document.getElementById('endStreak').textContent=state.bestStreak+' in a row';
+ document.getElementById('gearLead').innerHTML=last?'<b style="color:var(--ink)">The weekend, by the numbers</b> — three days of flips, one set of promises:':'<b style="color:var(--ink)">Between-days gear shop</b> — Flip earnings buy better hands tomorrow:';
+ document.getElementById('endCoins').textContent=last?('Weekend total: '+state.coins+' Flip Coins across all three days.'+(state.bandaids.length?' Band-aids on the books: '+state.bandaids.length+' — they carry to the off-season list.':' No band-aids all weekend — clean work.')):('You earned '+state.coins+' Flip Coins today'+(state.bandaids.length?'. Band-aids logged: '+state.bandaids.length+' — promises on the books for off-season.':'. No band-aids needed — clean day.'));
+ var btn=document.getElementById('againBtn');
+ if(last){btn.setAttribute('data-act','again');btn.textContent='Play the Weekend Again ↻';}
+ else if(state.day===2){btn.setAttribute('data-act','day3');btn.textContent='Start Day 3 — Sunday →';}
+ else{btn.setAttribute('data-act','day2');btn.textContent='Start Day 2 — Saturday →';}
+ document.getElementById('endSummary').textContent=(avg>=88?'That\u2019s a host\u2019s day done right: verified, safe, clean, tested — in order, on time. ':avg>=70?'A solid day. The sites got ready and the deductions tell you exactly where the minutes and the misses went. ':'The day survived you. The log shows where it leaked: order violations, rushed misses, and the clock. ')+(last?'That\u2019s the weekend: fifteen flips, three boards, and every arrival rolled onto a site that was honestly ready. That\u2019s the whole game, and the whole job.':'Tonight\u2019s arrivals pull onto sites that were honestly ready — and '+dayName(state.day+1)+'\u2019s board is already waiting. Sleep fast.');
+ document.getElementById('endOverlay').classList.add('show');
+ log('<b>Day '+state.day+' complete.</b> Avg Flip Score '+avg+'. Fees $'+state.fees+'.');
+}
+window.startDay=function(){
+ state.started=true;document.getElementById('introOverlay').classList.remove('show');
+ if(state.day===3)log('<b>Sunday, 11:00 AM.</b> Checkout was 10:00. Last five sites of the weekend. Site 31 is still occupied and Site 20 looks a little too empty…');
+ else if(state.day===2)log('<b>Saturday, 11:00 AM.</b> Checkout was 10:00. Five fresh sites on the board. Site 27 is still occupied and Site 15 looks a little too empty…');
+ else log('<b>Friday, 11:00 AM.</b> Checkout was 10:00. Five sites on the board, arrivals from 1:30 PM. Site 33 is still occupied and Site 7 looks a little too empty…');
+ clearInterval(timer);
+ timer=setInterval(function(){advance(1);if(state.mins>=960){clearInterval(timer);} },4000);
+ renderQueue();renderHosts();renderStats();
+};
+renderQueue();renderHosts();renderStats();
+log('Board is set. Start the day when you\u2019re ready — the intro has the house rules.');
+
+/* Every button routes through this one delegated listener (data-act / data-arg).
+   No inline onclick attributes anywhere: in the published sandboxed view those
+   never fire, which left the buttons visible but dead. */
+document.addEventListener('click',function(e){
+ var el=(e.target&&e.target.closest)?e.target.closest('[data-act]'):null;
+ if(!el||el.disabled)return;
+ var act=el.getAttribute('data-act'),arg=el.getAttribute('data-arg');
+ if(act==='start')startDay();
+ else if(act==='again')resetWeekend();
+ else if(act==='day2')startDay2();
+ else if(act==='day3')startDay3();
+ else if(act==='mode')setMode(arg);
+ else if(act==='ready')markReady();
+ else if(act==='verify')doVerify();
+ else if(act==='douse')doDouse();
+ else if(act==='clean')doCleanOne();
+ else if(act==='sub')doSub(arg);
+ else if(act==='test')doTest(arg);
+ else if(act==='over')resolveOver(arg);
+ else if(act==='ghost')resolveGhost(arg);
+ else if(act==='fail')resolveFail(arg);
+ else if(act==='findact')doFind(arg);
+ else if(act==='trash')clickTrash();
+ else if(act==='find')focusFind();
+});
+</script>
+</body>
+</html>
