@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@700;800;900&family=DM+Mono:wght@400;500&family=Nunito+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <title>Campground Tycoon</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg:#dde6cf;
+      --paper:#fffefa;
+      --paper-2:#f3efe0;
+      --ink:#1b2d23;
+      --muted:#576d5f;
+      --line:#c3cfb4;
+      --line-strong:#9db08d;
+      --pine:#1d4d38;
+      --green-dark:#154c38;
+      --pine-hi:#2a6b4e;
+      --pine-deep:#123527;
+      --bar-bg:linear-gradient(180deg,#276e4f,#1d4d38);
+      --bar-line:#ffffff2b;
+      --bar-label:#cfe0cd;
+      --brass:#b9831c;
+      --brass-hi:#e3aa2c;
+      --brass-soft:#f6e3ae;
+      --red:#b4473f;
+      --wood-a:#7c5636;
+      --wood-b:#6f4b2d;
+      --frame-edge:#2c1d10;
+      --grass-a:#7fb45e;
+      --grass-b:#6ea653;
+      --grass-built:#8fbf6a;
+      --shadow:rgba(25,56,42,.18);
+      --shadow-deep:rgba(18,43,30,.28);
+      --radius:16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0b1811;
+        --paper:#16281f;
+        --paper-2:#1b3227;
+        --ink:#eef4e2;
+        --muted:#a9bfa9;
+        --line:#2f4a3a;
+        --line-strong:#476b52;
+        --pine:#2e7d57;
+        --green-dark:#8fd0a8;
+        --pine-hi:#3a9970;
+        --pine-deep:#0d2016;
+        --bar-bg:linear-gradient(180deg,#1e3d2c,#132a1e);
+        --bar-line:#ffffff1f;
+        --bar-label:#a9c4ab;
+        --brass:#d9a83e;
+        --brass-hi:#eab54a;
+        --brass-soft:#f2d894;
+        --red:#e2766f;
+        --wood-a:#4e3823;
+        --wood-b:#43301e;
+        --frame-edge:#0a140d;
+        --grass-a:#3f744b;
+        --grass-b:#356540;
+        --grass-built:#477c50;
+        --shadow:rgba(0,0,0,.4);
+        --shadow-deep:rgba(0,0,0,.55);
+      }
+    }
+    *{box-sizing:border-box}
+    html{min-width:0;background:var(--bg)}
+    body{margin:0;min-width:0;min-height:100vh;color:var(--ink);font-family:"Nunito Sans",sans-serif;
+      background:
+        linear-gradient(90deg,transparent 49%,color-mix(in srgb,var(--pine) 6%,transparent) 50%) 0 0/34px 34px,
+        linear-gradient(transparent 49%,color-mix(in srgb,var(--pine) 6%,transparent) 50%) 0 0/34px 34px,
+        var(--bg)}
+    body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;pointer-events:none;opacity:.13;z-index:0;
+      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0 120 L0 84 L60 84 L95 40 L130 84 L210 84 L245 28 L280 84 L370 84 L405 48 L440 84 L540 84 L580 20 L620 84 L720 84 L755 44 L790 84 L880 84 L920 32 L960 84 L1050 84 L1085 52 L1120 84 L1200 84 L1200 120 Z' fill='%231d4d38'/%3E%3C/svg%3E") bottom center/1200px 120px no-repeat}
+    button,input{font:inherit}
+    button{color:inherit}
+    button:focus-visible,.tile:focus-visible{outline:3px solid var(--brass-hi);outline-offset:2px}
+    .app{position:relative;z-index:1;width:min(1320px,100%);margin:0 auto;padding:18px clamp(12px,2.5vw,30px) 40px}
+
+    /* ---------- Dashboard bar ---------- */
+    .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;margin-bottom:16px;
+      background:var(--bar-bg);border:1px solid var(--pine-deep);border-radius:var(--radius);padding:12px 14px;
+      box-shadow:inset 0 1px 0 #ffffff2a,0 10px 24px var(--shadow)}
+    .stats{display:grid;grid-template-columns:repeat(5,minmax(86px,1fr));min-width:0}
+    .stat{padding:2px 14px;border-left:1px solid var(--bar-line);min-width:0}
+    .stat:first-child{border-left:0;padding-left:2px}
+    .stat .label{display:flex;align-items:center;gap:6px;color:var(--bar-label);font:500 10px/1.2 "DM Mono",monospace;text-transform:uppercase;letter-spacing:.09em;white-space:nowrap}
+    .stat .label::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--brass-hi);flex:0 0 auto}
+    .stat:nth-child(2) .label::before{background:#9fc6d8}
+    .stat:nth-child(3) .label::before{background:#a8cf8f}
+    .stat:nth-child(4) .label::before{background:var(--brass-soft)}
+    .stat:nth-child(5) .label::before{background:#d9a06b}
+    .stat strong{display:block;margin-top:4px;font:800 clamp(17px,2vw,23px)/1.05 "Bitter",serif;color:#fdfbef;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stat:first-child strong{color:var(--brass-soft)}
+    .top-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+    .icon-btn,.plain-btn,.primary-btn,.tool{border:0;cursor:pointer;transition:transform .12s,background .12s,box-shadow .12s,border-color .12s}
+    .icon-btn:active,.plain-btn:active,.primary-btn:active,.tool:active{transform:translateY(2px)}
+    .icon-btn,.plain-btn{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-weight:800;box-shadow:0 3px 0 var(--shadow)}
+    .top-actions .icon-btn{background:rgba(255,255,255,.1);border-color:var(--bar-line);color:#fdfbef;box-shadow:none;display:flex;align-items:center;gap:7px}
+    .top-actions .icon-btn:hover{background:rgba(255,255,255,.2)}
+    .icon-btn svg{width:18px;height:18px;display:block;flex:0 0 auto}
+
+    /* ---------- World card ---------- */
+    .game-layout{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:16px;align-items:start}
+    .world-card{background:var(--paper);border:1px solid var(--line-strong);border-radius:20px;overflow:hidden;box-shadow:0 14px 30px var(--shadow),0 4px 0 var(--shadow);min-width:0}
+    .world-head{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;gap:12px;background:var(--pine-deep);color:#f3efdb}
+    .park-id{display:flex;align-items:center;gap:11px;min-width:0}
+    .park-mark{width:38px;height:38px;flex:0 0 auto;border-radius:50%;border:2px solid var(--brass-hi);display:grid;place-items:center;background:rgba(255,255,255,.06)}
+    .park-mark svg{width:21px;height:21px}
+    .world-head h1{font:800 22px/1.05 "Bitter",serif;margin:0;letter-spacing:.01em;white-space:nowrap}
+    .park-sub{display:block;margin-top:3px;font:500 9px/1.2 "DM Mono",monospace;letter-spacing:.14em;color:#b9cdb4}
+    .season{display:flex;align-items:center;gap:7px;color:#ece7cb;font:500 11px/1 "DM Mono",monospace;border:1px solid #ffffff2e;background:rgba(255,255,255,.08);padding:8px 10px;border-radius:999px;white-space:nowrap}
+    .season i{width:9px;height:9px;border-radius:50%;background:var(--brass-hi);box-shadow:0 0 0 3px color-mix(in srgb,var(--brass-hi) 30%,transparent);flex:0 0 auto}
+    .map-wrap{position:relative;padding:14px;overflow:hidden;
+      background:repeating-linear-gradient(90deg,var(--wood-a) 0 46px,var(--wood-b) 46px 48px);
+      box-shadow:inset 0 0 0 1px rgba(0,0,0,.18),inset 0 10px 24px rgba(0,0,0,.22)}
+    /* --- Campground map: header strip, loops, legend --- */
+    .map-top{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--paper);border:1px solid var(--line-strong);border-radius:10px;padding:9px 11px;margin:0 auto 10px;max-width:880px;box-shadow:0 3px 8px rgba(0,0,0,.18)}
+    .map-top-title{font:500 10px/1.35 "DM Mono",monospace;letter-spacing:.1em;color:var(--muted)}
+    .map-top-title strong{display:block;font:800 13px/1.2 "Bitter",serif;letter-spacing:.01em;color:var(--ink)}
+    .pads-summary{display:flex;flex-wrap:wrap;gap:6px}
+    .pill{display:flex;align-items:baseline;gap:5px;background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:5px 9px;font:500 9.5px/1 "DM Mono",monospace;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+    .pill strong{font:800 14px/1 "Bitter",serif;color:var(--ink)}
+    .pill.open strong{color:var(--pine)}
+    @media (prefers-color-scheme: dark){.pill.open strong{color:var(--brass-hi)}}
+    .pill.wooded strong{color:var(--red)}
+    .map{position:relative;border:3px solid var(--frame-edge);border-radius:14px;overflow:hidden;background:linear-gradient(160deg,var(--grass-a),var(--grass-b));box-shadow:0 6px 18px rgba(0,0,0,.3);width:100%;max-width:880px;margin:0 auto;touch-action:manipulation;aspect-ratio:860/580}
+    .road-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+    .loop-label{position:absolute;transform:translate(-50%,-50%);z-index:2;text-align:center;pointer-events:none;width:19%}
+    .loop-label strong{display:block;font:800 clamp(11px,1.9vw,17px)/1.1 "Bitter",serif;letter-spacing:.12em;color:var(--pine-deep);text-shadow:0 1px 0 rgba(255,255,255,.35)}
+    .loop-label span{display:block;margin-top:3px;font:500 clamp(7px,1vw,9px)/1.3 "DM Mono",monospace;letter-spacing:.08em;color:var(--pine-deep);opacity:.85}
+    @media (prefers-color-scheme: dark){.loop-label strong,.loop-label span{color:#dff0d2;text-shadow:0 1px 2px rgba(0,0,0,.5)}}
+    .entrance-sign{position:absolute;left:50%;bottom:1.2%;transform:translateX(-50%);z-index:2;background:var(--pine-deep);color:var(--brass-soft);border:1.5px solid var(--brass-hi);border-radius:6px;padding:4px 10px;font:500 clamp(7px,1vw,9.5px)/1.2 "DM Mono",monospace;letter-spacing:.14em;white-space:nowrap;pointer-events:none}
+    .tile{position:absolute;width:11.2%;min-width:44px;aspect-ratio:1.22;transform:translate(-50%,-50%) rotate(var(--rot,0deg));border-radius:7px;padding:0;overflow:visible;cursor:pointer;z-index:3;min-height:38px}
+    .tile.empty{background:linear-gradient(150deg,#e6d7ab,#d9c69c);border:1.5px dashed #7d683c;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25),0 2px 4px rgba(22,55,38,.25)}
+    .tile.empty::before{content:"+";position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);color:#7d683c;font:900 15px/1 "Nunito Sans",sans-serif;opacity:.55;z-index:1}
+    .tile.built{background:linear-gradient(150deg,#eee0b4,#e0cf9c);border:1.5px solid #7d683c;box-shadow:0 3px 7px rgba(22,55,38,.35)}
+    .tile.empty:hover,.tile.built:hover{box-shadow:0 0 0 3px var(--brass-hi),0 4px 10px rgba(22,55,38,.35);z-index:6}
+    .tile svg{position:absolute;inset:7% 4% 2%;width:92%;height:88%;filter:drop-shadow(0 2px 0 rgba(22,55,38,.25));z-index:2}
+    .site-no{position:absolute;left:2px;top:2px;z-index:5;background:var(--pine-deep);color:#fdfbef;border:1px solid var(--brass-hi);padding:1px 4px;border-radius:4px;font:500 8.5px/1.35 "DM Mono",monospace;letter-spacing:.03em}
+    .tile .lvl{position:absolute;right:2px;top:2px;background:var(--brass-soft);color:#4a3410;padding:1px 4px;border-radius:4px;font:500 8.5px/1.35 "DM Mono";z-index:5;border:1px solid var(--brass)}
+    .tile.problem{width:7.6%;min-width:40px;background:linear-gradient(150deg,#5d7050,#47603e);border:1.5px dashed var(--red);box-shadow:0 2px 5px rgba(22,55,38,.35)}
+    .tile.problem:hover{box-shadow:0 0 0 3px var(--red),0 4px 10px rgba(22,55,38,.35);z-index:6}
+    .tile.problem svg{inset:16% 8% 12%;width:84%;height:70%;opacity:.95}
+    .problem-tag{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);z-index:5;background:var(--red);color:#fff;padding:1px 4px;border-radius:4px;font:700 6.5px/1.3 "DM Mono",monospace;letter-spacing:.04em;white-space:nowrap}
+    .tile.cleared-pad{background:linear-gradient(150deg,#e6d7ab,#d9c69c);border:1.5px dashed #7d683c}
+    .site-detail{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:12px;font-size:13px;line-height:1.55}
+    .site-detail b{color:var(--ink)}
+    .chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 2px}
+    .chain span{background:var(--paper);border:1px solid var(--line-strong);border-radius:999px;padding:5px 9px;font:700 10.5px/1 "DM Mono",monospace}
+    .chain span.here{background:var(--pine);color:#fff;border-color:var(--pine)}
+    .chain i{color:var(--muted);font-style:normal}
+    .map-legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:var(--paper);border:1px solid var(--line-strong);border-radius:10px;padding:8px 11px;margin:10px auto 0;max-width:880px;font-size:11px;color:var(--muted);box-shadow:0 3px 8px rgba(0,0,0,.15)}
+    .map-legend b{color:var(--ink)}
+    .leg{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+    .leg i{width:20px;height:13px;border-radius:3px;flex:0 0 auto;display:inline-block}
+    .leg .sw-pad{background:#e0cf9c;border:1.5px dashed #7d683c}
+    .leg .sw-road{background:#c9b586;border-top:2px dashed #fff8dc;border-bottom:2px dashed #fff8dc}
+    .leg .sw-woods{background:var(--grass-b);border:1.5px solid var(--pine)}
+    .leg .sw-water{background:#7db6c9;border:1.5px solid #4d8ca8}
+    .map-hint{position:absolute;bottom:78px;left:50%;transform:translateX(-50%);background:var(--pine-deep);color:#f3efdb;border:1px solid var(--brass);padding:7px 12px;border-radius:999px;font:500 10px/1.2 "DM Mono";pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap;z-index:5}
+    .map-hint.show{opacity:1}
+    .world-foot{padding:12px 16px;display:flex;justify-content:space-between;gap:12px;align-items:center;background:var(--paper-2);border-top:1px solid var(--line)}
+    .goal{font-size:12.5px;color:var(--muted);min-width:0}
+    .goal strong{color:var(--ink)}
+    .goal-track{display:flex;align-items:center;gap:9px;flex:0 0 auto;width:min(250px,42%)}
+    .meter{flex:1;height:12px;background:color-mix(in srgb,var(--muted) 18%,transparent);border:1px solid var(--line-strong);overflow:hidden;border-radius:999px;box-shadow:inset 0 2px 3px rgba(0,0,0,.15)}
+    .meter span{display:block;height:100%;background:repeating-linear-gradient(45deg,var(--brass-hi) 0 8px,var(--brass) 8px 16px);width:0;transition:width .35s}
+    .goal-pct{font:500 12px/1 "DM Mono",monospace;color:var(--ink);min-width:36px;text-align:right}
+
+    /* ---------- Sidebar ---------- */
+    .sidebar{display:grid;gap:14px;min-width:0}
+    .panel{background:var(--paper);border:1px solid var(--line-strong);border-radius:var(--radius);box-shadow:0 8px 18px var(--shadow),0 4px 0 var(--shadow);overflow:hidden}
+    .panel-title{padding:11px 14px 10px;border-bottom:1px solid var(--line);background:var(--paper-2);display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+    .panel-title h2{font:800 15px/1.1 "Bitter",serif;margin:0}
+    .panel-title span{font:500 10px/1 "DM Mono";color:var(--brass);letter-spacing:.06em}
+    .tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+    .tool{position:relative;display:grid;grid-template-columns:44px minmax(0,1fr);gap:9px;align-items:center;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:78px}
+    .tool:hover:not(:disabled){border-color:var(--pine);transform:translateY(-1px);box-shadow:0 4px 10px var(--shadow)}
+    .tool.selected{background:color-mix(in srgb,var(--brass-soft) 38%,var(--paper));outline:2px solid var(--brass);outline-offset:-2px;border-color:var(--brass)}
+    .tool:disabled{opacity:.5;cursor:not-allowed}
+    .tool-thumb{position:relative;width:44px;height:44px;border-radius:9px;overflow:hidden;border:1px solid var(--line-strong);background:var(--grass-a);flex:0 0 auto}
+    .tool-thumb svg{position:absolute;inset:2px;width:calc(100% - 4px);height:calc(100% - 4px)}
+    .tool-body{display:block;min-width:0}
+    .tool strong{display:block;font-size:12.5px;line-height:1.2}
+    .tool small{display:block;margin-top:3px;color:var(--muted);font:500 10px/1.3 "DM Mono"}
+    .tool .cost{color:var(--pine);font-weight:500;font-size:11px}
+    @media (prefers-color-scheme: dark){.tool .cost{color:var(--brass-hi)}}
+    .tool.cant .cost{color:var(--red)}
+    .lock{position:absolute;top:6px;right:6px;font:500 8px/1.3 "DM Mono";background:var(--pine-deep);color:var(--brass-soft);border-radius:4px;padding:2px 5px;z-index:2}
+    .next-wrap{padding:10px;border-top:1px solid var(--line);background:var(--paper-2)}
+    .primary-btn{width:100%;background:var(--pine);color:#fff;border-radius:11px;padding:14px 16px;font-weight:900;font-size:15px;box-shadow:0 4px 0 var(--pine-deep);display:flex;justify-content:center;align-items:center;gap:10px}
+    .primary-btn:hover{background:var(--pine-hi)}
+    .primary-btn:disabled{opacity:.55;cursor:not-allowed}
+    .primary-btn svg{width:18px;height:18px}
+    .ledger{padding:8px 14px 12px}
+    .ledger-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+    .ledger-row:last-child{border-bottom:0;border-top:2px solid var(--line-strong);margin-top:2px;padding-top:9px}
+    .ledger-row span{color:var(--muted)}
+    .ledger-row strong{font:500 12.5px/1.2 "DM Mono",monospace}
+    .ledger-row:last-child strong{font-size:15px}
+    .event-log{max-height:150px;overflow:auto;padding:8px 14px 12px;scrollbar-width:thin}
+    .event{display:grid;grid-template-columns:46px 1fr;gap:9px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:11.5px;line-height:1.4}
+    .event:last-child{border:0}
+    .event time{font:500 9px/1.5 "DM Mono";color:var(--muted);background:var(--paper-2);border:1px solid var(--line);border-radius:4px;text-align:center;padding:1px 0;height:fit-content}
+    .event p{margin:0;position:relative;padding-left:13px}
+    .event p::before{content:"";position:absolute;left:0;top:5px;width:7px;height:7px;border-radius:50%;background:var(--muted)}
+    .event.good p{color:var(--pine)}.event.good p::before{background:var(--brass-hi)}
+    .event.bad p{color:var(--red)}.event.bad p::before{background:var(--red)}
+    @media (prefers-color-scheme: dark){.event.good p{color:var(--brass-soft)}}
+
+    /* ---------- Growth panel ---------- */
+    .growth-actions{display:grid;gap:8px;padding:10px}
+    .growth-btn{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer;width:100%}
+    .growth-btn:hover{border-color:var(--pine);box-shadow:0 4px 10px var(--shadow)}
+    .growth-btn .g-ico{width:36px;height:36px;flex:0 0 auto;border-radius:9px;display:grid;place-items:center;background:var(--pine);color:#fff;font-size:18px}
+    .growth-btn:nth-child(2) .g-ico{background:var(--brass)}
+    .growth-btn:nth-child(3) .g-ico{background:#5b7a3a}
+    .growth-btn strong{display:block;font-size:13px;line-height:1.2}
+    .growth-btn small{display:block;margin-top:3px;color:var(--muted);font-size:11px;line-height:1.35}
+    .growth-btn .g-badge{margin-left:auto;flex:0 0 auto;font:700 9px/1 "DM Mono",monospace;letter-spacing:.06em;background:var(--paper-2);border:1px solid var(--line);border-radius:999px;padding:5px 7px;color:var(--pine);white-space:nowrap}
+    .growth-summary{margin:0 10px 10px;background:var(--paper-2);border:1px dashed var(--line-strong);border-radius:10px;padding:10px 11px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+    .growth-summary b{color:var(--ink)}
+    .growth-summary .suggest{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);color:var(--ink)}
+    .growth-summary .suggest b{color:var(--pine)}
+    /* ---------- Finance / grant / addon modals ---------- */
+    .finance-note{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:12.5px;line-height:1.55;color:var(--muted);margin-bottom:12px}
+    .finance-note b{color:var(--ink)}
+    .dscr-bar{height:10px;background:color-mix(in srgb,var(--muted) 18%,transparent);border-radius:999px;overflow:hidden;border:1px solid var(--line-strong);margin:8px 0 4px}
+    .dscr-bar span{display:block;height:100%;background:var(--pine-hi);transition:width .3s}
+    .dscr-bar span.low{background:var(--red)}
+    .offer-card{border:1px solid var(--line-strong);border-radius:12px;padding:12px;margin-bottom:9px;background:var(--paper);display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+    .offer-card h3{margin:0;font:800 15px/1.15 "Bitter",serif}
+    .offer-card p{margin:4px 0 0!important;font-size:12px!important;line-height:1.45!important}
+    .offer-card .offer-meta{font:500 10px/1.4 "DM Mono",monospace;color:var(--muted);letter-spacing:.03em}
+    .offer-btn{background:var(--pine);color:#fff;border:0;border-radius:9px;padding:10px 12px;font-weight:900;font-size:12.5px;cursor:pointer;white-space:nowrap;box-shadow:0 3px 0 var(--pine-deep)}
+    .offer-btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+    .offer-btn.secondary{background:var(--paper);color:var(--ink);border:1px solid var(--line-strong);box-shadow:0 3px 0 var(--shadow)}
+    .grant-dots{display:flex;gap:6px;margin:14px 0}
+    .grant-dots i{flex:1;height:6px;border-radius:999px;background:var(--line)}
+    .grant-dots i.on{background:var(--brass-hi)}
+    .grant-dots i.done{background:var(--pine)}
+    .choice-list{display:grid;gap:8px;margin:12px 0 16px}
+    .choice-btn{text-align:left;background:var(--paper);border:1.5px solid var(--line-strong);border-radius:11px;padding:12px 13px;cursor:pointer;font-size:13.5px;line-height:1.45;width:100%}
+    .choice-btn:hover{border-color:var(--brass)}
+    .choice-btn.selected{border-color:var(--pine);background:color-mix(in srgb,var(--brass-soft) 35%,var(--paper));outline:2px solid var(--pine);outline-offset:-2px}
+    .choice-btn small{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}
+    .grant-score{text-align:center;background:var(--pine-deep);color:#f3efdb;border-radius:12px;padding:14px;margin:14px 0}
+    .grant-score strong{display:block;font:900 34px/1 "Bitter",serif;color:var(--brass-soft)}
+    .addon-owned{font:700 9px/1 "DM Mono",monospace;letter-spacing:.07em;background:var(--pine);color:#fff;border-radius:999px;padding:5px 7px;white-space:nowrap}
+    .addon-rec{font:700 9px/1 "DM Mono",monospace;letter-spacing:.05em;background:var(--brass-soft);color:#4a3410;border:1px solid var(--brass);border-radius:999px;padding:5px 7px;white-space:nowrap}
+    .extend-box{background:linear-gradient(180deg,#276e4f,#1d4d38);color:#fdfbef;border-radius:12px;padding:14px;margin:14px 0}
+    .extend-box h3{margin:0 0 6px;font:800 17px/1.2 "Bitter",serif;color:#fff}
+    .extend-box p{color:#d9e8d2!important;margin:0!important;font-size:13px!important}
+    /* ---------- Overlays ---------- */
+    .toast{position:fixed;z-index:30;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translate(-50%,18px);background:var(--pine-deep);color:#f3efdb;padding:11px 16px;border:1px solid var(--brass);border-radius:999px;box-shadow:0 10px 26px rgba(0,0,0,.35);font-size:12.5px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;max-width:min(90vw,430px);text-align:center}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .overlay{position:fixed;z-index:50;inset:0;background:rgba(7,24,16,.82);display:grid;place-items:center;padding:16px;backdrop-filter:blur(3px)}
+    .overlay[hidden]{display:none}
+    .modal{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--paper);border:2px solid var(--pine-deep);border-radius:20px;box-shadow:0 18px 40px rgba(0,0,0,.4),0 10px 0 rgba(7,24,16,.5);padding:clamp(20px,4vw,34px)}
+    .mini-scene{height:138px;position:relative;background:linear-gradient(#7ec1dc 0 56%,#78aa59 56%);border-radius:12px;overflow:hidden;border:2px solid var(--pine-deep);margin-bottom:22px}
+    .mini-scene svg{width:100%;height:100%}
+    .modal h2{font:900 clamp(26px,6vw,40px)/1.05 "Bitter",serif;margin:0 0 10px;letter-spacing:-.01em}
+    .modal p{color:var(--muted);line-height:1.55;font-size:14.5px;margin:0 0 16px}
+    .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+    .rule{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:11px;font-size:11.5px;line-height:1.4}
+    .rule b{display:inline-block;font:500 9.5px/1.2 "DM Mono";letter-spacing:.08em;color:var(--brass-soft);background:var(--pine);margin-bottom:6px;padding:3px 7px;border-radius:4px}
+    .modal-actions{display:flex;gap:8px;flex-wrap:wrap}.modal-actions .primary-btn{flex:1;width:auto;min-width:170px}.modal-actions .plain-btn{flex:0 0 auto}
+    .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+    .result{background:var(--paper-2);padding:12px;border-radius:10px;border:1px solid var(--line)}
+    .result small{display:block;font:500 9px/1.2 "DM Mono";color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+    .result strong{display:block;margin-top:5px;font:800 19px/1.1 "Bitter",serif}
+    .file-input{display:none}
+
+    @media (max-width:900px){
+      .topbar{grid-template-columns:1fr}
+      .top-actions{justify-content:flex-start}
+      .game-layout{grid-template-columns:1fr}
+      .sidebar{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:620px){
+      .app{padding:10px 8px 28px}
+      .topbar{gap:10px;margin-bottom:10px;padding:10px}
+      .stats{grid-template-columns:repeat(3,1fr);gap:6px}
+      .stat{border-left:0;background:rgba(255,255,255,.09);border-radius:10px;padding:8px 9px}
+      .stat:first-child{padding-left:9px;grid-column:span 1}
+      .stat .label{font-size:8px}
+      .stat strong{font-size:16px}
+      .top-actions{justify-content:flex-start}
+      .icon-btn{padding:8px 9px}
+      .game-layout{gap:10px}
+      .world-head{padding:11px 12px}
+      .world-head h1{font-size:18px}
+      .park-sub{font-size:8px}
+      .park-mark{width:32px;height:32px}
+      .season{font-size:9px;padding:6px 8px}
+      .map-wrap{padding:8px}
+      .map{border-width:2px;aspect-ratio:4/4.6}
+      .map-top{padding:8px}
+      .map-top-title strong{font-size:12px}
+      .pill{padding:4px 7px;font-size:8.5px}
+      .pill strong{font-size:12px}
+      .tile{width:15.5%;min-width:40px}
+      .tile svg{inset:9% 2% 1%;width:96%;height:86%}
+      .site-no{font-size:7.5px;padding:0 3px}
+      .loop-label{width:30%}
+      .map-legend{gap:5px 10px;font-size:10px}
+      .world-foot{align-items:flex-start;flex-wrap:wrap}
+      .goal-track{width:100%}
+      .sidebar{grid-template-columns:1fr}
+      .tools{grid-template-columns:1fr 1fr}
+      .tool{grid-template-columns:38px minmax(0,1fr);min-height:70px;padding:7px;gap:7px}
+      .tool-thumb{width:38px;height:38px}
+      .tool strong{font-size:11px}
+      .tool small{font-size:8.5px}
+      .panel-title{padding:10px 11px}
+      .rules{grid-template-columns:1fr}
+      .result-grid{grid-template-columns:1fr 1fr}
+      .modal{padding:18px}
+      .mini-scene{height:96px}
+    }
+    /* ---------- One-screen layout ---------- */
+    .app{padding:10px clamp(10px,2vw,24px) 12px}
+    .topbar{margin-bottom:10px;padding:8px 12px}
+    .stat strong{font-size:clamp(15px,1.6vw,20px)}
+    .world-head{padding:9px 14px}
+    .world-head h1{font-size:19px}
+    .map-wrap{padding:10px}
+    .map-top{padding:6px 9px;margin-bottom:8px}
+    .map-legend{padding:6px 9px;margin-top:8px;font-size:10.5px}
+    .map-hint{bottom:60px}
+    .world-foot{padding:8px 14px}
+    .sidebar .event-log{max-height:132px}
+    .sidebar>.next-wrap{border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--paper-2);box-shadow:0 8px 18px var(--shadow),0 4px 0 var(--shadow)}
+    #buildOverlay .tools{padding:0;margin-bottom:12px}
+    #buildOverlay .build-note{margin:0 0 12px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+    .sidebar{gap:10px}
+    .panel-title{padding:8px 12px 7px}
+    .panel-title h2{font-size:14px}
+    .tools{gap:6px;padding:8px}
+    .tool{min-height:54px;grid-template-columns:36px minmax(0,1fr);padding:6px;gap:7px}
+    .tool-thumb{width:36px;height:36px}
+    .tool strong{font-size:12px}
+    .next-wrap{padding:8px}
+    .primary-btn{padding:11px 14px;font-size:14px}
+    .growth-actions{gap:6px;padding:8px}
+    .growth-btn{padding:8px 10px}
+    .growth-btn .g-ico{width:30px;height:30px;font-size:15px}
+    .growth-btn small{font-size:10.5px}
+    .growth-summary{margin:0 8px 8px;padding:8px 9px;font-size:11px;line-height:1.45}
+    .ledger{padding:4px 12px 8px}
+    .ledger-row{padding:5px 0}
+    .event-log{padding:6px 12px 8px}
+    .event{padding:5px 0}
+    .grow-open-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--bar-bg);border:1px solid var(--pine-deep);border-radius:var(--radius);padding:12px 14px;cursor:pointer;color:#fdfbef;box-shadow:0 8px 18px var(--shadow),0 4px 0 var(--shadow)}
+    .grow-open-btn:hover{filter:brightness(1.07)}
+    .grow-open-btn:active{transform:translateY(2px)}
+    .grow-open-text{display:block;min-width:0;flex:1}
+    .grow-open-text strong{display:block;font:800 15px/1.15 "Bitter",serif}
+    .grow-open-text small{display:block;margin-top:3px;color:var(--bar-label);font-size:11px;line-height:1.35}
+    .grow-open-btn .g-badge{flex:0 0 auto;font:700 9px/1 "DM Mono",monospace;letter-spacing:.06em;background:var(--brass-soft);color:#4a3410;border:1px solid var(--brass);border-radius:999px;padding:6px 8px;white-space:nowrap}
+    /* ---------- Change signals on buttons ---------- */
+    .grow-open-btn,.growth-btn{position:relative}
+    .alert-dot{position:absolute;top:7px;right:7px;width:11px;height:11px;border-radius:50%;background:var(--red);border:2px solid var(--paper);z-index:3;pointer-events:none;animation:dotPulse 1.6s ease-out infinite}
+    .alert-dot[hidden]{display:none}
+    @keyframes dotPulse{0%{box-shadow:0 0 0 0 rgba(180,71,63,.5)}70%{box-shadow:0 0 0 7px rgba(180,71,63,0)}100%{box-shadow:0 0 0 0 rgba(180,71,63,0)}}
+    /* ---------- Nightly rent controls (Build overlay) ---------- */
+    #rentBox{border-top:1px dashed var(--line);padding-top:12px;margin-bottom:12px}
+    .rent-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .rent-head h3{margin:0;font:800 15px/1.15 "Bitter",serif}
+    .rent-reset{padding:6px 9px;font-size:11px;box-shadow:0 2px 0 var(--shadow)}
+    #rentBox .rent-note{font-size:11.5px;color:var(--muted);line-height:1.45;margin:6px 0 4px}
+    .rent-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+    .rent-row:last-child{border-bottom:0}
+    .rent-name b{display:block;font-size:13px;line-height:1.2}
+    .rent-name small{display:block;margin-top:2px;color:var(--muted);font:500 10px/1.3 "DM Mono",monospace}
+    .rent-name small .up{color:var(--red)}
+    .rent-name small .down{color:var(--pine)}
+    .rent-ctl{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+    .rent-ctl strong{font:500 14px/1 "DM Mono",monospace;min-width:50px;text-align:center}
+    .rent-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line-strong);background:var(--paper-2);font-weight:900;font-size:15px;line-height:1;cursor:pointer;color:var(--ink)}
+    .rent-btn:hover{border-color:var(--pine)}
+    .rent-btn:active{transform:translateY(1px)}
+    #growOverlay .growth-actions{padding:0;margin-bottom:12px}
+    #growOverlay .growth-summary{margin:0 0 12px}
+    #growOverlay .next-wrap{padding:10px 0 0}
+    .map{aspect-ratio:860/580}
+    @media (max-width:900px){
+      .game-layout{grid-template-columns:1fr}
+      .sidebar{grid-template-columns:1fr 1fr}
+      .grow-open-btn{grid-column:span 2}
+      .sidebar>.next-wrap{grid-column:span 2}
+      .tools{grid-template-columns:repeat(4,1fr)}
+    }
+    @media (max-width:620px){
+      .app{padding:8px 6px 16px}
+      .stats{grid-template-columns:repeat(5,1fr);gap:4px}
+      .stat{padding:6px 5px;border-radius:8px}
+      .stat strong{font-size:12.5px}
+      .stat .label{font-size:6.5px;letter-spacing:.03em}
+      .top-actions{gap:5px}
+      .map{aspect-ratio:4/4.6}
+      .sidebar{grid-template-columns:1fr}
+      .grow-open-btn{grid-column:auto}
+      .tools{grid-template-columns:1fr 1fr}
+      .sidebar .event-log{max-height:110px}
+      .event{font-size:10.5px}
+      .ledger-row{font-size:11.5px}
+    }
+    /* ---------- Hosts, events, time pace ---------- */
+    .mode-row{display:flex;gap:6px;margin-bottom:8px}
+    .mode-btn{flex:1;padding:8px 6px;border-radius:9px;border:1px solid var(--line-strong);background:var(--paper);font-weight:800;font-size:11.5px;cursor:pointer;color:var(--ink)}
+    .mode-btn small{display:block;font:500 8.5px/1.2 "DM Mono",monospace;color:var(--muted);margin-top:2px;letter-spacing:.04em}
+    .mode-btn.selected{background:var(--pine);color:#fff;border-color:var(--pine)}
+    .mode-btn.selected small{color:#cfe0cd}
+    .host-tag{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);z-index:5;background:var(--pine);color:#fff;padding:1px 5px;border-radius:4px;font:700 7px/1.3 "DM Mono",monospace;letter-spacing:.04em;white-space:nowrap}
+    .morale-wrap{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:12px}
+    .morale-wrap .m-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+    .morale-wrap .m-head b{font:800 15px/1.1 "Bitter",serif}
+    .morale-wrap .m-head strong{font:800 22px/1 "Bitter",serif;color:var(--pine)}
+    .morale-wrap p{margin:6px 0 0!important;font-size:11.5px!important;line-height:1.45!important}
+    .cfg-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+    @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="topbar" aria-label="Park status">
+      <div class="stats">
+        <div class="stat"><span class="label">Cash</span><strong id="cash">$10,000</strong></div>
+        <div class="stat"><span class="label">Day</span><strong><span id="day">1</span> / <span id="totalDays">30</span></strong></div>
+        <div class="stat"><span class="label">Guests</span><strong id="guests">0 / 0</strong></div>
+        <div class="stat"><span class="label">Rating</span><strong id="rating">2.5 ★</strong></div>
+        <div class="stat"><span class="label">Park value</span><strong id="parkValue">$0</strong></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="saveBtn" type="button" aria-label="Download save file" title="Download save file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h12l2 2v16H5zM8 3v6h8V3M8 21v-7h8v7"/></svg><span>Save</span></button>
+        <button class="icon-btn" id="loadBtn" type="button" aria-label="Load save file" title="Load save file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg><span>Load</span></button>
+        <input class="file-input" id="loadFile" type="file" accept="application/json,.json">
+        <button class="icon-btn" id="menuBtn" type="button" aria-label="Open game menu" title="Game menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      </div>
+    </section>
+
+    <section class="game-layout">
+      <article class="world-card">
+        <header class="world-head">
+          <div class="park-id">
+            <span class="park-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#e3aa2c" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 6.5 12h3L5 19h14l-4.5-7h3z" fill="#2a6b4e"/><path d="M12 19v3"/></svg></span>
+            <div><h1 id="parkName">Pine Hollow</h1><span class="park-sub">CAMPGROUND TYCOON · LOOPS A &amp; B · + 12 PROBLEM SITES TO CLEAR</span></div>
+          </div>
+          <div class="season"><i></i><span id="seasonText">EARLY SUMMER · CLEAR</span></div>
+        </header>
+        <div class="map-wrap">
+          <div class="map-top">
+            <div class="map-top-title"><strong>Campground map</strong>LOOPS A &amp; B · ONE-WAY ROADS · NOT TO SCALE</div>
+            <div class="pads-summary" aria-label="Usable spots in this park">
+              <span class="pill">USABLE PADS <strong id="padsTotal">34</strong></span>
+              <span class="pill open">OPEN <strong id="padsOpen">34</strong></span>
+              <span class="pill">BUILT <strong id="padsBuilt">0</strong></span>
+              <span class="pill wooded">PROBLEM SITES <strong id="padsWooded">12</strong></span>
+            </div>
+          </div>
+          <div class="map" id="map" role="group" aria-label="Campground map with Loop A, Pine Loop, and Loop B, Creek Loop — 34 usable pads plus 12 problem sites that must be cleared before they can be built on"></div>
+          <div class="map-legend">
+            <span class="leg"><i class="sw-pad"></i><span><b>Numbered pad</b> — usable, tap to build</span></span>
+            <span class="leg"><i class="sw-road"></i><span><b>Loop road</b> — one-way</span></span>
+            <span class="leg"><i class="sw-woods"></i><span><b>Problem site</b> — tap to see what blocks it, pay to clear it, then it becomes a buildable pad</span></span>
+            <span class="leg"><i class="sw-water"></i><span><b>Creek</b></span></span>
+            <span class="leg"><span><b>Loop A</b> · Pine Loop — <span id="loopAOpen">17 open of 17</span></span></span>
+            <span class="leg"><span><b>Loop B</b> · Creek Loop — <span id="loopBOpen">17 open of 17</span></span></span>
+            <span class="leg"><span><b>Expansion pads C1–C12</b> — <span id="loopCStatus">0 cleared</span></span></span>
+          </div>
+          <div class="map-hint" id="mapHint">Choose something to build</div>
+        </div>
+        <footer class="world-foot"><div class="goal" id="goalText"><strong>Tycoon goal:</strong> reach $16k park value and a 4.0 rating by Day 30 — or keep the season going month by month</div><div class="goal-track"><div class="meter" aria-label="Tycoon goal progress"><span id="goalMeter"></span></div><span class="goal-pct" id="goalPct">0%</span></div></footer>
+      </article>
+
+      <aside class="sidebar">
+        <button class="grow-open-btn" id="buildOpenBtn" type="button"><span class="alert-dot" id="buildDot" hidden></span><span class="grow-open-text"><strong>Build</strong><small>Select a facility, then tap a pad on the map to place it</small></span><span class="g-badge" id="buildBadge">TENT SITE</span></button>
+
+        <div class="next-wrap"><div class="mode-row" role="group" aria-label="Time pace — how far one press advances"><button type="button" class="mode-btn" data-mode="day">Day<small>ADVANCE 1 DAY</small></button><button type="button" class="mode-btn" data-mode="week">Week<small>ADVANCE 7 DAYS</small></button><button type="button" class="mode-btn" data-mode="month">Month<small>ADVANCE 30 DAYS</small></button></div><button class="primary-btn" id="nextDay" type="button">Open for the day <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 5 7 7-7 7"/></svg></button></div>
+
+        <button class="grow-open-btn" id="hostsOpenBtn" type="button"><span class="alert-dot" id="hostsDot" hidden></span><span class="grow-open-text"><strong>Hosts &amp; Hiring</strong><small id="hostsSub">Build a camp host site, then hire</small></span><span class="g-badge" id="moraleBadge">NO HOSTS</span></button>
+
+        <button class="grow-open-btn" id="eventsOpenBtn" type="button"><span class="alert-dot" id="eventsDot" hidden></span><span class="grow-open-text"><strong>Host Events</strong><small id="eventsSub">Weekend events that pull campers in</small></span><span class="g-badge" id="eventsBadge">PLAN</span></button>
+
+        <button class="grow-open-btn" id="ledgerOpenBtn" type="button"><span class="grow-open-text"><strong>Ledger</strong><small>Yesterday’s books — every dollar on its own line</small></span><span class="g-badge" id="ledgerBadge">NO REPORT</span></button>
+
+        <button class="grow-open-btn" id="growOpenBtn" type="button"><span class="alert-dot" id="growDot" hidden></span><span class="grow-open-text"><strong>Grow the Park</strong><small>Grants · DSCR loans · Add-ons · Extend the season</small></span><span class="g-badge" id="growBadge">OPEN</span></button>
+
+        <section class="panel">
+          <div class="panel-title"><h2>Ranger radio</h2><span>RECENT</span></div>
+          <div class="event-log" id="eventLog" aria-live="polite"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="overlay" id="welcomeOverlay">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+      <div class="mini-scene" aria-hidden="true"><svg viewBox="0 0 500 150" preserveAspectRatio="none"><circle cx="430" cy="32" r="18" fill="#f2c14e"/><path d="M0 92 80 44l65 50 82-66 96 74 72-50 105 58v40H0z" fill="#356d49"/><path d="M0 112 92 75l75 46 105-56 89 57 68-30 71 33v25H0z" fill="#5e9255"/><path d="M197 136 242 82l47 54z" fill="#f1b957" stroke="#17382a" stroke-width="5"/><path d="M243 83v53" stroke="#17382a" stroke-width="5"/><path d="M82 128h31l-16-42zM383 126h39l-20-52z" fill="#17382a"/><path d="M0 136h500v14H0z" fill="#4f7d44"/></svg></div>
+      <h2 id="welcomeTitle">Build the campground people come back to.</h2>
+      <p>You start with 30 days, $10,000, and a rough patch of pine country — but the season no longer has to end at Day 30. Keep running month by month, chase grants with the Pitch Builder mini-game, borrow smart with DSCR loans, and bolt on add-ons like Wi-Fi and kayak rentals. The map has 34 usable pads — Loop A runs A1–A17 and Loop B runs B1–B17, numbered in order around each loop — plus 12 problem sites (C1–C12) that stay unusable until you pay to clear what blocks them: a fallen oak, standing water, stumps, junk. Cleared problem sites become brand-new buildable pads. Start with tents and upgrade them all the way up — tent → RV pad → cabin — and add a picnic or event pavilion to give guests a place to gather. Comfort starts the way it does at every primitive park: with a porta potty — or skip straight to a full bathhouse if the park can afford it. A porta potty can always be upgraded into a bathhouse later, on the same pad. Any site can also be demolished for a salvage refund when you want its pad back for something else. You set the nightly rent yourself in the Build panel: every site type starts at its base rate, and you can raise it for more per night or cut it to fill more pads. Pine Hollow is open <b>year-round</b> now: June–August is peak season, spring and fall are the shoulder seasons, and winter runs quiet — so build camp host sites, hire hosts (couples when you can get them, singles when you can't), keep them happy with fair pay, gentle site rent, and perks, and throw host-run events to pull campers in during the slow months. One host covers about six guest sites before ratings start to slide, and the camp store needs a host on the counter or it stays closed.</p>
+      <div class="rules"><div class="rule"><b>BUILD</b>Choose a facility, then tap a numbered pad on Loop A or Loop B. Problem sites must be cleared first.</div><div class="rule"><b>UPGRADE</b>Tap any built site: improve it, or convert a tent to an RV pad, then to a cabin.</div><div class="rule"><b>GROW</b>Extend the season, win grants, use DSCR loans &amp; add-ons to keep growing.</div></div>
+      <div class="modal-actions"><button class="primary-btn" id="startBtn" type="button">Take over Pine Hollow</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="menuOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+      <h2 id="menuTitle">Game menu</h2><p>Your progress lives only in this play session. Download a save file if you want to continue later.</p>
+      <div class="modal-actions"><button class="primary-btn" id="resumeBtn" type="button">Keep playing</button><button class="plain-btn" id="restartBtn" type="button">Start over</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="resultOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <h2 id="resultTitle">Season complete</h2><p id="resultCopy"></p>
+      <div class="result-grid"><div class="result"><small>Park value</small><strong id="finalValue">$0</strong></div><div class="result"><small>Rating</small><strong id="finalRating">0</strong></div><div class="result"><small>Cash</small><strong id="finalCash">$0</strong></div><div class="result"><small>Grants won</small><strong id="finalGrants">0</strong></div><div class="result"><small>Debt</small><strong id="finalDebt">$0</strong></div><div class="result"><small>Add-ons</small><strong id="finalAddons">0</strong></div></div>
+      <div class="extend-box"><h3>Not done yet? Keep running.</h3><p>Roll straight into another month — same park, same cash, same loans and add-ons. The deadline moves +30 days and a new grant window opens. Most real parks don’t quit at Day 30, and neither do you.</p></div>
+      <div class="modal-actions"><button class="primary-btn" id="extendBtn" type="button">▶ Keep Running — Another Month (+30 Days)</button></div>
+      <div class="modal-actions" style="margin-top:8px"><button class="plain-btn" id="playAgainBtn" type="button">Start a fresh season</button><button class="plain-btn" id="resultSaveBtn" type="button">Download save</button><button class="plain-btn" id="finishBtn" type="button">Finish here</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="siteOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="siteTitle">
+      <h2 id="siteTitle">Site</h2>
+      <div id="siteBody"></div>
+      <div class="modal-actions"><button class="plain-btn" id="siteCloseBtn" type="button">Close</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="grantOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="grantTitle">
+      <h2 id="grantTitle">Apply for Grants</h2>
+      <p id="grantIntro">Pick a grant, then play <b>Pitch Builder</b> — 3 rounds, pick the strongest line each time. Score 5–6 for the full award, 4 for half. Reviewers can smell a generic pitch. One application per 7 days.</p>
+      <div id="grantBody"></div>
+      <div class="modal-actions"><button class="plain-btn" id="grantCloseBtn" type="button">Close</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="loanOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="loanTitle">
+      <h2 id="loanTitle">DSCR Loans</h2>
+      <p>A DSCR loan is underwritten on the <b>park’s</b> cash flow, not your personal income. DSCR = Monthly Net Operating Income ÷ Monthly Debt Payment. Lenders want <b>1.20× or higher</b> after the new loan. Borrow, build, and the daily payment comes out automatically.</p>
+      <div class="finance-note" id="dscrBox">Calculating your coverage…</div>
+      <div id="loanBody"></div>
+      <div class="modal-actions"><button class="plain-btn" id="loanCloseBtn" type="button">Close</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="addonOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="addonTitle">
+      <h2 id="addonTitle">Add-ons &amp; Upgrades</h2>
+      <p>These don’t need a pad — they bolt onto the park you already have. Each one pays you back a little every day, lifts value, or nudges ratings. The <b>Recommended</b> tag is picked live from your park’s weakest spot.</p>
+      <div id="addonBody"></div>
+      <div class="modal-actions"><button class="plain-btn" id="addonCloseBtn" type="button">Close</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="buildOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
+      <h2 id="buildTitle">Build</h2>
+      <p>Pick a facility, then tap a numbered pad on Loop A or Loop B to place it. Red-tagged problem sites (C1–C12) must be cleared before anything can be built on them.</p>
+      <div class="tools" id="tools"></div>
+      <div id="rentBox"></div>
+      <p class="build-note">Tap a built site on the map to improve it, convert it up a chain — <b>tent → RV pad → cabin</b>, <b>porta potty → bathhouse</b> — or demolish it to free the pad for something else.</p>
+      <div class="modal-actions"><button class="plain-btn" id="buildCloseBtn" type="button">Back to the map</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="ledgerOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="ledgerTitle">
+      <h2 id="ledgerTitle">Park Ledger</h2>
+      <p>The last day you ran, line by line — site fees, store, pavilion, add-ons, events, host rent in, wages out. The lines always add up to the Net.</p>
+      <div class="panel-title" style="padding-left:0;padding-right:0;background:transparent"><h2>Yesterday</h2><span id="daySummaryLabel">NO REPORT YET</span></div>
+      <div class="ledger">
+        <div class="ledger-row"><span>Site & cabin fees</span><strong id="feeIncome">$0</strong></div>
+        <div class="ledger-row"><span>Store sales</span><strong id="storeIncome">$0</strong></div>
+        <div class="ledger-row"><span>Pavilion rentals</span><strong id="pavIncome">$0</strong></div>
+        <div class="ledger-row"><span>Add-on income</span><strong id="addonIncome">$0</strong></div>
+        <div class="ledger-row"><span>Events, donations &amp; repairs</span><strong id="eventIncome">$0</strong></div>
+        <div class="ledger-row"><span>Host site rent</span><strong id="hostRentIncome">$0</strong></div>
+        <div class="ledger-row"><span>Operations</span><strong id="expenses">$0</strong></div>
+        <div class="ledger-row"><span>Host wages &amp; perks</span><strong id="wageOut">$0</strong></div>
+        <div class="ledger-row"><span>Loan payments</span><strong id="loanOut">$0</strong></div>
+        <div class="ledger-row"><span>Net</span><strong id="net">$0</strong></div>
+      </div>
+      <div class="modal-actions" style="margin-top:14px"><button class="plain-btn" id="ledgerCloseBtn" type="button">Back to the map</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="hostsOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="hostsTitle">
+      <h2 id="hostsTitle">Hosts &amp; Hiring</h2>
+      <p>Hosts keep the park running: roughly <b>one host per 6 guest sites</b>, plus <b>one on the camp store counter</b> or the store stays closed. Cover too many sites with too few hosts and the rating slides. Pay them fairly, keep their site rent gentle, and reach for a perk before morale — and a host — walks.</p>
+      <div id="hostsBody"></div>
+      <div class="modal-actions" style="margin-top:14px"><button class="plain-btn" id="hostsCloseBtn" type="button">Back to the map</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="eventsOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="eventsTitle">
+      <h2 id="eventsTitle">Host Events</h2>
+      <p>Pine Hollow is open year-round, and events are how a year-round park fights the slow months. Each event needs enough hosts on staff to pull it off, costs money up front, and boosts occupancy for 3 days.</p>
+      <div id="eventsBody"></div>
+      <div class="modal-actions" style="margin-top:14px"><button class="plain-btn" id="eventsCloseBtn" type="button">Back to the map</button></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="growOverlay" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="growTitle">
+      <h2 id="growTitle">Grow the Park</h2>
+      <p>Grants, DSCR loans, add-ons, and season extensions — everything that grows Pine Hollow beyond its pads. The map stays right where it was when you come back.</p>
+      <div class="growth-actions">
+        <button class="growth-btn" id="grantBtn" type="button"><span class="alert-dot" id="grantDot" hidden></span><span class="g-ico" aria-hidden="true">✦</span><span><strong>Apply for Grants</strong><small>Play the 3-round Pitch Builder mini-game. Strong pitches win $1,750–$5,000. One application per 7 days.</small></span><span class="g-badge" id="grantBadge">READY</span></button>
+        <button class="growth-btn" id="loanBtn" type="button"><span class="alert-dot" id="loanDot" hidden></span><span class="g-ico" aria-hidden="true">$</span><span><strong>DSCR Loans</strong><small>Borrow against park cash flow — not your house. Lender checks your Debt Service Coverage Ratio.</small></span><span class="g-badge" id="loanBadge">VIEW</span></button>
+        <button class="growth-btn" id="addonBtn" type="button"><span class="alert-dot" id="addonDot" hidden></span><span class="g-ico" aria-hidden="true">+</span><span><strong>Add-ons &amp; Upgrades</strong><small>Wi-Fi, dog park, kayaks, EV charging &amp; more — with a suggestion picked for your park right now.</small></span><span class="g-badge" id="addonBadge">6 IDEAS</span></button>
+      </div>
+      <div class="growth-summary" id="growthSummary">No debt, no grants yet, no add-ons. Your next move is wide open.</div>
+      <div class="next-wrap" style="border-top:1px dashed var(--line)"><button class="plain-btn" id="extendEarlyBtn" type="button" style="width:100%">＋ Keep Running — Extend Season by 30 Days</button><p style="margin:7px 2px 0;font-size:11px;line-height:1.4;color:var(--muted)">You don’t have to wait for Day 30. Extend anytime and the calendar, goal deadline, and loan clock all roll forward.</p></div>
+      <div class="modal-actions" style="margin-top:12px"><button class="plain-btn" id="growCloseBtn" type="button">Back to the map</button></div>
+    </section>
+  </div>
+
+<script>
+(function(){
+  'use strict';
+  var ROWS=6, COLS=8;
+  var catalog={
+    tent:{name:'Tent site',cost:800,upkeep:12,value:1100,capacity:1,rate:120,minRating:0,desc:'1 campsite · $120/night'},
+    rv:{name:'RV pad',cost:1600,upkeep:22,value:2300,capacity:1,rate:190,minRating:2.8,desc:'1 campsite · $190/night'},
+    porta:{name:'Porta potty',cost:450,upkeep:18,value:650,comfort:0.3,minRating:0,desc:'Basic relief · upgrade to a bathhouse'},
+    bath:{name:'Bathhouse',cost:2800,upkeep:58,value:3800,comfort:0.75,minRating:0,desc:'Lifts guest ratings'},
+    trail:{name:'Nature trail',cost:1300,upkeep:16,value:1900,comfort:0.4,minRating:0,desc:'Scenery + ratings'},
+    store:{name:'Camp store',cost:2400,upkeep:48,value:3500,storeRate:22,minRating:3.1,desc:'$22 per occupied site'},
+    pavilion:{name:'Picnic pavilion',cost:2600,upkeep:52,value:3600,comfort:0.6,minRating:0,desc:'Covered tables · ratings + $30/day rental'},
+    eventPavilion:{name:'Event pavilion',cost:4600,upkeep:85,value:6200,comfort:0.85,minRating:3.2,desc:'Reunions & weddings · $9 per occupied site'},
+    cabin:{name:'Cabin',cost:5200,upkeep:75,value:7300,capacity:1,rate:320,minRating:3.5,desc:'1 cabin · $320/night'},
+    host:{name:'Camp host site',cost:1000,upkeep:8,value:1300,minRating:0,desc:'Houses up to 2 hosts · staff only, no guests'}
+  };
+  var problemCatalog={
+    fallen:{name:'Fallen oak across the pad',short:'FALLEN TREE',cost:650,desc:'A storm dropped a mature oak straight across this pad. It needs chainsaw work, a splitter crew, and a haul-off before a tent peg could go in the ground.'},
+    brush:{name:'Kudzu & brush overgrowth',short:'OVERGROWN',cost:450,desc:'Years of kudzu, briars, and saplings have swallowed this pad whole. Bush-hog it, grub out the roots, and rake it level to make it usable.'},
+    water:{name:'Standing water — poor drainage',short:'FLOODED',cost:850,desc:'This low pad holds water after every rain. It needs a French drain, a load of gravel, and re-grading before anyone can camp on it dry.'},
+    rock:{name:'Rock ledge & boulders',short:'ROCKY',cost:750,desc:'A rock ledge pokes right through the pad. Breaking it out and grading in fresh fill is a full day with a rented mini-excavator.'},
+    junk:{name:'Old junk & debris pile',short:'JUNK PILE',cost:550,desc:'Somebody used this corner as a dump for years — tires, scrap tin, and a rusted mower. It all has to be hauled to the landfill before the pad is a site.'},
+    stump:{name:'Stump field',short:'STUMPS',cost:600,desc:'A half-dozen old stumps sit right where the pad belongs. A stump grinder and a load of topsoil will turn it into a clean, level site.'}
+  };
+  var upgradeChain={tent:{next:'rv',cost:1100,label:'Convert to RV pad'},rv:{next:'cabin',cost:3900,label:'Convert to cabin'},porta:{next:'bath',cost:2350,label:'Upgrade to bathhouse'}};
+  var addonCatalog={
+    wifi:{name:'Wi-Fi Mesh',cost:1200,value:1500,daily:18,comfort:0.12,desc:'+$18/day · +comfort. Guests stop asking for the password at the gate.',tag:'rating'},
+    propane:{name:'Propane & Ice Station',cost:950,value:1100,daily:14,comfort:0,desc:'+$14/day in easy add-on sales by the store door.',tag:'cash'},
+    dogpark:{name:'Dog Park',cost:1500,value:1800,daily:6,comfort:0.30,desc:'+$6/day · big comfort lift. Dog owners book longer stays.',tag:'rating'},
+    kayaks:{name:'Kayak Rentals (×4)',cost:1900,value:2200,perOcc:9,daily:0,comfort:0.08,desc:'+$9 per occupied site/day on the creek. Life vests included.',tag:'cash'},
+    laundry:{name:'Laundry Room',cost:2200,value:2600,perOcc:7,daily:0,comfort:0.20,desc:'+$7 per occupied site/day · +comfort for week-plus stays.',tag:'rating'},
+    ev:{name:'EV Charging — 2 Stalls',cost:2800,value:3200,daily:26,comfort:0.10,desc:'+$26/day · pulls EV road-trippers off the highway.',tag:'value'}
+  };
+  var grantCatalog=[
+    {id:'trails',name:'Trails & Habitat Grant',org:'State Parks Foundation',amount:3500,blurb:'For trails, habitat, and getting people outside.'},
+    {id:'tourism',name:'Rural Tourism Development Grant',org:'State Tourism Board',amount:5000,blurb:'For parks that bring visitors — and dollars — to rural towns.'},
+    {id:'access',name:'Accessibility & Inclusion Grant',org:'USDA Rural Development',amount:4200,blurb:'For accessible paths, pads, and bathhouses everyone can use.'}
+  ];
+  var grantRounds=[
+    {q:'Round 1 — Your Project Pitch: which line leads?',opts:[
+      {t:'“We’ll clear, grade, and sign a loop trail with habitat plantings and a trailhead kiosk.”',s:2,g:'trails'},
+      {t:'“We’ll market Pine Hollow to bring 2,000 new visitor-nights and local spending to the county.”',s:2,g:'tourism'},
+      {t:'“We’ll add accessible paths, an ADA pad, and grab-bar bathhouse upgrades.”',s:2,g:'access'},
+      {t:'“We need money to make the park nicer in general.”',s:0,g:'any'}]},
+    {q:'Round 2 — Your Budget: which plan convinces a reviewer?',opts:[
+      {t:'Itemised: materials 55%, local contractor 30%, signage & match 15% — with quotes attached.',s:2,g:'any'},
+      {t:'One round number, no breakdown — “trust us, we’re careful.”',s:0,g:'any'},
+      {t:'Mostly marketing and a launch party, project itself TBD.',s:1,g:'any'}]},
+    {q:'Round 3 — Community Impact: close strong.',opts:[
+      {t:'Free trail days for local schools + a volunteer habitat crew from town.',s:2,g:'any'},
+      {t:'“Campers will probably like it.” No numbers, no partners.',s:0,g:'any'},
+      {t:'Partner letter from the county, plus last season’s guest counts to prove demand.',s:2,g:'any'}]}
+  ];
+  var loanOffers=[
+    {id:'starter',name:'Creek Starter Loan',amount:5000,rate:0.082,termMo:36,payment:157},
+    {id:'growth',name:'Pine Growth Loan',amount:10000,rate:0.089,termMo:48,payment:249},
+    {id:'resort',name:'Hollow Resort Loan',amount:18000,rate:0.095,termMo:60,payment:378}
+  ];
+  // ---- Year-round calendar: the game starts in June; each 30-day month advances the calendar ----
+  var CALENDAR=[
+    {name:'January',factor:.45,season:'OFF SEASON',note:'Deep winter — only the hardy roll in.'},
+    {name:'February',factor:.50,season:'OFF SEASON',note:'Quiet and cold; a good event can still fill a weekend.'},
+    {name:'March',factor:.68,season:'SHOULDER SEASON',note:'Spring breakers start sniffing around.'},
+    {name:'April',factor:.78,season:'SHOULDER SEASON',note:'Wildflowers up, weekends filling.'},
+    {name:'May',factor:.92,season:'SHOULDER SEASON',note:'Nearly summer — long weekends book out.'},
+    {name:'June',factor:1.12,season:'PEAK SEASON',note:'The summer rush. Every pad earns.'},
+    {name:'July',factor:1.25,season:'PEAK SEASON',note:'The busiest month of the year.'},
+    {name:'August',factor:1.18,season:'PEAK SEASON',note:'Still hot, still full.'},
+    {name:'September',factor:.95,season:'SHOULDER SEASON',note:'Families leave, leaf-peepers arrive.'},
+    {name:'October',factor:.85,season:'SHOULDER SEASON',note:'Fall color carries the weekends.'},
+    {name:'November',factor:.55,season:'OFF SEASON',note:'First frosts thin the crowd.'},
+    {name:'December',factor:.52,season:'OFF SEASON',note:'Holiday lights or empty loops — your call.'}
+  ];
+  var eventCatalog={
+    stargazing:{name:'Stargazing & S’mores Night',hosts:2,cost:90,boost:.22,income:35,days:3,desc:'Telescopes on the pavilion lawn, cocoa at the store door. An easy yes for a shoulder-season weekend.'},
+    derby:{name:'Creek Fishing Derby',hosts:3,cost:250,boost:.35,income:80,days:3,desc:'Tagged fish, a leaderboard at check-in, and bragging rights. Anglers book the creek-side pads first.'},
+    festival:{name:'Harvest Home Festival',hosts:4,cost:420,boost:.48,income:120,days:3,desc:'Pie contest, string band, pumpkin weigh-in. The kind of weekend that fills a park in the fall.'},
+    lights:{name:'Holiday Lights Weekend',hosts:4,cost:520,boost:.60,income:150,days:3,desc:'Loops strung with lights and a drive-through night. Winter’s best trick for an “empty” month.'},
+    reunion:{name:'Big Reunion Weekend',hosts:6,cost:700,boost:.65,income:200,days:3,desc:'One clan, half the park, the event pavilion booked solid. Needs a full crew to pull off.'}
+  };
+  var perkCatalog={
+    kayaks:{name:'Free kayak rentals',cost:3,bonus:8,desc:'Hosts paddle free on their days off — the park covers the rental.'},
+    storedisc:{name:'50% off the camp store',cost:2,bonus:6,desc:'Half price on everything in the store for hosts.'},
+    laundry:{name:'Free laundry & Wi-Fi',cost:2,bonus:5,desc:'No quarters to feed the machines, no password hassles.'},
+    cookout:{name:'Weekly host cookout',cost:5,bonus:10,desc:'Burgers at the pavilion every week, park picks up the tab.'}
+  };
+  var FIRST_NAMES=['Sam','Riley','Jordan','Casey','Robin','Jamie','Alex','Pat','Dana','Lee','Morgan','Jesse','Skyler','Quinn','Avery','Emerson','Finley','Harper','Rowan','Wren'];
+  var LAST_NAMES=['Carter','Nguyen','Brooks','Patel','Garcia','Kim','Osei','Novak','Frost','Lane','Marsh','Boone','Hale','Rios','Fenn','Ward','Doyle','Ash'];
+  var COUPLE_BLURBS=['Full-timers — three seasons hosting in state parks.','Retired early, handy with a wrench and a smile.','Former teachers; the camp store counter is their happy place.','They run a tight bathhouse and remember every regular by name.'];
+  var SINGLE_BLURBS=['Retired nurse, early riser, loves the morning gate shift.','Solo full-timer with their own tools and a quiet dog.','Former park ranger — knows trails and grumpy water lines.','Snowbird heading your way; great with guests, fine with a rake.'];
+  var blocked=[0,1,6,7,8,15,32,39,40,41,46,47];
+  var blockedProblems=['fallen','brush','water','rock','junk','stump','brush','fallen','water','stump','rock','junk'];
+  var blockedPos=[{x:6,y:10},{x:95.5,y:8},{x:49,y:15},{x:49,y:63},{x:8,y:87.5},{x:92,y:87.5},{x:26,y:87.5},{x:74,y:87.5},{x:17,y:94},{x:36,y:94},{x:64,y:94},{x:83,y:94}];
+  function problemKey(i){return blockedProblems[blocked.indexOf(i)]||'brush'}
+  function isCleared(i){return (state.problemsCleared||[]).indexOf(i)>-1}
+  var state, selected='tent', toastTimer;var applicantPool=[];
+  var rentTypes=['tent','rv','cabin'];
+  var alertState={build:false,grant:false,loan:false,addon:false};
+  var sigSeen={buildAvail:null,cleared:-1,grantReady:null,loanQual:null,rec:undefined};
+  var $=function(s){return document.querySelector(s)};
+  var money=function(n){var sign=n<0?'−':'';return sign+'$'+Math.abs(Math.round(n)).toLocaleString('en-US')};
+  function initialGrid(){var a=[];for(var i=0;i<ROWS*COLS;i++)a.push(blocked.indexOf(i)>-1?'blocked':null);return a}
+  function newState(){return {version:2,day:1,totalDays:30,month:1,cash:10000,rating:2.5,weather:'CLEAR',grid:initialGrid(),logs:[{day:1,text:'The gate is unlocked. Build your first campsite.',tone:'good'}],report:{fees:0,store:0,pavilion:0,addons:0,events:0,hostRent:0,expenses:0,wages:0,debt:0,net:0},ended:false,addons:[],loans:[],debt:0,grantsWon:0,grantTotal:0,lastGrantDay:-99,incomeHistory:[],awaitingExtension:false,problemsCleared:[],hosts:[],hostCfg:{pay:35,rent:10},perks:[],timeMode:'day',hostMorale:65,activeEvent:null,rents:{tent:catalog.tent.rate,rv:catalog.rv.rate,cabin:catalog.cabin.rate}}}
+  function numOr(v,def,min,max){var n=Number(v);if(!isFinite(n))return def;if(typeof min==='number'&&n<min)n=min;if(typeof max==='number'&&n>max)n=max;return n}
+  function ensureState(){
+    if(!state||typeof state!=='object')state=newState();
+    state.day=numOr(state.day,1,1,1000000);state.totalDays=numOr(state.totalDays,30,1,1000000);state.month=numOr(state.month,Math.floor((state.day-1)/30)+1,1,100000);state.cash=numOr(state.cash,10000);state.rating=numOr(state.rating,2.5,0,5);
+    if(['CLEAR','CLOUDY','STORMY','HOT'].indexOf(state.weather)===-1)state.weather='CLEAR';
+    if(!Array.isArray(state.grid)||state.grid.length!==ROWS*COLS)state.grid=initialGrid();
+    state.grid=state.grid.map(function(c){if(c==='blocked'||c===null)return c;if(c&&typeof c==='object'&&catalog[c.type])return{type:c.type,level:c.level===2?2:1};return null});
+    if(!Array.isArray(state.addons))state.addons=[];state.addons=state.addons.filter(function(id){return !!addonCatalog[id]});
+    if(!Array.isArray(state.loans))state.loans=[];state.loans=state.loans.filter(function(l){return l&&typeof l==='object'}).map(function(l){var offer=loanOffers.filter(function(o){return o.id===l.id})[0];return{id:String(l.id||''),name:offer?offer.name:'Loan',payment:numOr(l.payment,0,0),remaining:numOr(l.remaining,0,0)}});
+    state.debt=state.loans.reduce(function(s,l){return s+l.remaining},0);
+    state.grantsWon=numOr(state.grantsWon,0,0,1000000);state.grantTotal=numOr(state.grantTotal,0);state.lastGrantDay=numOr(state.lastGrantDay,-99);
+    if(!Array.isArray(state.incomeHistory))state.incomeHistory=[];state.incomeHistory=state.incomeHistory.filter(function(n){return isFinite(Number(n))}).map(function(n){return Number(n)});
+    if(!Array.isArray(state.problemsCleared))state.problemsCleared=[];state.problemsCleared=state.problemsCleared.filter(function(i){return blocked.indexOf(i)>-1});state.problemsCleared.forEach(function(i){if(state.grid[i]==='blocked')state.grid[i]=null});
+    if(!Array.isArray(state.logs))state.logs=[];state.logs=state.logs.filter(function(e){return e&&typeof e.text==='string'}).map(function(e){return{day:numOr(e.day,1,0,1000000),text:e.text,tone:e.tone==='good'||e.tone==='bad'?e.tone:''}});
+    var rp=state.report&&typeof state.report==='object'?state.report:{};state.report={fees:numOr(rp.fees,0),store:numOr(rp.store,0),pavilion:numOr(rp.pavilion,0),addons:numOr(rp.addons,0),events:numOr(rp.events,0),hostRent:numOr(rp.hostRent,0),wages:numOr(rp.wages,0),expenses:numOr(rp.expenses,0),debt:numOr(rp.debt,0),net:numOr(rp.net,0),guests:numOr(rp.guests,0,0,1000000)};
+    if(!state.rents||typeof state.rents!=='object')state.rents={};rentTypes.forEach(function(t){state.rents[t]=Math.round(numOr(state.rents[t],catalog[t].rate,20,catalog[t].rate*2)/10)*10});
+    if(!Array.isArray(state.hosts))state.hosts=[];
+    state.hosts=state.hosts.filter(function(h){return h&&typeof h==='object'&&(h.kind==='couple'||h.kind==='single')&&typeof h.names==='string'&&h.names.length>0&&typeof h.site==='number'&&state.grid[h.site]&&state.grid[h.site].type==='host'}).map(function(h){return{id:numOr(h.id,1),kind:h.kind,names:h.names.slice(0,60),site:h.site}});
+    if(!state.hostCfg||typeof state.hostCfg!=='object')state.hostCfg={pay:35,rent:10};
+    state.hostCfg.pay=Math.round(numOr(state.hostCfg.pay,35,0,80)/5)*5;state.hostCfg.rent=Math.round(numOr(state.hostCfg.rent,10,0,40)/5)*5;
+    if(!Array.isArray(state.perks))state.perks=[];state.perks=state.perks.filter(function(id){return !!perkCatalog[id]});
+    if(['day','week','month'].indexOf(state.timeMode)===-1)state.timeMode='day';
+    state.hostMorale=numOr(state.hostMorale,65,0,100);
+    if(!state.activeEvent||typeof state.activeEvent!=='object'||!eventCatalog[state.activeEvent.id])state.activeEvent=null;else state.activeEvent={id:state.activeEvent.id,daysLeft:Math.max(1,Math.round(numOr(state.activeEvent.daysLeft,1,1,30)))};
+    state.ended=!!state.ended;state.awaitingExtension=!!state.awaitingExtension;
+    if(typeof removedPads!=='undefined')removedPads.forEach(function(ri){if(state.grid[ri]&&state.grid[ri].type)state.grid[ri]=null});
+  }
+  function totalDays(){return state.totalDays||30}
+  function dailyDebtPayment(){return state.loans.reduce(function(s,l){return s+l.payment/30},0)}
+  function monthlyDebtPayment(){return state.loans.reduce(function(s,l){return s+l.payment},0)}
+  function resetGame(){state=newState();selected='tent';applicantPool=[];alertState={build:false,grant:false,loan:false,addon:false};sigSeen={buildAvail:null,cleared:-1,grantReady:null,loanQual:null,rec:undefined};render();closeAll();$('#welcomeOverlay').hidden=false}
+  function count(type){return state.grid.filter(function(x){return x&&x.type===type}).length}
+  function capacity(){return count('tent')+count('rv')+count('cabin')}
+  function parkValue(){var v=state.grid.reduce(function(sum,x){return sum+(x&&x.type?catalog[x.type].value*(1+(x.level-1)*.55):0)},0);(state.addons||[]).forEach(function(id){if(addonCatalog[id])v+=addonCatalog[id].value});return v}
+  function comfort(){var c=count('bath')*.42+count('porta')*.16+count('trail')*.22+Math.min(count('store'),1)*.08+count('pavilion')*.5+count('eventPavilion')*.7;(state.addons||[]).forEach(function(id){if(addonCatalog[id])c+=addonCatalog[id].comfort||0});return c}
+  function pavilionDaily(occupied){if(!occupied)return 0;return count('pavilion')*30+count('eventPavilion')*occupied*9}
+  function rentOf(type){var r=state&&state.rents?Number(state.rents[type]):NaN;return isFinite(r)?r:catalog[type].rate}
+  function priceIndex(){var w=0,s=0;rentTypes.forEach(function(t){var n=count(t);if(n>0){w+=n;s+=n*(rentOf(t)/catalog[t].rate)}});return w?s/w:1}
+  function priceFactor(){var f=1-(priceIndex()-1)*.55;return Math.max(.55,Math.min(1.18,f))}
+  function calendarOf(day){return CALENDAR[(5+Math.floor((day-1)/30))%12]}
+  function esc(s){return String(s).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
+  function hostPersons(){return state.hosts.reduce(function(s,h){return s+(h.kind==='couple'?2:1)},0)}
+  function hostOccupancy(i){return state.hosts.reduce(function(s,h){return s+(h.site===i?(h.kind==='couple'?2:1):0)},0)}
+  function hostPay(){return state.hostCfg?state.hostCfg.pay:35}
+  function hostRentRate(){return state.hostCfg?state.hostCfg.rent:10}
+  function coveragePersons(){return Math.max(0,hostPersons()-(count('store')>0?1:0))}
+  function perkDailyCost(){return (state.perks||[]).reduce(function(s,id){return s+(perkCatalog[id]?perkCatalog[id].cost:0)},0)*hostPersons()}
+  function hostRentIncome(){var n=0;state.grid.forEach(function(c,i){if(c&&c.type==='host'&&hostOccupancy(i)>0)n++});return n*hostRentRate()}
+  function moraleTarget(){
+    var persons=hostPersons();if(!persons)return 65;
+    var m=62;var pay=hostPay(),rent=hostRentRate();
+    m+=Math.max(-25,Math.min(25,(pay-35)*.9));
+    m-=rent*.7;
+    var sites=capacity(),cov=coveragePersons();
+    if(sites===0)m+=6;else if(cov<=0)m-=25;else{var r=sites/cov;if(r<=6)m+=10;else m-=Math.min(30,(r-6)*5)}
+    (state.perks||[]).forEach(function(id){if(perkCatalog[id])m+=perkCatalog[id].bonus});
+    return Math.max(2,Math.min(98,Math.round(m)));
+  }
+  function addonDaily(occupied){var t=0;(state.addons||[]).forEach(function(id){var a=addonCatalog[id];if(!a)return;t+=(a.daily||0)+(a.perOcc||0)*(occupied||0)});return t}
+  function projectedMonthlyNOI(){var cap=capacity();if(cap===0)return 0;var demand=Math.min(.96,(.18+state.rating*.14+.12)*priceFactor()*calendarOf(state.day).factor);var occ=Math.round(cap*demand);var types=[];state.grid.forEach(function(x){if(x&&x.type&&catalog[x.type].capacity)types.push(x)});types.sort(function(a,b){return rentOf(b.type)-rentOf(a.type)});var fees=0,rem=occ;types.forEach(function(x){if(rem>0){fees+=rentOf(x.type)*(1+(x.level-1)*.28);rem--}});var storeInc=count('store')&&hostPersons()>0?occ*catalog.store.storeRate:0;var upkeep=state.grid.reduce(function(s,x){return s+(x&&x.type?catalog[x.type].upkeep:0)},0)+45;var daily=fees+storeInc+pavilionDaily(occ)+addonDaily(occ)-upkeep-(hostPersons()*hostPay()+perkDailyCost())+hostRentIncome();return Math.round(daily*30)}
+  function currentDSCR(extraPayment){var noi=projectedMonthlyNOI();var pay=monthlyDebtPayment()+(extraPayment||0);if(pay<=0)return noi>0?9.99:0;return noi/pay}
+  function recommendedAddon(){var owned=state.addons||[];var avail=Object.keys(addonCatalog).filter(function(id){return owned.indexOf(id)===-1});if(!avail.length)return null;if(state.rating<3.3&&avail.indexOf('dogpark')>-1)return 'dogpark';if(count('store')===0&&avail.indexOf('propane')>-1)return 'propane';if(capacity()>=6&&avail.indexOf('kayaks')>-1)return 'kayaks';if(state.cash>6000&&avail.indexOf('ev')>-1)return 'ev';if(avail.indexOf('wifi')>-1)return 'wifi';return avail[0]}
+  function occupiedEstimate(){return Math.round(capacity()*Math.min(.92,.21+state.rating*.12))}
+  function render(){ensureState();renderStats();renderTools();renderRents();renderMap();renderReport();renderLogs();renderGrowth();renderChrome();computeSignals()}
+  var usableList=[];for(var ui=0;ui<ROWS*COLS;ui++){if(blocked.indexOf(ui)===-1)usableList.push(ui)}
+  var removedPads=[usableList[11],usableList[29]];
+  function siteLabel(i){if(blocked.indexOf(i)>-1)return 'C'+(blocked.indexOf(i)+1);var k=usableList.indexOf(i);if(k<0)return '';var slot=k%18;var num=slot<11?slot+1:slot;return (k<18?'A':'B')+num}
+  function siteSlot(i){return usableList.indexOf(i)}
+  function renderStats(){
+    state.month=Math.floor((state.day-1)/30)+1;
+    $('#cash').textContent=money(state.cash);$('#day').textContent=state.day;var td=$('#totalDays');if(td)td.textContent=totalDays();$('#guests').textContent=(state.report.guests||0)+' / '+capacity();$('#rating').textContent=state.rating.toFixed(1)+' ★';$('#parkValue').textContent=money(parkValue());
+    var clearedCount=(state.problemsCleared||[]).length,totalPads=usableList.length-removedPads.length+clearedCount;
+    var builtCount=state.grid.filter(function(x){return x&&x.type}).length,openCount=totalPads-builtCount;
+    var po=$('#padsOpen'),pb=$('#padsBuilt');if(po)po.textContent=openCount;if(pb)pb.textContent=builtCount;
+    var pt=$('#padsTotal'),pw=$('#padsWooded');if(pt)pt.textContent=totalPads;if(pw)pw.textContent=blocked.length-clearedCount;
+    var lc=$('#loopCStatus');if(lc)lc.textContent=clearedCount+' cleared of '+blocked.length;
+    var aOpen=0,bOpen=0;usableList.forEach(function(idx,k){if(removedPads.indexOf(idx)>-1)return;if(!state.grid[idx]){if(k<18)aOpen++;else bOpen++}});
+    var la=$('#loopAOpen'),lb=$('#loopBOpen');if(la)la.textContent=aOpen+' open of 17';if(lb)lb.textContent=bOpen+' open of 17';
+    var valueProgress=Math.min(1,parkValue()/16000), ratingProgress=Math.min(1,state.rating/4),pct=Math.round((valueProgress*.58+ratingProgress*.42)*100);$('#goalMeter').style.width=pct+'%';var gp=$('#goalPct');if(gp)gp.textContent=pct+'%';
+    var cal=calendarOf(state.day);$('#seasonText').textContent=cal.name.toUpperCase()+' · '+cal.season+' · '+state.weather;
+    var gt=$('#goalText');if(gt){gt.textContent='';var gs=document.createElement('strong');gs.textContent='Tycoon goal:';gt.appendChild(gs);gt.appendChild(document.createTextNode(' reach $16k park value and a 4.0 rating by Day '+totalDays()+' — Month '+(state.month||1)+' of your run'))}
+    $('#nextDay').disabled=state.ended;$('#nextDay').firstChild.nodeValue=state.day>=totalDays()?'Finish this month ':(state.timeMode==='week'?'Open for the week (7 days) ':state.timeMode==='month'?'Open for the month (30 days) ':'Open for the day ');
+  }
+  function renderGrowth(){
+    var gob=$('#growBadge');if(gob){var gleft=7-(state.day-state.lastGrantDay);gob.textContent=(state.lastGrantDay<0||gleft<=0)?'GRANTS READY':(state.loans.length?money(state.debt)+' OWED':'OPEN')}
+    var gb=$('#grantBadge');if(gb){var left=7-(state.day-state.lastGrantDay);gb.textContent=(state.lastGrantDay<0||left<=0)?'READY':'IN '+left+'D'}
+    var lb=$('#loanBadge');if(lb)lb.textContent=state.loans.length?money(state.debt)+' OWED':'VIEW';
+    var ab=$('#addonBadge');if(ab)ab.textContent=(state.addons.length)+' OWNED · '+(Object.keys(addonCatalog).length-state.addons.length)+' LEFT';
+    var box=$('#growthSummary');if(!box)return;var rec=recommendedAddon();var dscr=currentDSCR();
+    var html='<b>'+money(state.cash)+'</b> cash · <b>'+(state.loans.length?money(state.debt)+' debt · '+money(monthlyDebtPayment())+'/mo':'No debt')+'</b> · DSCR <b>'+(monthlyDebtPayment()?dscr.toFixed(2)+'×':'—')+'</b><br>Grants: <b>'+state.grantsWon+' won · '+money(state.grantTotal)+'</b> · Add-ons: <b>'+state.addons.length+' owned</b> · Season: <b>Day '+state.day+' of '+totalDays()+' (Month '+(state.month||1)+')</b>';
+    if(rec)html+='<div class="suggest">💡 <b>Suggested next:</b> '+addonCatalog[rec].name+' — '+money(addonCatalog[rec].cost)+'. '+addonCatalog[rec].desc+'</div>';
+    else if(state.addons.length)html+='<div class="suggest">All add-ons owned — the park is fully bolted-on. Nice.</div>';
+    box.innerHTML=html;
+  }
+  function renderRents(){
+    var box=$('#rentBox');if(!box)return;
+    var html='<div class="rent-head"><h3>Nightly site rent</h3><button class="plain-btn rent-reset" id="rentReset" type="button">Reset to defaults</button></div><p class="rent-note">Every site type starts at its <b>base rate</b>. Raise rent to earn more per occupied night — but higher prices thin out bookings and nick your rating. Cut rent and more pads fill for less per night.</p>';
+    rentTypes.forEach(function(t){var c=catalog[t],r=rentOf(t),off=r-c.rate;
+      html+='<div class="rent-row"><span class="rent-name"><b>'+c.name+'</b><small>BASE '+money(c.rate)+'/NIGHT'+(off!==0?' · NOW <span class="'+(off>0?'up':'down')+'">'+(off>0?'+':'−')+money(Math.abs(off))+'</span>':' · AT BASE')+'</small></span><span class="rent-ctl"><button type="button" class="rent-btn" data-rent="'+t+'|-10" aria-label="Lower '+c.name+' rent by $10">−</button><strong>'+money(r)+'</strong><button type="button" class="rent-btn" data-rent="'+t+'|10" aria-label="Raise '+c.name+' rent by $10">+</button></span></div>'});
+    box.innerHTML=html;
+    box.querySelectorAll('[data-rent]').forEach(function(b){b.addEventListener('click',function(){var parts=b.dataset.rent.split('|');adjustRent(parts[0],Number(parts[1]))})});
+    var rr=$('#rentReset');if(rr)rr.addEventListener('click',function(){rentTypes.forEach(function(t){state.rents[t]=catalog[t].rate});render();showToast('Rents reset to base rates')});
+  }
+  function adjustRent(t,delta){if(!catalog[t]||state.ended)return;var base=catalog[t].rate;var v=Math.round((rentOf(t)+delta)/10)*10;v=Math.max(20,Math.min(base*2,v));if(v===rentOf(t))return;state.rents[t]=v;addLog(catalog[t].name+' rent set to '+money(v)+'/night (base '+money(base)+').','');render()}
+  function renderSignals(){
+    var bd=$('#buildDot');if(bd)bd.hidden=!alertState.build;
+    var gd=$('#growDot');if(gd)gd.hidden=!(alertState.grant||alertState.loan||alertState.addon);
+    var gr=$('#grantDot');if(gr)gr.hidden=!alertState.grant;
+    var lo=$('#loanDot');if(lo)lo.hidden=!alertState.loan;
+    var ad=$('#addonDot');if(ad)ad.hidden=!alertState.addon;
+  }
+  function computeSignals(){
+    var avail={};Object.keys(catalog).forEach(function(k){if(state.rating>=catalog[k].minRating&&state.cash>=catalog[k].cost)avail[k]=1});
+    if(sigSeen.buildAvail){for(var k in avail){if(!sigSeen.buildAvail[k]){alertState.build=true;break}}}
+    sigSeen.buildAvail=avail;
+    var cleared=(state.problemsCleared||[]).length;
+    if(sigSeen.cleared>=0&&cleared>sigSeen.cleared)alertState.build=true;
+    sigSeen.cleared=cleared;
+    var gReady=state.lastGrantDay<0||(state.day-state.lastGrantDay)>=7;
+    if(sigSeen.grantReady===false&&gReady){alertState.grant=true}
+    sigSeen.grantReady=gReady;
+    var qual={};if(capacity()>0&&projectedMonthlyNOI()>0)loanOffers.forEach(function(o){if(currentDSCR(o.payment)>=1.2&&!state.loans.some(function(l){return l.id===o.id}))qual[o.id]=1});
+    if(sigSeen.loanQual){for(var id in qual){if(!sigSeen.loanQual[id]){alertState.loan=true;break}}}
+    sigSeen.loanQual=qual;
+    var rec=recommendedAddon();var aov=$('#addonOverlay');
+    if(sigSeen.rec!==undefined&&rec&&rec!==sigSeen.rec&&state.addons.indexOf(rec)===-1&&(!aov||aov.hidden))alertState.addon=true;
+    sigSeen.rec=rec;
+    renderSignals();
+  }
+  function renderTools(){
+    var tools=$('#tools');tools.innerHTML='';
+    Object.keys(catalog).forEach(function(key){var c=catalog[key],locked=state.rating<c.minRating;var desc=c.desc;if(c.capacity){desc=(key==='cabin'?'1 cabin · ':'1 campsite · ')+money(rentOf(key))+'/night'+(rentOf(key)!==c.rate?' · base '+money(c.rate):'')}var b=document.createElement('button');b.type='button';b.className='tool'+(selected===key?' selected':'')+(state.cash<c.cost?' cant':'');b.disabled=locked||state.ended;b.dataset.type=key;b.innerHTML='<span class="tool-thumb">'+art(key,1)+'</span><span class="tool-body"><strong>'+c.name+'</strong><small class="cost">'+money(c.cost)+'</small><small>'+desc+'</small></span>'+(locked?'<span class="lock">'+c.minRating.toFixed(1)+' ★</span>':'');b.addEventListener('click',function(){selected=key;renderTools();var bov=$('#buildOverlay');if(bov)bov.hidden=true;showToast(c.name+' selected — tap a numbered pad on the map');});tools.appendChild(b)});
+    var bb=$('#buildBadge');if(bb&&catalog[selected])bb.textContent=catalog[selected].name.toUpperCase();
+  }
+  function treeSvg(v){var greens=[['#245a3d','#34734a'],['#1f5236','#2c6a42'],['#2a6343','#3f8153']];var g=greens[((v||1)-1)%3];return '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M47 80h8v16h-8z" fill="#765139"/><path d="M51 8 27 49h15L23 76h56L61 49h14z" fill="'+g[0]+'"/><path d="M51 18 35 48h12L31 69h20z" fill="'+g[1]+'"/>'+(v===3?'<circle cx="24" cy="82" r="9" fill="'+g[1]+'"/><circle cx="78" cy="84" r="7" fill="'+g[0]+'"/>':'')+'</svg>'}
+  function art(type,level){
+    if(type==='blocked')return treeSvg(level);
+    if(type==='tent')return '<svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="52" cy="84" rx="37" ry="8" fill="#245a3d" opacity=".25"/><path d="M13 80 50 24l39 56z" fill="#f2bd4b" stroke="#18382a" stroke-width="4"/><path d="M50 24v56H13" fill="#dc7b3f"/><path d="M50 80 66 55l18 25z" fill="#9f4f36"/><path d="M9 83h83" stroke="#18382a" stroke-width="4"/>'+(level>1?'<circle cx="81" cy="26" r="12" fill="#fff8dc"/><path d="M76 26h10M81 21v10" stroke="#257050" stroke-width="3"/>':'')+'</svg>';
+    if(type==='rv')return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="28" width="88" height="60" rx="9" fill="#d9c9a3"/><ellipse cx="50" cy="84" rx="39" ry="7" fill="#245a3d" opacity=".22"/><path d="M13 36h60q12 0 12 12v29H13z" fill="#f3efe0" stroke="#18382a" stroke-width="4"/><path d="M20 44h22v18H20zM50 44h22v18H50z" fill="#6aa6bc" stroke="#18382a" stroke-width="3"/><circle cx="29" cy="78" r="9" fill="#293a35"/><circle cx="69" cy="78" r="9" fill="#293a35"/><path d="M85 68h9v6h-9" fill="none" stroke="#18382a" stroke-width="4"/></svg>';
+    if(type==='porta')return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="8" y="34" width="84" height="54" rx="9" fill="#ddd0ac"/><ellipse cx="50" cy="87" rx="38" ry="7" fill="#245a3d" opacity=".22"/><path d="M33 86V31q0-7 7-7h20q7 0 7 7v55z" fill="#4d8ca8" stroke="#18382a" stroke-width="4"/><path d="M33 40h34" stroke="#18382a" stroke-width="3"/><path d="M41 52h18v22H41z" fill="#3a7191"/><circle cx="56" cy="63" r="2.2" fill="#f6e8cf"/><path d="M39 24h22l3 9H36z" fill="#e7d7b4" stroke="#18382a" stroke-width="3"/>'+(level>1?'<circle cx="80" cy="24" r="11" fill="#fff8dc"/><path d="M75 24h10M80 19v10" stroke="#257050" stroke-width="3"/>':'')+'</svg>';
+    if(type==='bath')return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="8" y="30" width="84" height="58" rx="9" fill="#ddd0ac"/><ellipse cx="50" cy="86" rx="39" ry="7" fill="#245a3d" opacity=".22"/><path d="M17 38 50 18l34 20v48H17z" fill="#e7d7b4" stroke="#18382a" stroke-width="4"/><path d="M10 42 50 17l41 25" fill="none" stroke="#704b34" stroke-width="8"/><path d="M40 56h21v30H40z" fill="#4d8ca8" stroke="#18382a" stroke-width="3"/><circle cx="55" cy="70" r="2" fill="#fff"/><path d="M24 49h10v13H24zM68 49h10v13H68z" fill="#8ec7d8"/></svg>';
+    if(type==='trail')return '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M26 100c4-26 39-24 28-48-8-18 10-29 25-40" fill="none" stroke="#d4b06a" stroke-width="20"/><path d="M26 100c4-26 39-24 28-48-8-18 10-29 25-40" fill="none" stroke="#ab8549" stroke-width="3" stroke-dasharray="4 5"/><path d="M13 33h9v43h-9z" fill="#6f4930"/><path d="M7 29h32l-7 14H7z" fill="#e5b44b" stroke="#18382a" stroke-width="3"/><path d="m16 36 10 0" stroke="#18382a" stroke-width="3"/></svg>';
+    if(type==='store')return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="30" width="88" height="58" rx="9" fill="#ddd0ac"/><ellipse cx="50" cy="87" rx="40" ry="7" fill="#245a3d" opacity=".22"/><path d="M17 39h68v47H17z" fill="#ddc08b" stroke="#18382a" stroke-width="4"/><path d="M10 41h82L82 23H19z" fill="#c95d48" stroke="#18382a" stroke-width="4"/><path d="M28 55h20v31H28z" fill="#704b34"/><path d="M59 53h17v16H59z" fill="#75b2c7" stroke="#18382a" stroke-width="3"/><path d="M43 23v18M66 23v18" stroke="#f6e8cf" stroke-width="8"/></svg>';
+    if(type==='pavilion')return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="5" y="34" width="90" height="56" rx="9" fill="#ddd0ac"/><ellipse cx="50" cy="88" rx="40" ry="7" fill="#245a3d" opacity=".22"/><path d="M12 42 50 20l38 22-8 7L50 32 20 49z" fill="#8a4f2a" stroke="#18382a" stroke-width="3"/><path d="M22 46v34M78 46v34M50 38v10" stroke="#5e3f2f" stroke-width="5"/><path d="M30 66h40M35 66v10M65 66v10" stroke="#704b34" stroke-width="4" fill="none"/><path d="M26 60h48" stroke="#704b34" stroke-width="5"/>'+(level>1?'<path d="M22 50q9 6 14 0q9 6 14 0q9 6 14 0q9 6 14 0" fill="none" stroke="#c95d48" stroke-width="3"/>':'')+'</svg>';
+    if(type==='eventPavilion')return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="4" y="32" width="92" height="58" rx="9" fill="#ddd0ac"/><ellipse cx="50" cy="89" rx="41" ry="7" fill="#245a3d" opacity=".22"/><path d="M8 40 50 15l42 25-9 8L50 29 17 48z" fill="#6d3f22" stroke="#18382a" stroke-width="3"/><path d="M18 46v38M82 46v38M50 36v12" stroke="#4e2f1e" stroke-width="5"/><path d="M18 52q16 10 32 2q16 8 32-2" fill="none" stroke="#e3aa2c" stroke-width="3"/><path d="M30 58l5 8 5-8zM48 60l5 8 5-8zM64 58l5 8 5-8z" fill="#c95d48"/><path d="M28 74h44M34 74v9M66 74v9" stroke="#704b34" stroke-width="4" fill="none"/>'+(level>1?'<circle cx="50" cy="24" r="4" fill="#f2c14e" stroke="#18382a" stroke-width="2"/>':'')+'</svg>';
+    if(type==='host')return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="30" width="88" height="58" rx="9" fill="#d9c9a3"/><ellipse cx="50" cy="86" rx="39" ry="7" fill="#245a3d" opacity=".22"/><path d="M14 38h56q13 0 13 13v26H14z" fill="#e9f0e4" stroke="#18382a" stroke-width="4"/><path d="M21 46h20v16H21zM49 46h20v16H49z" fill="#6aa6bc" stroke="#18382a" stroke-width="3"/><circle cx="28" cy="79" r="8" fill="#293a35"/><circle cx="66" cy="79" r="8" fill="#293a35"/><path d="M84 84V52" stroke="#704b34" stroke-width="4"/><path d="M84 52l14 5-14 5z" fill="#c95d48" stroke="#18382a" stroke-width="2"/></svg>';
+    return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="5" y="32" width="90" height="57" rx="9" fill="#d9c9a3"/><ellipse cx="50" cy="88" rx="41" ry="7" fill="#245a3d" opacity=".22"/><path d="M17 45 50 19l34 26v42H17z" fill="#9a683f" stroke="#18382a" stroke-width="4"/><path d="M10 47 50 16l41 31" fill="none" stroke="#18382a" stroke-width="7"/><path d="M25 52h17v14H25zM58 52h17v14H58z" fill="#f2c14e" stroke="#18382a" stroke-width="3"/><path d="M43 68h16v19H43z" fill="#5e3f2f"/><path d="M15 77h70" stroke="#18382a" stroke-width="4"/></svg>'
+  }
+  function problemArt(kind){
+    if(kind==='fallen')return '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 74 84 40" stroke="#6f4b2d" stroke-width="13" stroke-linecap="round"/><path d="M60 48 74 22M70 44l16-8M52 54 60 34" stroke="#2c6a42" stroke-width="6" stroke-linecap="round"/><circle cx="16" cy="73" r="8" fill="#a9805a" stroke="#6f4b2d" stroke-width="3"/><path d="M8 88h84" stroke="#47603e" stroke-width="5"/></svg>';
+    if(kind==='water')return '<svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="62" rx="40" ry="20" fill="#4d8ca8"/><ellipse cx="50" cy="58" rx="32" ry="14" fill="#7db6c9"/><path d="M22 56q10-6 20 0t20 0 20 0" fill="none" stroke="#dff2f8" stroke-width="3"/><path d="M38 30c4 8-6 10 0 16M58 26c4 8-6 10 0 16" stroke="#2c6a42" stroke-width="5" fill="none"/></svg>';
+    if(kind==='rock')return '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M12 80 30 46l18 10 10-20 30 44z" fill="#8b8d84" stroke="#5c5e57" stroke-width="4"/><path d="M30 46 44 66M58 36 62 62" stroke="#5c5e57" stroke-width="3"/><path d="M8 86h84" stroke="#47603e" stroke-width="5"/></svg>';
+    if(kind==='junk')return '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="32" cy="66" r="15" fill="none" stroke="#3c4148" stroke-width="7"/><circle cx="66" cy="72" r="11" fill="none" stroke="#3c4148" stroke-width="6"/><path d="M22 44h44l-6 12H28z" fill="#9a4f36" stroke="#6e3524" stroke-width="3"/><path d="M70 30l10 14-8 4-9-13z" fill="#7d8891" stroke="#4c565e" stroke-width="3"/></svg>';
+    if(kind==='stump')return '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 52h26v18q-13 6-26 0z" fill="#8a6844" stroke="#5e452c" stroke-width="3"/><ellipse cx="35" cy="52" rx="13" ry="5" fill="#c8a878"/><path d="M58 60h22v12q-11 5-22 0z" fill="#8a6844" stroke="#5e452c" stroke-width="3"/><ellipse cx="69" cy="60" rx="11" ry="4" fill="#c8a878"/><path d="M10 86q20-8 40 0t40 0" fill="none" stroke="#47603e" stroke-width="5"/></svg>';
+    return '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M20 84V44M20 44q-10-14 2-24M20 56q14-4 16-18M20 66q-12-2-14-14" stroke="#2c6a42" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M52 84V38M52 38q-8-16 4-26M52 52q14-6 14-20M52 64q-13-3-15-15" stroke="#34734a" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M78 84V50M78 50q10-10 4-22" stroke="#2c6a42" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M8 88h84" stroke="#47603e" stroke-width="5"/></svg>'
+  }
+  var OUTER_ANG=[-80,-48,-16,16,48,80,112,144,176,208,240,272],INNER_ANG=[-60,0,60,120,180,240];
+  function sitePos(i){if(blocked.indexOf(i)>-1){var bp=blockedPos[blocked.indexOf(i)];return{x:bp.x,y:bp.y,rot:0}}var k=siteSlot(i),loop=k<18?0:1,slot=k%18,cx=loop===0?26:74,cy=42,ang,rx,ry;if(slot<12){ang=OUTER_ANG[slot];rx=18.5;ry=34}else{ang=INNER_ANG[slot-12];rx=10.8;ry=18.5}var rad=ang*Math.PI/180;return{x:cx+rx*Math.cos(rad),y:cy+ry*Math.sin(rad),rot:Math.round(13*Math.sin(rad))}}
+  function pineAt(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')" opacity=".85"><path d="M0 -16 L11 4 L5 4 L14 18 L-14 18 L-5 4 L-11 4 Z" fill="#1e4d33"/><rect x="-2" y="18" width="4" height="7" fill="#6f4b2d"/></g>'}
+  function roadSvg(){var trees=[[28,26,1],[70,14,.8],[792,22,1],[828,60,.8],[22,300,1],[838,300,.9],[26,540,1],[70,560,.8],[790,548,1],[836,520,.85],[430,120,.7],[838,120,.8],[20,120,.85]];var t='';trees.forEach(function(p){t+=pineAt(p[0],p[1],p[2])});
+    return '<svg class="road-svg" viewBox="0 0 860 580" preserveAspectRatio="none" aria-hidden="true">'
+    +'<ellipse cx="430" cy="14" rx="118" ry="26" fill="#7db6c9" opacity=".9"/><path d="M352 8 q78 22 156 2" fill="none" stroke="#a8d3e2" stroke-width="5" opacity=".8"/>'
+    +t
+    +'<path d="M224 396 H636 M430 580 V396" fill="none" stroke="#c9b586" stroke-width="34"/><path d="M224 396 H636 M430 580 V396" fill="none" stroke="#fff8dc" stroke-width="2" stroke-dasharray="10 12" opacity=".65"/>'
+    +'<ellipse cx="224" cy="244" rx="126" ry="152" fill="none" stroke="#c9b586" stroke-width="34"/><ellipse cx="636" cy="244" rx="126" ry="152" fill="none" stroke="#c9b586" stroke-width="34"/>'
+    +'<ellipse cx="224" cy="244" rx="126" ry="152" fill="none" stroke="#fff8dc" stroke-width="2" stroke-dasharray="10 12" opacity=".65"/><ellipse cx="636" cy="244" rx="126" ry="152" fill="none" stroke="#fff8dc" stroke-width="2" stroke-dasharray="10 12" opacity=".65"/>'
+    +'<path d="M214 82 l10 -10 10 10 z" fill="#fff8dc"/><path d="M626 82 l10 -10 10 10 z" fill="#fff8dc"/><path d="M420 500 l10 -10 10 10 z" fill="#fff8dc"/>'
+    +'</svg>'}
+  function renderMap(){var map=$('#map');map.innerHTML=roadSvg()
+    +'<div class="loop-label" style="left:26%;top:42%"><strong>LOOP A</strong><span>PINE LOOP<br>17 PADS · A1–A17</span></div>'
+    +'<div class="loop-label" style="left:74%;top:42%"><strong>LOOP B</strong><span>CREEK LOOP<br>17 PADS · B1–B17</span></div>'
+    +'<div class="entrance-sign">▲ ENTRANCE · CHECK-IN</div>';
+    state.grid.forEach(function(cell,i){if(removedPads.indexOf(i)>-1)return;var label=siteLabel(i),pos=sitePos(i);var b=document.createElement('button');b.type='button';
+      if(cell==='blocked'&&!isCleared(i)){var pk=problemKey(i),pc=problemCatalog[pk];b.className='tile problem';b.style.left=pos.x+'%';b.style.top=pos.y+'%';b.setAttribute('aria-label','Problem site '+label+': '+pc.name+'. Tap to see the problem and clearing cost.');b.innerHTML='<span class="site-no">'+label+'</span>'+problemArt(pk)+'<span class="problem-tag">'+pc.short+'</span>';b.addEventListener('click',function(){openProblem(i)});map.appendChild(b);return}
+      var clearedPad=blocked.indexOf(i)>-1;
+      b.className='tile '+(cell===null?'empty':'built')+(clearedPad?' cleared-pad':'');b.style.left=pos.x+'%';b.style.top=pos.y+'%';b.style.setProperty('--rot',pos.rot+'deg');
+      if(cell===null){b.setAttribute('aria-label','Pad '+label+', open. Tap to build.');b.innerHTML='<span class="site-no">'+label+'</span>';b.addEventListener('click',function(){buildAt(i)})}
+      else{b.setAttribute('aria-label','Pad '+label+': '+catalog[cell.type].name+', level '+cell.level+'. Tap for upgrades.');b.innerHTML='<span class="site-no">'+label+'</span>'+art(cell.type,cell.level)+(cell.level>1?'<span class="lvl">L'+cell.level+'</span>':'')+(cell.type==='host'?'<span class="host-tag">'+hostOccupancy(i)+'/2 HOSTS</span>':'');b.addEventListener('click',function(){inspectBuilt(i)})}
+      map.appendChild(b)})}
+  function buildAt(i){if(state.ended)return;var c=catalog[selected];if(!c){showToast('Choose something to build first');return}if(state.cash<c.cost){showToast('You need '+money(c.cost-state.cash)+' more for that');return}state.cash-=c.cost;state.grid[i]={type:selected,level:1};addLog(c.name+' opened on pad '+siteLabel(i)+' for '+money(c.cost)+'.','good');render();showToast(c.name+' built on pad '+siteLabel(i))}
+  function openProblem(i){if(state.ended)return;var pk=problemKey(i),pc=problemCatalog[pk];$('#siteTitle').textContent='Problem site '+siteLabel(i)+' — not usable yet';var body=$('#siteBody');var afford=state.cash>=pc.cost;
+    body.innerHTML='<div class="site-detail"><b>The problem: '+pc.name+'.</b><br>'+pc.desc+'<br><br>Until this is cleared, pad '+siteLabel(i)+' is <b>not a usable site</b> — nothing can be built on it and it earns nothing. Clear it once and it becomes a normal buildable pad for good.</div>'
+    +'<div class="offer-card"><div><h3>Clear this site</h3><p>Crew, equipment, and haul-off — one-time job.</p><span class="offer-meta">CLEARING COST: '+money(pc.cost)+' · YOUR CASH: '+money(state.cash)+'</span></div><button class="offer-btn" id="clearProblemBtn" type="button" '+(afford?'':'disabled')+'>'+(afford?'Clear it — '+money(pc.cost):'Need '+money(pc.cost))+'</button></div>';
+    $('#siteOverlay').hidden=false;
+    var btn=$('#clearProblemBtn');if(btn)btn.addEventListener('click',function(){clearProblem(i)})}
+  function clearProblem(i){var pk=problemKey(i),pc=problemCatalog[pk];if(state.cash<pc.cost){showToast('Clearing costs '+money(pc.cost));return}state.cash-=pc.cost;if(!Array.isArray(state.problemsCleared))state.problemsCleared=[];state.problemsCleared.push(i);state.grid[i]=null;addLog('Problem cleared on pad '+siteLabel(i)+': '+pc.name.toLowerCase()+' — removed for '+money(pc.cost)+'. Pad '+siteLabel(i)+' is now buildable.','good');$('#siteOverlay').hidden=true;render();showToast('Pad '+siteLabel(i)+' cleared — pick a tool and build on it')}
+  function chainHtml(current){var chains={tent:['tent','rv','cabin'],rv:['tent','rv','cabin'],cabin:['tent','rv','cabin'],porta:['porta','bath'],bath:['porta','bath']};var steps=chains[current];if(!steps)return '';var html='<div class="chain" aria-label="Upgrade path">';steps.forEach(function(s,idx){if(idx>0)html+='<i>→</i>';html+='<span class="'+(s===current?'here':'')+'">'+catalog[s].name+(s===current?' (you are here)':'')+'</span>'});html+='</div>';return html}
+  function inspectBuilt(i){if(state.ended)return;var item=state.grid[i],c=catalog[item.type];$('#siteTitle').textContent='Pad '+siteLabel(i)+' — '+c.name;var body=$('#siteBody');
+    var html='<div class="site-detail"><b>'+c.name+'</b> · Level '+item.level+(catalog[item.type].capacity?' · '+money(rentOf(item.type)*(1+(item.level-1)*.28))+'/night at this level · base rate '+money(c.rate):' · supports the whole park')+' · upkeep '+money(Math.round(c.upkeep*(1+(item.level-1)*.25)))+'/day<br>'+(c.capacity?'Nightly rent is set for all '+c.name.toLowerCase()+'s in the Build panel.':c.desc)+'</div>'+chainHtml(item.type)+(item.type==='host'?hostResidentsHtml(i):'');
+    var upCost=Math.round(c.cost*.62);
+    if(item.level<2)html+='<div class="offer-card"><div><h3>Improve this '+c.name.toLowerCase()+'</h3><p>Level 2 earns more per night and adds park value.</p><span class="offer-meta">COST: '+money(upCost)+'</span></div><button class="offer-btn" id="improveBtn" type="button" '+(state.cash>=upCost?'':'disabled')+'>'+(state.cash>=upCost?'Improve — '+money(upCost):'Need '+money(upCost))+'</button></div>';
+    else html+='<div class="finance-note">This '+c.name.toLowerCase()+' is already at <b>Level 2</b> — fully improved at its current type.</div>';
+    var chain=upgradeChain[item.type];
+    if(chain){var nc=catalog[chain.next];var locked=state.rating<nc.minRating;var afford=state.cash>=chain.cost;var isSite=!!nc.capacity;
+      var pathText=item.type==='porta'?'Comfort climbs its own ladder: <b>porta potty → bathhouse</b>. Upgrading keeps this pad and its spot on the loop — the bathhouse starts at Level 1 and lifts guest comfort park-wide.':'The full upgrade path runs <b>tent → RV pad → cabin</b>. Converting keeps this pad and its spot on the loop — the new build starts at Level 1 and earns your '+nc.name.toLowerCase()+' rent of '+money(rentOf(chain.next))+'/night.';
+      var metaText=locked?'REQUIRES '+nc.minRating.toFixed(1)+' ★ — YOU ARE AT '+state.rating.toFixed(1)+' ★':(isSite?'COST: '+money(chain.cost)+' · NEW RATE: '+money(rentOf(chain.next))+'/NIGHT (BASE '+money(nc.rate)+')':'COST: '+money(chain.cost)+' · FULL BATHHOUSE WITH SHOWERS & SINKS');
+      html+='<div class="offer-card"><div><h3>'+chain.label+'</h3><p>'+pathText+'</p><span class="offer-meta">'+metaText+'</span></div><button class="offer-btn" id="convertBtn" type="button" '+(!locked&&afford?'':'disabled')+'>'+(locked?'Locked — '+nc.minRating.toFixed(1)+' ★':afford?chain.label+' — '+money(chain.cost):'Need '+money(chain.cost))+'</button></div>'}
+    else if(item.type==='cabin')html+='<div class="finance-note">🏆 <b>Top of the chain.</b> This pad started life as a lesser site and now rents as a cabin at '+money(rentOf(item.type))+'/night — the best a single pad can be.</div>';
+    else if(item.type==='bath')html+='<div class="finance-note">🚿 <b>Top of the comfort chain.</b> This pad runs as a full bathhouse — the porta potty it may have started as is long gone.</div>';
+    var salvage=Math.round((c.cost+(item.level>1?Math.round(c.cost*.62):0))*.25);
+    var hostOccupied=item.type==='host'&&hostOccupancy(i)>0;
+    html+='<div class="offer-card"><div><h3>Demolish this '+c.name.toLowerCase()+'</h3><p>'+(hostOccupied?'Hosts are living on this site — let them go from the Hosts &amp; Hiring panel before this pad can come out.':'Tear it out and haul it off — pad '+siteLabel(i)+' goes back to empty so you can build something else on it. You recover a quarter of what you have sunk into it as salvage.')+'</p><span class="offer-meta">'+(hostOccupied?'OCCUPIED BY HOSTS — DEMOLISH UNAVAILABLE':'SALVAGE REFUND: '+money(salvage)+' · PAD RETURNS TO EMPTY')+'</span></div><button class="offer-btn secondary" id="demolishBtn" type="button" '+(hostOccupied?'disabled':'')+'>'+(hostOccupied?'Hosts live here':'Demolish — '+money(salvage)+' back')+'</button></div>';
+    body.innerHTML=html;$('#siteOverlay').hidden=false;
+    var ib=$('#improveBtn');if(ib)ib.addEventListener('click',function(){if(state.cash<upCost)return;state.cash-=upCost;item.level=2;addLog(c.name+' on pad '+siteLabel(i)+' improved to Level 2.','good');$('#siteOverlay').hidden=true;render();showToast(c.name+' improved for '+money(upCost))});
+    var cb=$('#convertBtn');if(cb)cb.addEventListener('click',function(){if(state.cash<chain.cost)return;var from=c.name;state.cash-=chain.cost;state.grid[i]={type:chain.next,level:1};addLog(from+' on pad '+siteLabel(i)+' converted up to a '+catalog[chain.next].name+'. The upgrade path continues.','good');$('#siteOverlay').hidden=true;render();showToast('Pad '+siteLabel(i)+' is now a '+catalog[chain.next].name)});
+    var db=$('#demolishBtn');if(db)db.addEventListener('click',function(){if(db.dataset.armed!=='1'){db.dataset.armed='1';db.textContent='Tap again to confirm';db.classList.remove('secondary');return}state.grid[i]=null;state.cash+=salvage;addLog(c.name+' on pad '+siteLabel(i)+' demolished. Salvage refunded '+money(salvage)+' — the pad is open for something new.','');$('#siteOverlay').hidden=true;render();showToast('Pad '+siteLabel(i)+' demolished — ready to rebuild')})}
+  function rand(seed){var x=Math.sin(seed*9187.313)*10000;return x-Math.floor(x)}
+  function runDay(){
+    var d=state.day,weatherRoll=rand(d+parkValue()),weather=weatherRoll<.12?'STORMY':weatherRoll<.34?'CLOUDY':weatherRoll>.9?'HOT':'CLEAR';state.weather=weather;
+    var cal=calendarOf(d);
+    if(d>1&&(d-1)%30===0)addLog(cal.name+' rolls in — '+cal.season.toLowerCase()+' at Pine Hollow. '+cal.note,'');
+    var weatherFactor=weather==='STORMY'?.54:weather==='CLOUDY'?.82:weather==='HOT'?.88:1;
+    var demand=Math.min(.96,(.18+state.rating*.14+Math.min(.18,d*.006))*weatherFactor*priceFactor()*cal.factor);
+    var evBoost=0,evIncome=0,evName='';
+    if(state.activeEvent&&eventCatalog[state.activeEvent.id]){var evd=eventCatalog[state.activeEvent.id];evBoost=evd.boost;evIncome=evd.income||0;evName=evd.name;demand=Math.min(.97,demand*(1+evBoost))}
+    var totalCap=capacity(),occupied=Math.max(0,Math.min(totalCap,Math.round(totalCap*demand+rand(d*3.7)-.35)));
+    var types=[];state.grid.forEach(function(x){if(x&&x.type&&catalog[x.type].capacity)types.push(x)});types.sort(function(a,b){return rentOf(b.type)-rentOf(a.type)});
+    var remaining=occupied,fees=0;types.forEach(function(x){if(remaining>0){fees+=rentOf(x.type)*(1+(x.level-1)*.28);remaining--}});
+    var persons=hostPersons();
+    var storeClosed=count('store')>0&&persons<1;
+    var store=storeClosed?0:(count('store')?occupied*catalog.store.storeRate*(1+Math.min(1,count('store')-1)*.2):0);
+    var pavilion=pavilionDaily(occupied);
+    var addonInc=addonDaily(occupied);
+    var debtPay=dailyDebtPayment();
+    // amortise loans a touch each day
+    state.loans.forEach(function(l){l.remaining=Math.max(0,l.remaining-l.payment/30)});state.loans=state.loans.filter(function(l){return l.remaining>1});state.debt=state.loans.reduce(function(s,l){return s+l.remaining},0);
+    var opsUpkeep=state.grid.reduce(function(sum,x){return sum+(x&&x.type?catalog[x.type].upkeep*(1+(x.level-1)*.25):0)},0)+45;
+    var eventDelta=0,eventText='',tone='';var er=rand(d*13.11+count('trail')*2);
+    if(er<.08){eventDelta=-420;eventText='A water-line repair cost '+money(420)+'.';tone='bad'}
+    else if(er<.16&&count('trail')){eventDelta=260;eventText='The trail drew a hiking club. Donations added '+money(260)+'.';tone='good'}
+    else if(er>.92){eventDelta=390;eventText='A regional camping blog featured the park. '+money(390)+' bonus revenue.';tone='good'}
+    else if(weather==='STORMY'){eventText='Heavy rain kept several campers home.';tone='bad'}
+    eventDelta+=evIncome;
+    var wagesCost=persons*hostPay()+perkDailyCost();
+    var rentInc=hostRentIncome();
+    // Book every dollar as a whole-dollar ledger line first, then Net is exactly
+    // the sum of the lines — fees + store + pavilion + add-ons + events + host rent − operations − wages − loan payments.
+    fees=Math.round(fees);store=Math.round(store);pavilion=Math.round(pavilion);addonInc=Math.round(addonInc);eventDelta=Math.round(eventDelta);wagesCost=Math.round(wagesCost);rentInc=Math.round(rentInc);
+    var opsCost=Math.round(opsUpkeep),debtCost=Math.round(debtPay);
+    var net=fees+store+pavilion+addonInc+eventDelta+rentInc-opsCost-wagesCost-debtCost;state.cash+=net;
+    state.incomeHistory.push(net);state.incomeHistory=state.incomeHistory.slice(-14);
+    if(persons>0){var mt=moraleTarget();state.hostMorale=Math.max(0,Math.min(100,state.hostMorale+(mt-state.hostMorale)*.4))}
+    var covP=coveragePersons();
+    var experience=2.7+comfort()+Math.min(.45,count('cabin')*.12)+Math.min(.25,count('rv')*.05)-(weather==='STORMY'?.18:0)-((priceIndex()-1)*.45);
+    if(totalCap>0){if(covP<=0)experience-=.5;else{var wr=totalCap/covP;if(wr>6)experience-=Math.min(.6,(wr-6)*.07)}}
+    if(persons>0)experience+=(state.hostMorale-58)*.004;
+    if(storeClosed&&occupied>0)experience-=.12;
+    if(occupied>=4){if(count('bath')===0&&count('porta')===0)experience-=.35;else if(count('bath')===0)experience-=.15}
+    experience=Math.max(1.8,Math.min(4.85,experience));state.rating=Math.max(1,Math.min(5,state.rating*.75+experience*.25));
+    state.report={fees:fees,store:store,pavilion:pavilion,addons:addonInc,events:eventDelta,hostRent:rentInc,expenses:-opsCost,wages:-wagesCost,debt:-debtCost,net:net,guests:occupied};
+    addLog(occupied+' of '+totalCap+' sites filled. Net '+money(net)+(debtPay>0?' after '+money(debtPay)+' debt service':'')+'.',net>=0?'good':'bad');if(eventText)addLog(eventText,tone);
+    if(storeClosed&&occupied>0)addLog('The camp store sat closed today — no host on staff to run the counter. Hire a host to open it.','bad');
+    if(totalCap>0&&covP<=0&&persons>0)addLog('Every host is tied up at the store — nobody is covering the guest sites, and guests can tell.','bad');
+    else if(totalCap>0&&covP>0&&totalCap/covP>6&&rand(d*2.31)<.6)addLog('Guests are noticing the thin staffing — '+totalCap+' guest sites is a stretch for '+covP+' working host'+(covP===1?'':'s')+'. Hire help or the rating keeps sliding.','bad');
+    if(persons>0&&state.hostMorale<40&&rand(d*1.93)<.35)addLog('Host morale is at '+Math.round(state.hostMorale)+'% — there is grumbling at the host sites. Better pay, lower site rent, or a perk would help.','bad');
+    if(persons>0&&state.hostMorale<30&&state.hosts.length&&rand(d*7.31+persons*3)<.16){var qi=Math.floor(rand(d*3.97+1)*state.hosts.length)%state.hosts.length;var quitter=state.hosts[qi];state.hosts.splice(qi,1);addLog(quitter.names+' packed up and left — host morale got too low to stay.','bad')}
+    if(addonInc>0)addLog('Add-ons brought in '+money(addonInc)+' today.','good');
+    if(pavilion>0)addLog('Pavilion rentals brought in '+money(pavilion)+' today — gatherings pay.','good');
+    if(state.activeEvent){state.activeEvent.daysLeft--;if(state.activeEvent.daysLeft<=0){addLog(evName+' wrapped up — three good days in the books.','good');state.activeEvent=null}}
+    if(state.cash<0){addLog('The park is overdrawn. Build carefully and recover cash flow.','bad')}
+    if(d>=totalDays()){state.awaitingExtension=true;state.ended=true;render();showResults();return true}
+    state.day++;return false
+  }
+  function operateDay(){
+    if(state.ended)return;if(capacity()===0){showToast('Build at least one campsite before opening');$('#mapHint').classList.add('show');setTimeout(function(){$('#mapHint').classList.remove('show')},1800);return}
+    var steps=state.timeMode==='week'?7:state.timeMode==='month'?30:1,ran=0,totalNet=0,endedNow=false;
+    while(ran<steps){endedNow=runDay();ran++;totalNet+=state.report.net||0;if(endedNow)break}
+    if(endedNow)return;
+    if(ran>1)addLog('Ran '+ran+' days at '+state.timeMode+' pace — combined net '+money(totalNet)+'. The ledger shows the last day line by line.',totalNet>=0?'good':'bad');
+    render()
+  }
+  function addLog(text,tone){state.logs.unshift({day:state.day,text:text,tone:tone||''});state.logs=state.logs.slice(0,12)}
+  function renderReport(){var r=state.report;$('#daySummaryLabel').textContent=r.guests===undefined?'NO REPORT YET':'DAY '+Math.max(1,state.day-(state.ended?0:1))+' REPORT';$('#feeIncome').textContent=money(r.fees||0);$('#storeIncome').textContent=money(r.store||0);var pi=$('#pavIncome');if(pi)pi.textContent=money(r.pavilion||0);var ai=$('#addonIncome');if(ai)ai.textContent=money(r.addons||0);var ei=$('#eventIncome');if(ei)ei.textContent=money(r.events||0);var hr=$('#hostRentIncome');if(hr)hr.textContent=money(r.hostRent||0);var wg=$('#wageOut');if(wg)wg.textContent=money(r.wages||0);$('#expenses').textContent=money(r.expenses||0);var lo=$('#loanOut');if(lo)lo.textContent=money(r.debt||0);$('#net').textContent=money(r.net||0);$('#net').style.color=(r.net||0)<0?'var(--red)':'var(--green-dark)'}
+  function renderLogs(){var box=$('#eventLog');box.innerHTML='';state.logs.forEach(function(e){var div=document.createElement('div');div.className='event '+(e.tone||'');var t=document.createElement('time');t.textContent='DAY '+(Number(e.day)||1);var p=document.createElement('p');p.textContent=e.text;div.appendChild(t);div.appendChild(p);box.appendChild(div)})}
+  function showToast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},1900)}
+  function closeAll(){$('#welcomeOverlay').hidden=true;$('#menuOverlay').hidden=true;$('#resultOverlay').hidden=true;var s=$('#siteOverlay');if(s)s.hidden=true;var bo=$('#buildOverlay');if(bo)bo.hidden=true;var gw=$('#growOverlay');if(gw)gw.hidden=true;var g=$('#grantOverlay');if(g)g.hidden=true;var l=$('#loanOverlay');if(l)l.hidden=true;var a=$('#addonOverlay');if(a)a.hidden=true;var ho=$('#hostsOverlay');if(ho)ho.hidden=true;var eo=$('#eventsOverlay');if(eo)eo.hidden=true;var lo2=$('#ledgerOverlay');if(lo2)lo2.hidden=true}
+  function showResults(){var won=parkValue()>=16000&&state.rating>=4;$('#resultTitle').textContent=won?'Month '+(state.month||1)+' complete — Tycoon goal hit!':'Month '+(state.month||1)+' complete';$('#resultCopy').textContent=won?'You hit $16k value and 4.0★ — but a real park doesn’t close on its best month. Keep running, stack another month, and see how big Pine Hollow gets.':'You kept the gates open through Day '+totalDays()+'. The tycoon goal is still ahead — another month gives your sites, grants, and loans time to compound instead of resetting to zero.';$('#finalValue').textContent=money(parkValue());$('#finalRating').textContent=state.rating.toFixed(1)+' ★';$('#finalCash').textContent=money(state.cash);var fg=$('#finalGrants');if(fg)fg.textContent=state.grantsWon+' · '+money(state.grantTotal);var fd=$('#finalDebt');if(fd)fd.textContent=money(state.debt||0);var fa=$('#finalAddons');if(fa)fa.textContent=state.addons.length;$('#resultOverlay').hidden=false}
+  function extendSeason(){state.totalDays=totalDays()+30;state.month=(state.month||1)+1;state.ended=false;state.awaitingExtension=false;state.day=totalDays()-29;state.lastGrantDay=Math.min(state.lastGrantDay,state.day-7);addLog('Season extended — Month '+state.month+' is open. Now playing to Day '+totalDays()+'.','good');closeAll();render();showToast('Another month! Now running to Day '+totalDays())}
+  // ---- Grants mini-game: Pitch Builder ----
+  var grantGame=null;
+  function openGrants(){alertState.grant=false;renderSignals();closeAll();$('#grantOverlay').hidden=false;var left=7-(state.day-state.lastGrantDay);var body=$('#grantBody');
+    if(state.lastGrantDay>=0&&left>0){body.innerHTML='<div class="finance-note">⏳ <b>Review window closed for now.</b> Your last application was Day '+state.lastGrantDay+'. Funders need <b>'+left+' more day'+(left===1?'':'s')+'</b> before the next round. Run days, grow NOI, and come back — a stronger park pitches better anyway.</div>';return}
+    grantGame={step:-1,score:0,grant:null,picks:[]};
+    var html='<p style="margin-bottom:10px"><b>Step 1 — Pick a grant to chase:</b></p>';
+    grantCatalog.forEach(function(g){html+='<button class="choice-btn" data-grant="'+g.id+'" type="button"><b>'+g.name+' — '+money(g.amount)+'</b><small>'+g.org+' · '+g.blurb+'</small></button>'});
+    body.innerHTML='<div class="choice-list">'+html+'</div>';
+    body.querySelectorAll('[data-grant]').forEach(function(b){b.addEventListener('click',function(){var g=grantCatalog.filter(function(x){return x.id===b.dataset.grant})[0];grantGame.grant=g;grantGame.step=0;renderGrantStep()})});
+  }
+  function renderGrantStep(){var body=$('#grantBody');var step=grantGame.step;
+    if(step>=grantRounds.length){finishGrant();return}
+    var r=grantRounds[step];var dots='<div class="grant-dots">'+grantRounds.map(function(_,i){return '<i class="'+(i<step?'done':i===step?'on':'')+'"></i>'}).join('')+'</div>';
+    var html=dots+'<p><b>'+r.q+'</b></p><p style="font-size:12px">Grant: '+grantGame.grant.name+' ('+money(grantGame.grant.amount)+') · Score so far: '+grantGame.score+'/6</p><div class="choice-list">';
+    // shuffle deterministically by day+step so layout varies
+    var opts=r.opts.slice();for(var i=opts.length-1;i>0;i--){var j=Math.floor(rand(state.day*7+step*13+i*3)*(i+1));var tmp=opts[i];opts[i]=opts[j];opts[j]=tmp}
+    opts.forEach(function(o,idx){html+='<button class="choice-btn" data-pick="'+idx+'" type="button">'+o.t+'</button>'});
+    html+='</div>';body.innerHTML=html;
+    body.querySelectorAll('[data-pick]').forEach(function(b){b.addEventListener('click',function(){var o=opts[Number(b.dataset.pick)];var pts=o.s;if(step===0&&o.g!=='any'&&o.g!==grantGame.grant.id)pts=Math.max(0,pts-1);if(step===0&&o.g===grantGame.grant.id)pts=o.s;grantGame.score+=pts;grantGame.picks.push(pts);grantGame.step++;renderGrantStep()})});
+  }
+  function finishGrant(){var body=$('#grantBody');var amt=grantGame.grant.amount;var won=0,label='';
+    if(grantGame.score>=5){won=amt;label='FULLY FUNDED'}else if(grantGame.score===4){won=Math.round(amt/2);label='PARTIALLY FUNDED'}else{label='DECLINED — THIS ROUND'}
+    state.lastGrantDay=state.day;
+    if(won>0){state.cash+=won;state.grantsWon++;state.grantTotal+=won;addLog('Grant awarded: '+grantGame.grant.name+' — '+money(won)+' ('+label+', pitch '+grantGame.score+'/6).','good')}
+    else addLog('Grant declined: '+grantGame.grant.name+' (pitch '+grantGame.score+'/6). Sharpen the pitch and retry in 7 days.','bad');
+    body.innerHTML='<div class="grant-score"><span>PITCH SCORE</span><strong>'+grantGame.score+' / 6</strong><span>'+label+'</span></div><p>'+(won>0?'The reviewers funded <b>'+grantGame.grant.name+'</b> for <b>'+money(won)+'</b>. It’s in your cash now — no repayment, but funders will expect to see it working in the park. Next application opens in 7 days.':'Score 4 earns half, 5–6 earns the full award. The fix is almost always the same: match Round 1 to the grant you picked, itemise the budget, and bring a partner or numbers for impact. Try again in 7 days.')+'</p>';
+    grantGame=null;render();
+  }
+  // ---- DSCR Loans ----
+  function openLoans(){alertState.loan=false;renderSignals();closeAll();$('#loanOverlay').hidden=false;renderLoans()}
+  function renderLoans(){var noi=projectedMonthlyNOI();var pay=monthlyDebtPayment();var dscr=currentDSCR();var pct=pay>0?Math.min(100,Math.round(dscr/2*100)): (noi>0?100:0);
+    $('#dscrBox').innerHTML='<b>Your numbers right now</b><br>Projected monthly NOI: <b>'+money(noi)+'</b> · Current debt payments: <b>'+money(pay)+'/mo</b> · Current DSCR: <b>'+(pay?dscr.toFixed(2)+'×':'No debt yet')+'</b><div class="dscr-bar"><span class="'+(pay&&dscr<1.2?'low':'')+'" style="width:'+pct+'%"></span></div><span style="font-size:11px">Lenders approve when DSCR stays ≥ 1.20× <i>after</i> the new loan. No sites built yet = $0 NOI = no loan — build income first.</span>';
+    var body=$('#loanBody');var html='';
+    if(state.loans.length){html+='<p style="margin:0 0 8px"><b>Your active loans — extra payments welcome anytime:</b></p>';
+      state.loans.forEach(function(l,idx){var payAmt=Math.min(l.remaining,state.cash);html+='<div class="offer-card"><div><h3>'+l.name+'</h3><p><b>'+money(l.remaining)+'</b> left · '+money(l.payment)+'/mo scheduled</p><span class="offer-meta">EXTRA PAYMENTS COME STRAIGHT OFF THE BALANCE — THE MONTHLY PAYMENT STAYS THE SAME, THE LOAN JUST ENDS SOONER, AND A SMALLER BALANCE RAISES YOUR DSCR</span></div><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="offer-btn secondary" data-extra="'+idx+'|250" type="button" '+(state.cash>0?'':'disabled')+'>+$250</button><button class="offer-btn secondary" data-extra="'+idx+'|500" type="button" '+(state.cash>0?'':'disabled')+'>+$500</button><button class="offer-btn" data-extra="'+idx+'|full" type="button" '+(state.cash>0?'':'disabled')+'>'+(state.cash>=l.remaining?'Pay off '+money(l.remaining):'Pay '+money(payAmt)+' toward it')+'</button></span></div>'})}
+    loanOffers.forEach(function(o){var nd=currentDSCR(o.payment);var ok=capacity()>0&&noi>0&&nd>=1.2&&!state.loans.some(function(l){return l.id===o.id});var reason=capacity()===0?'Build a site first':noi<=0?'NOI too low':nd<1.2?'DSCR would be '+nd.toFixed(2)+'× — too low':state.loans.some(function(l){return l.id===o.id})?'Already active':'';
+      html+='<div class="offer-card"><div><h3>'+o.name+' — '+money(o.amount)+'</h3><p>'+(o.rate*100).toFixed(1)+'% · '+o.termMo+' months · <b>'+money(o.payment)+'/mo</b> ('+money(Math.round(o.payment/30))+'/day)</p><span class="offer-meta">DSCR AFTER THIS LOAN: '+nd.toFixed(2)+'× '+(ok?'✓ QUALIFIES':'· '+reason)+'</span></div><button class="offer-btn" data-loan="'+o.id+'" '+(ok?'':'disabled')+' type="button">Take '+money(o.amount)+'</button></div>'});
+    html+='<div class="finance-note">💡 <b>How to raise your DSCR:</b> add occupied sites, a store, or add-ons — anything that lifts monthly NOI without adding debt. Paying a loan down over time also frees coverage.</div>';
+    body.innerHTML=html;
+    body.querySelectorAll('[data-loan]').forEach(function(b){b.addEventListener('click',function(){var o=loanOffers.filter(function(x){return x.id===b.dataset.loan})[0];state.cash+=o.amount;state.loans.push({id:o.id,name:o.name,payment:o.payment,remaining:o.amount});state.debt=state.loans.reduce(function(s,l){return s+l.remaining},0);addLog('DSCR loan funded: '+o.name+' '+money(o.amount)+' at '+money(o.payment)+'/mo.','good');render();renderLoans();showToast(money(o.amount)+' loan funded — '+money(o.payment)+'/mo')})});
+    body.querySelectorAll('[data-extra]').forEach(function(b){b.addEventListener('click',function(){var parts=b.dataset.extra.split('|');var l=state.loans[Number(parts[0])];if(!l)return;var amt=parts[1]==='full'?l.remaining:Number(parts[1]);amt=Math.min(amt,l.remaining,state.cash);if(amt<=0){showToast('No cash available for an extra payment');return}state.cash-=amt;l.remaining-=amt;var closed=l.remaining<1;var bal=Math.max(0,l.remaining);if(closed)state.loans=state.loans.filter(function(x){return x!==l});state.debt=state.loans.reduce(function(s,x){return s+x.remaining},0);addLog('Extra loan payment: '+money(amt)+' toward the '+l.name+(closed?' — loan paid off in full!':'. Balance now '+money(bal)+'.'),'good');render();renderLoans();showToast(closed?l.name+' paid off in full!':'Extra '+money(amt)+' paid — balance '+money(bal))})});
+  }
+  // ---- Add-ons ----
+  function openAddons(){alertState.addon=false;renderSignals();closeAll();$('#addonOverlay').hidden=false;renderAddons()}
+  function renderAddons(){var body=$('#addonBody');var rec=recommendedAddon();var html='';
+    Object.keys(addonCatalog).forEach(function(id){var a=addonCatalog[id];var owned=state.addons.indexOf(id)>-1;var afford=state.cash>=a.cost;
+      html+='<div class="offer-card"><div><h3>'+a.name+' — '+money(a.cost)+'</h3><p>'+a.desc+'<br><span class="offer-meta">ADDS '+money(a.value)+' PARK VALUE · NO PAD NEEDED</span></p></div>'+(owned?'<span class="addon-owned">✓ OWNED</span>':(id===rec?'<span style="display:grid;gap:6px;justify-items:end"><span class="addon-rec">★ RECOMMENDED</span><button class="offer-btn" data-addon="'+id+'" '+(afford?'':'disabled')+' type="button">'+(afford?'Buy '+money(a.cost):'Need '+money(a.cost))+'</button></span>':'<button class="offer-btn" data-addon="'+id+'" '+(afford?'':'disabled')+' type="button">'+(afford?'Buy':'Need '+money(a.cost))+'</button>'))+'</div>'});
+    if(rec)html+='<div class="finance-note">💡 <b>Why '+addonCatalog[rec].name+'?</b> '+(state.rating<3.3&&rec==='dogpark'?'Your rating is the bottleneck — comfort is the fastest lever you have.':rec==='propane'?'You have no store income yet — this is the cheapest daily earner in the catalog.':rec==='kayaks'?'You have the occupancy to make per-guest rentals pay every single day.':'It best matches your cash, rating, and occupancy right now.')+'</div>';
+    body.innerHTML=html;
+    body.querySelectorAll('[data-addon]').forEach(function(b){b.addEventListener('click',function(){var a=addonCatalog[b.dataset.addon];if(state.cash<a.cost)return;state.cash-=a.cost;state.addons.push(b.dataset.addon);addLog('Add-on installed: '+a.name+' for '+money(a.cost)+'.','good');render();renderAddons();showToast(a.name+' installed')})});
+  }
+  // ---- Sidebar chrome: pace buttons, morale badge, button badges & dots ----
+  function renderChrome(){
+    document.querySelectorAll('[data-mode]').forEach(function(b){b.classList.toggle('selected',state.timeMode===b.dataset.mode)});
+    var persons=hostPersons();
+    var hs=$('#hostsSub'),mb=$('#moraleBadge'),hd=$('#hostsDot');
+    if(hs){if(persons===0)hs.textContent=count('host')>0?'Host sites built — nobody hired yet':'Build a camp host site, then hire';else hs.textContent=persons+' host'+(persons===1?'':'s')+' on staff · covers '+(coveragePersons()*6)+' guest sites'+(count('store')?' · store staffed':'')}
+    if(mb)mb.textContent=persons>0?'MORALE '+Math.round(state.hostMorale)+'%':'NO HOSTS';
+    if(hd)hd.hidden=!((persons>0&&state.hostMorale<40)||(persons===0&&count('host')>0));
+    var eb=$('#eventsBadge'),es=$('#eventsSub'),ed=$('#eventsDot');
+    if(state.activeEvent&&eventCatalog[state.activeEvent.id]){var ev=eventCatalog[state.activeEvent.id];if(eb)eb.textContent='ACTIVE · '+state.activeEvent.daysLeft+'D LEFT';if(es)es.textContent=ev.name+' is running — occupancy boosted'}
+    else{if(eb)eb.textContent='PLAN';if(es)es.textContent='Weekend events that pull campers in'}
+    if(ed){var slow=calendarOf(state.day).factor<.9;var canRun=!state.activeEvent&&Object.keys(eventCatalog).some(function(id){var e=eventCatalog[id];return hostPersons()>=e.hosts&&state.cash>=e.cost});ed.hidden=!(slow&&canRun)}
+    var lb2=$('#ledgerBadge');if(lb2)lb2.textContent=state.report&&(state.report.guests||state.report.net)?money(state.report.net||0)+' NET':'NO REPORT';
+  }
+  function hostResidentsHtml(i){var res=state.hosts.filter(function(h){return h.site===i});if(!res.length)return '<div class="finance-note">🛏 <b>Nobody lives here yet.</b> This site houses up to <b>2 hosts</b> — one couple, or up to two singles sharing. Hire from the <b>Hosts &amp; Hiring</b> panel.</div>';return '<div class="finance-note">🛏 <b>Staying here:</b> '+res.map(function(h){return esc(h.names)+' ('+(h.kind==='couple'?'couple':'single')+')'}).join(' · ')+'<br>That is '+hostOccupancy(i)+' of 2 spots filled. Pay, site rent, and perks live in the <b>Hosts &amp; Hiring</b> panel.</div>'}
+  // ---- Hosts & hiring ----
+  function findHostSpot(need){for(var i=0;i<state.grid.length;i++){var c=state.grid[i];if(c&&c.type==='host'){var occ=hostOccupancy(i);if(need>=2?occ===0:occ<2)return i}}return -1}
+  function randName(used){var f=FIRST_NAMES[Math.floor(Math.random()*FIRST_NAMES.length)],g=0;while(used[f]&&g++<25)f=FIRST_NAMES[Math.floor(Math.random()*FIRST_NAMES.length)];used[f]=1;return f}
+  function genApplicants(){applicantPool=[];var used={};for(var n=0;n<3;n++){var couple=Math.random()<0.45;var last=LAST_NAMES[Math.floor(Math.random()*LAST_NAMES.length)];if(couple)applicantPool.push({kind:'couple',names:randName(used)+' & '+randName(used)+' '+last,blurb:COUPLE_BLURBS[Math.floor(Math.random()*COUPLE_BLURBS.length)]});else applicantPool.push({kind:'single',names:randName(used)+' '+last,blurb:SINGLE_BLURBS[Math.floor(Math.random()*SINGLE_BLURBS.length)]})}}
+  function moraleText(){var parts=[];var pay=hostPay(),rent=hostRentRate();
+    parts.push(pay>=45?'Pay is strong ('+money(pay)+'/host/day).':pay>=35?'Pay is fair ('+money(pay)+'/host/day).':pay>=20?'Pay is thin ('+money(pay)+'/host/day) — hosts notice.':'Pay is rock-bottom ('+money(pay)+'/host/day) — expect grumbling and quits.');
+    parts.push(rent===0?'The site is free — hosts love that.':rent<=10?'Site rent is modest ('+money(rent)+'/site/day).':'Site rent bites ('+money(rent)+'/site/day).');
+    var sites=capacity(),cov=coveragePersons();
+    if(sites>0){if(cov<=0)parts.push('Nobody is covering the guest sites — the store host can’t be everywhere.');else{var r=sites/cov;parts.push(r<=6?'Workload is sane: '+sites+' guest sites across '+cov+' working hosts.':'Overloaded: '+sites+' guest sites across '+cov+' working hosts — ratings and morale both suffer.')}}
+    var pk=(state.perks||[]).length;parts.push(pk?pk+' perk'+(pk===1?'':'s')+' active — it shows.':'No perks active. A cheap perk beats a resignation letter.');
+    if(state.hostMorale<30)parts.push('⚠ Morale this low means hosts may quit without notice.');
+    return parts.join(' ')}
+  function openHosts(){closeAll();$('#hostsOverlay').hidden=false;renderHosts()}
+  function renderHosts(){
+    var body=$('#hostsBody');if(!body)return;var persons=hostPersons();var pay=hostPay(),rent=hostRentRate();
+    var html='';
+    if(persons>0){var morale=Math.round(state.hostMorale);html+='<div class="morale-wrap"><div class="m-head"><b>Host morale</b><strong>'+morale+'%</strong></div><div class="dscr-bar"><span class="'+(morale<40?'low':'')+'" style="width:'+morale+'%"></span></div><p>'+moraleText()+'</p></div>'}
+    else html+='<div class="finance-note">No hosts on staff yet. Build a <b>camp host site</b> from the Build panel ('+money(catalog.host.cost)+'), then hire below. One host covers about <b>6 guest sites</b> before guests start noticing; the camp store needs <b>1 host</b> on the counter or it stays closed. Each host site sleeps <b>up to 2 hosts</b> — a couple takes the whole site, singles can share one.</div>';
+    html+='<p style="margin:0 0 8px"><b>On staff: '+persons+' host'+(persons===1?'':'s')+'</b> · covering <b>'+(coveragePersons()*6)+' guest sites</b> of your '+capacity()+(count('store')?' · 1 host is on the store counter':'')+'</p>';
+    state.hosts.forEach(function(h,idx){html+='<div class="offer-card"><div><h3>'+esc(h.names)+'</h3><p>'+(h.kind==='couple'?'Host couple · 2 hosts':'Single host · 1 host')+' · living on pad <b>'+siteLabel(h.site)+'</b></p><span class="offer-meta">EARNS '+money(pay*(h.kind==='couple'?2:1))+'/DAY AT CURRENT PAY</span></div><button class="offer-btn secondary" data-letgo="'+idx+'" type="button">Let go</button></div>'});
+    html+='<div class="cfg-row"><span class="rent-name"><b>Host pay</b><small>PER HOST PER DAY · NOW '+money(persons*pay)+'/DAY GOING OUT</small></span><span class="rent-ctl"><button type="button" class="rent-btn" data-cfg="pay|-5" aria-label="Lower host pay by $5">−</button><strong>'+money(pay)+'</strong><button type="button" class="rent-btn" data-cfg="pay|5" aria-label="Raise host pay by $5">+</button></span></div>';
+    html+='<div class="cfg-row"><span class="rent-name"><b>Host site rent</b><small>PER OCCUPIED HOST SITE PER DAY · NOW '+money(hostRentIncome())+'/DAY COMING IN</small></span><span class="rent-ctl"><button type="button" class="rent-btn" data-cfg="rent|-5" aria-label="Lower host site rent by $5">−</button><strong>'+money(rent)+'</strong><button type="button" class="rent-btn" data-cfg="rent|5" aria-label="Raise host site rent by $5">+</button></span></div>';
+    html+='<p style="margin:14px 0 4px"><b>Perks — for when hosts are upset</b></p><p style="font-size:12px;margin:0 0 6px">Toggle one on and it runs every day. Small money, real morale — cheaper than replacing a host who quits.</p><div class="choice-list">';
+    Object.keys(perkCatalog).forEach(function(id){var p=perkCatalog[id];var on=(state.perks||[]).indexOf(id)>-1;html+='<button class="choice-btn'+(on?' selected':'')+'" data-perk="'+id+'" type="button"><b>'+(on?'✓ On — ':'')+p.name+'</b> · +'+p.bonus+' morale<small>'+p.desc+' Costs '+money(p.cost)+' per host/day'+(persons?' ('+money(p.cost*persons)+'/day for your crew)':'')+'.</small></button>'});
+    html+='</div>';
+    if(!applicantPool.length)genApplicants();
+    html+='<p style="margin:14px 0 8px"><b>Applicants</b> — couples cover twice the sites but need a whole host site to themselves. Some rounds only singles apply; that is the labor market, not a bug.</p>';
+    applicantPool.forEach(function(a,idx){var need=a.kind==='couple'?2:1;var spot=findHostSpot(need);var meta=count('host')===0?'BUILD A CAMP HOST SITE FIRST':spot>-1?'WOULD LIVE ON PAD '+siteLabel(spot):'NO HOST SITE WITH ROOM — BUILD ONE OR FREE A SPOT';html+='<div class="offer-card"><div><h3>'+a.names+'</h3><p>'+(a.kind==='couple'?'Couple · 2 hosts':'Single · 1 host')+' — '+a.blurb+'</p><span class="offer-meta">'+meta+'</span></div><button class="offer-btn" data-hire="'+idx+'" '+(spot>-1?'':'disabled')+' type="button">Hire</button></div>'});
+    html+='<button class="plain-btn" id="refreshApps" type="button" style="margin-top:4px">See a fresh set of applicants</button>';
+    body.innerHTML=html;
+    body.querySelectorAll('[data-letgo]').forEach(function(b){b.addEventListener('click',function(){var ix=Number(b.dataset.letgo);var h=state.hosts[ix];if(!h)return;state.hosts.splice(ix,1);addLog(h.names+' were let go from pad '+siteLabel(h.site)+'. The host site stands empty.','');render();renderHosts()})});
+    body.querySelectorAll('[data-cfg]').forEach(function(b){b.addEventListener('click',function(){var parts=b.dataset.cfg.split('|');adjustHostCfg(parts[0],Number(parts[1]))})});
+    body.querySelectorAll('[data-perk]').forEach(function(b){b.addEventListener('click',function(){togglePerk(b.dataset.perk)})});
+    body.querySelectorAll('[data-hire]').forEach(function(b){b.addEventListener('click',function(){hireApplicant(Number(b.dataset.hire))})});
+    var rf=$('#refreshApps');if(rf)rf.addEventListener('click',function(){genApplicants();renderHosts()});
+  }
+  function adjustHostCfg(kind,delta){if(state.ended)return;if(!state.hostCfg)state.hostCfg={pay:35,rent:10};var cur=kind==='pay'?state.hostCfg.pay:state.hostCfg.rent;var max=kind==='pay'?80:40;var v=Math.max(0,Math.min(max,cur+delta));if(v===cur)return;state.hostCfg[kind]=v;addLog('Host '+(kind==='pay'?'pay set to '+money(v)+' per host/day.':'site rent set to '+money(v)+' per occupied site/day.')+' Morale will drift over the next few days.','');render();renderHosts()}
+  function togglePerk(id){if(!perkCatalog[id]||state.ended)return;if(!Array.isArray(state.perks))state.perks=[];var i=state.perks.indexOf(id);if(i>-1){state.perks.splice(i,1);addLog('Perk ended: '+perkCatalog[id].name+'. Hosts noticed.','')}else{state.perks.push(id);addLog('Perk started: '+perkCatalog[id].name+' — '+money(perkCatalog[id].cost)+' per host/day, +'+perkCatalog[id].bonus+' morale.','good')}render();renderHosts()}
+  function hireApplicant(idx){var a=applicantPool[idx];if(!a||state.ended)return;var need=a.kind==='couple'?2:1;var spot=findHostSpot(need);if(spot<0){showToast(a.kind==='couple'?'A couple needs an empty host site':'No host site with a free spot');return}state.hosts.push({id:Date.now()+idx,kind:a.kind,names:a.names,site:spot});applicantPool.splice(idx,1);if(state.hosts.length===1)state.hostMorale=Math.max(state.hostMorale,60);addLog('Hired '+a.names+' ('+(a.kind==='couple'?'couple':'single')+') — settled into host site '+siteLabel(spot)+'.','good');render();renderHosts();showToast(a.names+' hired — pad '+siteLabel(spot))}
+  // ---- Host events ----
+  function openEvents(){closeAll();$('#eventsOverlay').hidden=false;renderEvents()}
+  function renderEvents(){
+    var body=$('#eventsBody');if(!body)return;var cal=calendarOf(state.day);var persons=hostPersons();
+    var html='<div class="finance-note">It is <b>'+cal.name+'</b> — '+cal.season.toLowerCase()+' (visitor demand ×'+cal.factor.toFixed(2)+'). '+(cal.factor<.9?'This is exactly when a well-staffed event pays for itself: it pulls campers in while the loops would sit quiet.':'Peak crowds come anyway — events still add ticket income and full pads.')+' Events run <b>3 days</b> and need their hosts on staff.</div>';
+    if(state.activeEvent&&eventCatalog[state.activeEvent.id]){var ae=eventCatalog[state.activeEvent.id];html+='<div class="finance-note">🎉 <b>'+ae.name+'</b> is running — '+state.activeEvent.daysLeft+' day'+(state.activeEvent.daysLeft===1?'':'s')+' left, occupancy boosted +'+Math.round(ae.boost*100)+'% and '+money(ae.income)+'/day coming in.</div>'}
+    Object.keys(eventCatalog).forEach(function(id){var e=eventCatalog[id];var staffOk=persons>=e.hosts;var afford=state.cash>=e.cost;var busy=!!state.activeEvent;var dis=busy||!staffOk||!afford;var meta=busy?'ANOTHER EVENT IS RUNNING':!staffOk?'NEEDS '+e.hosts+' HOSTS ON STAFF — YOU HAVE '+persons:!afford?'NEEDS '+money(e.cost)+' CASH':'READY WHEN YOU ARE';
+      html+='<div class="offer-card"><div><h3>'+e.name+' — '+money(e.cost)+'</h3><p>'+e.desc+'</p><span class="offer-meta">NEEDS '+e.hosts+' HOSTS · +'+Math.round(e.boost*100)+'% OCCUPANCY FOR 3 DAYS · +'+money(e.income)+'/DAY EVENT INCOME · '+meta+'</span></div><button class="offer-btn" data-event="'+id+'" '+(dis?'disabled':'')+' type="button">Run event</button></div>'});
+    body.innerHTML=html;
+    body.querySelectorAll('[data-event]').forEach(function(b){b.addEventListener('click',function(){var e=eventCatalog[b.dataset.event];if(!e||state.cash<e.cost||hostPersons()<e.hosts||state.activeEvent||state.ended)return;state.cash-=e.cost;state.activeEvent={id:b.dataset.event,daysLeft:e.days};addLog('Event booked: '+e.name+' — hosts are hanging flyers and stringing lights. Occupancy boost for the next '+e.days+' days.','good');render();renderEvents();showToast(e.name+' — see you at the gate')})});
+  }
+  function saveGame(){var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='pine-hollow-day-'+state.day+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000);showToast('Save file downloaded')}
+  function loadGame(file){if(!file)return;var reader=new FileReader();reader.onload=function(){try{var data=JSON.parse(String(reader.result));if(!data||!Array.isArray(data.grid)||data.grid.length!==ROWS*COLS||typeof data.cash!=='number')throw new Error('invalid');state=data;ensureState();applicantPool=[];alertState={build:false,grant:false,loan:false,addon:false};sigSeen={buildAvail:null,cleared:-1,grantReady:null,loanQual:null,rec:undefined};if(state.ended&&state.day>=totalDays())state.awaitingExtension=true;state.logs=Array.isArray(state.logs)?state.logs:[];state.report=state.report||{fees:0,store:0,expenses:0,net:0};closeAll();render();showToast('Save loaded — Day '+state.day+' of '+totalDays())}catch(e){showToast('That file is not a Campground Tycoon save')}};reader.readAsText(file)}
+  $('#startBtn').addEventListener('click',function(){$('#welcomeOverlay').hidden=true;showToast('Pick a tool, then tap a numbered pad — red-tagged problem sites must be cleared first')});$('#nextDay').addEventListener('click',operateDay);$('#saveBtn').addEventListener('click',saveGame);$('#resultSaveBtn').addEventListener('click',saveGame);$('#loadBtn').addEventListener('click',function(){$('#loadFile').click()});$('#loadFile').addEventListener('change',function(){loadGame(this.files[0]);this.value=''});$('#menuBtn').addEventListener('click',function(){$('#menuOverlay').hidden=false});$('#resumeBtn').addEventListener('click',function(){$('#menuOverlay').hidden=true});$('#restartBtn').addEventListener('click',resetGame);$('#playAgainBtn').addEventListener('click',resetGame);
+  $('#extendBtn').addEventListener('click',extendSeason);$('#extendEarlyBtn').addEventListener('click',function(){if(state.ended&&state.awaitingExtension){extendSeason();return}state.totalDays=totalDays()+30;addLog('Season extended early — now playing to Day '+totalDays()+'.','good');render();showToast('Extended! Now running to Day '+totalDays())});$('#finishBtn').addEventListener('click',function(){$('#resultOverlay').hidden=true;showToast('Season saved in this tab — download a save to keep it')});
+  document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){state.timeMode=b.dataset.mode;render();showToast('Pace set: advance by '+b.dataset.mode)})});
+  $('#hostsOpenBtn').addEventListener('click',openHosts);$('#hostsCloseBtn').addEventListener('click',function(){$('#hostsOverlay').hidden=true});
+  $('#eventsOpenBtn').addEventListener('click',openEvents);$('#eventsCloseBtn').addEventListener('click',function(){$('#eventsOverlay').hidden=true});
+  $('#ledgerOpenBtn').addEventListener('click',function(){closeAll();$('#ledgerOverlay').hidden=false});$('#ledgerCloseBtn').addEventListener('click',function(){$('#ledgerOverlay').hidden=true});
+  $('#grantBtn').addEventListener('click',openGrants);$('#grantCloseBtn').addEventListener('click',function(){$('#grantOverlay').hidden=true});
+  $('#loanBtn').addEventListener('click',openLoans);$('#loanCloseBtn').addEventListener('click',function(){$('#loanOverlay').hidden=true});
+  $('#addonBtn').addEventListener('click',openAddons);$('#addonCloseBtn').addEventListener('click',function(){$('#addonOverlay').hidden=true});
+  $('#siteCloseBtn').addEventListener('click',function(){$('#siteOverlay').hidden=true});
+  $('#buildOpenBtn').addEventListener('click',function(){alertState.build=false;renderSignals();closeAll();$('#buildOverlay').hidden=false});
+  $('#buildCloseBtn').addEventListener('click',function(){$('#buildOverlay').hidden=true});
+  $('#growOpenBtn').addEventListener('click',function(){closeAll();$('#growOverlay').hidden=false});
+  $('#growCloseBtn').addEventListener('click',function(){$('#growOverlay').hidden=true});
+  resetGame();
+})();
+</script>
+</body>
+</html>
