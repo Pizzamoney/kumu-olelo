@@ -1,0 +1,2476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Campground Repair Log</title>
+<style>
+  :root{
+    --bg:#f6f1e6;
+    --surface:#fffdf6;
+    --surface-2:#efe7d3;
+    --ink:#26301f;
+    --muted:#5f6a52;
+    --line:#d9cfb4;
+    --line-strong:#b9ab84;
+    --accent:#2e5a38;
+    --accent-ink:#ffffff;
+    --accent-soft:#e2ecdc;
+    --rust:#b5501d;
+    --rust-soft:#f9e8dc;
+    --amber:#96690a;
+    --amber-soft:#f7ecd2;
+    --red:#a3271e;
+    --red-soft:#f9e3df;
+    --shadow:0 1px 2px rgba(38,48,31,.08),0 8px 24px rgba(38,48,31,.07);
+    --radius:10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#161915;
+      --surface:#20261e;
+      --surface-2:#2a3126;
+      --ink:#ede8d8;
+      --muted:#a9b198;
+      --line:#3e4638;
+      --line-strong:#5a6450;
+      --accent:#7fb685;
+      --accent-ink:#14220f;
+      --accent-soft:#2c3d2a;
+      --rust:#e08a55;
+      --rust-soft:#43301f;
+      --amber:#dcb45e;
+      --amber-soft:#42391f;
+      --red:#ef9a8d;
+      --red-soft:#472824;
+      --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.5;
+  }
+  h1,h2,h3{font-family:Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif;line-height:1.2;margin:0}
+  a{color:var(--accent)}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{font:inherit;color:var(--ink)}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 56px}
+  @media (min-width:760px){.wrap{padding:28px 24px 64px}}
+
+  /* ---------- intro ---------- */
+  .intro{border-bottom:3px solid var(--accent);padding-bottom:18px;margin-bottom:18px}
+  .intro h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.01em}
+  .intro p.lede{font-size:17px;color:var(--muted);max-width:72ch;margin:10px 0 0}
+  .how{display:grid;gap:10px;margin-top:16px}
+  @media (min-width:760px){.how{grid-template-columns:repeat(3,1fr)}}
+  .how .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+  .how .step b{display:block;font-family:Georgia,serif;font-size:15px;margin-bottom:2px}
+  .how .step span{font-size:14px;color:var(--muted)}
+  .how .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:700;margin-right:7px;vertical-align:2px}
+
+  /* ---------- toolbar / stats ---------- */
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 14px}
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);
+    background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px;
+    font-weight:600;font-size:14.5px;text-decoration:none;line-height:1.2;
+  }
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn.rust{background:var(--rust);border-color:var(--rust);color:#fff}
+  @media (prefers-color-scheme: dark){.btn.rust{color:#1d130b}}
+  .btn svg{width:16px;height:16px;flex:none}
+  .btn.small{padding:6px 10px;font-size:13.5px}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:22px}
+  @media (min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+  @media (max-width:759px){.stats .stat:last-child{grid-column:1/-1}}
+  .cost-months{margin-top:4px}
+  .cost-months h3{font-size:16px;margin-bottom:6px}
+  .cost-months table{width:100%;border-collapse:collapse;font-size:14.5px}
+  .cost-months td,.cost-months th{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}
+  .cost-months td:last-child,.cost-months th:last-child{text-align:right}
+  .due-strip{
+    display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;width:100%;text-align:left;
+    background:var(--amber-soft);border:1px solid var(--amber);border-radius:8px;
+    padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:14.5px;color:var(--ink);
+  }
+  .due-strip .overdue{color:var(--red)}
+  .due-strip small{font-weight:400;color:var(--muted)}
+  .chronic-flag{display:inline-block;margin-top:4px;font-size:12.5px;font-weight:700;color:var(--red)}
+  .demo-banner{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    background:var(--amber-soft);border:1.5px solid var(--amber);border-radius:var(--radius);
+    padding:12px 14px;margin-bottom:16px;font-size:14.5px;
+  }
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+  .stat .n{font-family:Georgia,serif;font-size:28px;font-weight:800;line-height:1}
+  .stat .l{font-size:13px;color:var(--muted);margin-top:4px}
+  .stat.alert .n{color:var(--red)}
+  .stat.warn .n{color:var(--rust)}
+
+  /* ---------- sections ---------- */
+  section.block{margin:30px 0}
+  .block-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:6px}
+  .block-head h2{font-size:23px;font-weight:700}
+  .block-head p{margin:0;color:var(--muted);font-size:14.5px;max-width:70ch}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+  @media (max-width:559px){.card{padding:14px}}
+
+  /* ---------- entry form (mirrors the paper sheet, field for field) ---------- */
+  .form-grid{display:grid;gap:14px}
+  @media (min-width:760px){.form-grid{grid-template-columns:1fr 1fr}}
+  .field label{display:block;font-weight:700;font-size:13.5px;letter-spacing:.01em;margin-bottom:5px}
+  .field label .req{color:var(--rust)}
+  .field input[type="text"],.field input[type="date"],.field input[type="time"],.field input[type="number"],
+  .field select,.field textarea{
+    width:100%;background:var(--bg);border:1px solid var(--line-strong);border-radius:7px;padding:9px 11px;
+  }
+  .field textarea{resize:vertical;min-height:74px}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .span2{grid-column:1/-1}
+  .dt-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .prio{display:flex;flex-wrap:wrap;gap:8px}
+  .prio label{
+    display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:999px;
+    padding:7px 13px;font-weight:600;font-size:14px;cursor:pointer;background:var(--bg);margin:0;
+  }
+  .prio label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+  .prio label.p-safety:has(input:checked){border-color:var(--red);background:var(--red-soft)}
+  .prio label.p-urgent:has(input:checked){border-color:var(--amber);background:var(--amber-soft)}
+  .prio input{accent-color:var(--accent);margin:0}
+  .yn{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .yn label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);border-radius:7px;padding:7px 13px;font-weight:600;cursor:pointer;background:var(--bg);margin:0}
+  .yn label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+  .yn input{accent-color:var(--accent);margin:0}
+  .money-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media (max-width:559px){.money-row{grid-template-columns:1fr 1fr}}
+  .form-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+  .form-error{display:none;background:var(--red-soft);color:var(--red);border:1px solid var(--red);border-radius:7px;padding:9px 12px;font-size:14.5px;font-weight:600}
+  .form-error.show{display:block}
+  .editing-note{display:none;font-size:14px;font-weight:700;color:var(--rust)}
+  .editing-note.show{display:inline}
+
+  /* ---------- log table / cards ---------- */
+  .log-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .log-controls input[type="search"],.log-controls select{
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:7px;padding:8px 11px;
+  }
+  .log-controls input[type="search"]{flex:1 1 200px;min-width:0}
+  .view-toggle{display:inline-flex;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden}
+  .view-toggle button{border:0;background:var(--surface);color:var(--ink);padding:8px 12px;font-weight:600;font-size:14px}
+  .view-toggle button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+  table.log{width:100%;border-collapse:collapse;font-size:14.5px}
+  table.log th{text-align:left;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--line-strong)}
+  table.log td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.log .site{font-weight:700;white-space:nowrap}
+  table.log .prob{max-width:340px}
+  .badge{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12.5px;font-weight:700;white-space:nowrap}
+  .badge.safety{background:var(--red-soft);color:var(--red)}
+  .badge.urgent{background:var(--amber-soft);color:var(--amber)}
+  .badge.routine{background:var(--accent-soft);color:var(--accent)}
+  .badge.cosmetic{background:var(--surface-2);color:var(--muted)}
+  .badge.st-open{background:var(--rust-soft);color:var(--rust)}
+  .badge.st-progress{background:var(--amber-soft);color:var(--amber)}
+  .badge.st-bandaid{background:var(--amber-soft);color:var(--amber)}
+  .badge.st-parts{background:var(--surface-2);color:var(--muted)}
+  .badge.st-deferred{background:var(--surface-2);color:var(--ink)}
+  .badge.st-done{background:var(--accent-soft);color:var(--accent)}
+  .ba-flag{display:inline-block;margin-top:4px;font-size:12.5px;font-weight:700;color:var(--rust)}
+  .ba-flag.overdue{color:var(--red)}
+  .def-flag{display:inline-block;margin-top:4px;font-size:12.5px;font-weight:700;color:var(--muted)}
+  .def-flag.overdue{color:var(--red)}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .row-actions button{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:6px;padding:5px 9px;font-size:13px;font-weight:600}
+  .row-actions button.danger.armed{background:var(--red);border-color:var(--red);color:#fff}
+  .empty{border:1.5px dashed var(--line-strong);border-radius:var(--radius);padding:26px 18px;text-align:center;color:var(--muted)}
+  .empty b{color:var(--ink)}
+  @media (max-width:820px){
+    table.log thead{display:none}
+    table.log,table.log tbody,table.log tr,table.log td{display:block;width:100%}
+    table.log tr{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px}
+    table.log td{border:0;padding:3px 0}
+    table.log td::before{content:attr(data-l);display:block;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+    table.log .prob{max-width:none}
+  }
+
+  /* ---------- band-aid board ---------- */
+  .ba-list{display:grid;gap:10px}
+  @media (min-width:760px){.ba-list{grid-template-columns:1fr 1fr}}
+  .ba-item{border:1px solid var(--line);border-left:5px solid var(--amber);border-radius:8px;background:var(--surface);padding:12px 14px;box-shadow:var(--shadow)}
+  .ba-item.overdue{border-left-color:var(--red)}
+  .ba-item .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+  .ba-item .site{font-weight:700}
+  .ba-item .due{font-weight:700;font-size:14px}
+  .ba-item.overdue .due{color:var(--red)}
+  .ba-item p{margin:4px 0 0;color:var(--muted);font-size:14.5px}
+  .rule-quote{font-family:Georgia,serif;font-style:italic;font-size:17px;margin:14px 0 0}
+  .rule-quote span{color:var(--muted);font-size:14px;font-style:normal}
+
+  /* ---------- deferred: form panel + board ---------- */
+  .defer-box{border:1.5px dashed var(--line-strong);border-radius:8px;background:var(--surface-2);padding:12px 14px}
+  .defer-box.on{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
+  .defer-check{display:flex;align-items:flex-start;gap:9px;font-weight:700;font-size:15px;cursor:pointer;margin:0}
+  .defer-check input{accent-color:var(--accent);width:18px;height:18px;margin:2px 0 0;flex:none}
+  .defer-check small{display:block;font-weight:400;color:var(--muted);font-size:13.5px;margin-top:2px}
+  .defer-fields{display:grid;gap:10px;margin-top:12px}
+  @media (min-width:760px){.defer-fields{grid-template-columns:2fr 1fr}}
+  .defer-fields label{display:block;font-weight:700;font-size:13.5px;margin-bottom:5px}
+  .defer-fields input{width:100%;background:var(--surface);border:1px solid var(--line-strong);border-radius:7px;padding:9px 11px}
+  .defer-fields input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .def-item{border:1px solid var(--line);border-left:5px solid var(--line-strong);border-radius:8px;background:var(--surface);padding:12px 14px;box-shadow:var(--shadow)}
+  .def-item.overdue{border-left-color:var(--red)}
+  .def-item .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+  .def-item .site{font-weight:700}
+  .def-item .due{font-weight:700;font-size:14px}
+  .def-item.overdue .due{color:var(--red)}
+  .def-item p{margin:4px 0 0;color:var(--muted);font-size:14.5px}
+
+  /* ---------- printable sheets ---------- */
+  .sheet-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .sheet{
+    background:#ffffff;color:#1c1c1c;border:1px solid #c9c2ae;border-radius:6px;
+    padding:26px 26px 20px;margin-bottom:22px;font-size:14px;
+    box-shadow:var(--shadow);
+  }
+  .sheet h3{font-size:21px;border-bottom:2.5px solid #1c1c1c;padding-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+  .sheet h3 .brand{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#555}
+  .sheet .row{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
+  .sheet .f{flex:1 1 180px}
+  .sheet .f.wide{flex:2 1 300px}
+  .sheet .lab{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#444}
+  .sheet .line{border-bottom:1.5px solid #888;min-height:24px}
+  .sheet .writebox{border:1.5px solid #888;border-radius:3px;margin-top:4px;
+    background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,#cfcfcf 27px,#cfcfcf 28px)}
+  .sheet .writebox.h3{height:84px}.sheet .writebox.h2{height:56px}
+  .sheet .checks{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;font-size:14px}
+  .sheet .box{display:inline-block;width:14px;height:14px;border:1.8px solid #333;border-radius:2px;vertical-align:-2px;margin-right:5px}
+  .sheet table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  .sheet table th{border:1.5px solid #666;padding:6px 7px;text-align:left;background:#f0ede2;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  .sheet table td{border:1.5px solid #666;padding:6px 7px;height:30px}
+  .sheet .foot{margin-top:14px;border-top:1.5px solid #888;padding-top:8px;font-size:12.5px;color:#333;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .sheet .safety-first{font-weight:700}
+  /* filled sheets — the digital entries, printed */
+  .sheet .line .val{font-weight:600}
+  .sheet .fillbox{border:1.5px solid #888;border-radius:3px;margin-top:4px;padding:8px 10px;min-height:52px;white-space:pre-wrap;word-break:break-word}
+  .sheet .fillbox.tall{min-height:80px}
+  .sheet .box.on{background:#333;box-shadow:inset 0 0 0 2.5px #fff}
+  .sheet table td.data-cell{height:auto;vertical-align:top}
+  .sheet table{table-layout:fixed}
+  .sheet table td,.sheet table th{overflow-wrap:break-word}
+  .filled-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+  .filled-controls select{background:var(--surface);border:1px solid var(--line-strong);border-radius:7px;padding:8px 11px;max-width:100%}
+  .btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .btn[disabled]:hover{border-color:var(--line-strong)}
+  .filled-printbar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius);
+    padding:12px 14px;margin-bottom:16px;font-size:14.5px;
+  }
+  .filled-printbar .what{font-weight:600}
+  .filled-printbar .what small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+  @media (max-width:640px){.sheet{padding:18px 14px}}
+
+  .print-banner{display:none;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:14.5px}
+  .print-banner.show{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+
+  /* ---------- store / funnel ---------- */
+  .store-grid{display:grid;gap:12px}
+  @media (min-width:760px){.store-grid{grid-template-columns:repeat(3,1fr)}}
+  .product{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .product h3{font-size:17px}
+  .product p{margin:0;color:var(--muted);font-size:14.5px;flex:1}
+  .product .price{font-family:Georgia,serif;font-weight:800;font-size:19px}
+  .product .price small{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:600;font-size:13px;color:var(--muted)}
+
+  .toast{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--bg);border-radius:8px;padding:11px 16px;font-size:14.5px;font-weight:600;
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:min(92vw,560px);text-align:center;z-index:50;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer.page{border-top:1px solid var(--line);margin-top:36px;padding-top:16px;color:var(--muted);font-size:14px}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  /* ---------- collapsible panels (everything secondary lives behind a button) ---------- */
+  .header-panels{display:grid;gap:10px;margin-top:16px}
+  .panel-toggle{
+    display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);
+    padding:13px 16px;font-family:Georgia,serif;font-size:19px;font-weight:700;color:var(--ink);
+    box-shadow:var(--shadow);text-align:left;
+  }
+  .panel-toggle:hover{border-color:var(--accent)}
+  .panel-toggle .chev{font-size:15px;color:var(--muted);transition:transform .2s;flex:none}
+  .panel-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .panel-toggle .count{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 10px;margin-left:auto}
+  .panel-body{margin-top:12px}
+  .panel-desc{margin:0 0 12px;color:var(--muted);font-size:14.5px;max-width:72ch}
+  section.block.panel{margin:12px 0}
+  .header-panels .toolbar{margin:0}
+  .header-panels .stats{margin:0}
+  .header-panels .how{margin:0}
+
+  /* ---------- entry photos (blobs stored on-device in IndexedDB) ---------- */
+  .photo-attach{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+  .photo-attach label.btn{margin:0}
+  .photo-note{font-size:13.5px;color:var(--muted)}
+  .photo-preview{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+  .photo-preview img{width:76px;height:76px;object-fit:cover;border-radius:8px;border:1px solid var(--line-strong)}
+  .photo-preview span{font-size:13.5px;color:var(--muted)}
+  .thumb-btn{border:0;background:none;padding:0;cursor:pointer;display:inline-block;margin-top:6px}
+  .thumb-btn img{width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--line-strong);display:block}
+  .photo-flag{display:inline-block;margin-top:4px;font-size:12.5px;font-weight:700;color:var(--muted)}
+  .photo-viewer{position:fixed;inset:0;background:rgba(10,12,8,.88);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+  .photo-viewer .pv-card{max-width:min(94vw,900px)}
+  .photo-viewer img{max-width:100%;max-height:78vh;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.5);display:block;margin:0 auto}
+  .photo-viewer .pv-bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;color:#f2eedd;font-size:14.5px;font-weight:600}
+
+  /* ---------- master merge: import preview + report ---------- */
+  .import-report{
+    margin-top:14px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius);
+    padding:12px 14px;font-size:14.5px;
+  }
+  .import-report b{font-family:Georgia,serif}
+  .import-report ul{margin:6px 0 0;padding-left:18px}
+  .import-overlay{position:fixed;inset:0;background:rgba(10,12,8,.72);z-index:70;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow:auto}
+  .import-card{background:var(--surface);color:var(--ink);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.4);max-width:min(94vw,760px);width:100%;padding:20px;margin:auto}
+  .import-card h3{font-size:22px;margin-bottom:4px}
+  .import-card .sub{color:var(--muted);font-size:14.5px;margin:0 0 14px}
+  .import-nums{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+  @media (min-width:640px){.import-nums{grid-template-columns:repeat(5,1fr)}}
+  .import-nums .nbox{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);text-align:center}
+  .import-nums .nbox .n{font-family:Georgia,serif;font-size:24px;font-weight:800;line-height:1}
+  .import-nums .nbox .l{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .import-nums .nbox.protect{border-color:var(--amber);background:var(--amber-soft)}
+  .import-group{margin:12px 0}
+  .import-group h4{font-family:Georgia,serif;font-size:16px;margin:0 0 6px}
+  .import-group ul{margin:0;padding-left:18px;font-size:14.5px}
+  .import-group li{margin:3px 0}
+  .import-group .meta{color:var(--muted);font-size:13.5px}
+  .import-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+
+  /* ---------- print ---------- */
+  @media print{
+    body{background:#fff}
+    .panel-body{display:block !important}
+    .no-print{display:none !important}
+    .wrap{max-width:none;padding:0}
+    .sheet{box-shadow:none;border:0;border-radius:0;margin:0;padding:10px 4px;page-break-after:always}
+    body[data-print="report"] .sheet:not(#sheet-report),
+    body[data-print="filled"] .sheet:not(.filled-sheet){display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= INTRO ================= -->
+  <header class="intro no-print">
+    <h1>Campground Repair Log</h1>
+    <p class="lede">The paper form lives in the field, where the gloves and the busted pedestal are. This page is its digital twin — same boxes, same order — so transferring the paper trail at the office is a minute of straight typing, not detective work.</p>
+    <div class="header-panels">
+    <div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="howBody"><span>How it works</span><span class="chev" aria-hidden="true">▾</span></button>
+      <div class="how panel-body" id="howBody" hidden>
+      <div class="step"><b><span class="num">1</span>Report it on paper</b><span>Print the Repair Report sheet below and keep a stack in the shop and the office.</span></div>
+      <div class="step"><b><span class="num">2</span>Type it in here</b><span>The entry form mirrors the sheet box for box. Entries save on this device as you go — the CSV is your backup and the way to share the log, not the only copy.</span></div>
+      <div class="step"><b><span class="num">3</span>Carry the log forward</b><span>Download the CSV, then upload that same file next week or on another device — you preview the merge first, new entries stack on top, updates land only when they're newer, and nothing doubles up or disappears. Photos ride along in the ZIP bundle: the CSV plus every picture, named by its Entry ID.</span></div>
+      </div>
+    </div>
+    <div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="csvBody"><span>Log files — upload, download &amp; photo bundle</span><span class="chev" aria-hidden="true">▾</span></button>
+      <div class="panel-body" id="csvBody" hidden>
+    <p class="panel-desc"><b>Works offline, right off your device.</b> This one file is the whole app — no account, no connection needed, the photo bundle included. If you downloaded it from Gumroad, unzip it and always open <b>this same file in the same browser</b>: your entries and photos are saved in that browser, on this device. To move to another device or browser, download the bundle here and upload it in the new spot — Entry IDs merge, nothing doubles. A weekly bundle download is your backup if the browser's saved data ever gets cleared.</p>
+    <p class="panel-desc"><b>The weekly master routine:</b> hosts send their CSV or bundle files in. Upload each one here and you get a <b>preview before anything changes</b> — new entries, updates, and anything held back — then Apply or Cancel. Every entry carries a last-updated stamp: if a host's file holds an older copy of an entry this file already corrected, the fresher version here wins and the preview says so, so a stale file can never quietly overwrite a fix. Entries are never deleted just because they're missing from an incoming file. On Monday, download the <b>Monday packet</b> — a dated bundle of this master log — and send that one file to every host, so the whole park starts the week from the same spot.</p>
+    <div class="toolbar">
+      <label class="btn primary" for="csvFile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+        Upload CSV or bundle
+      </label>
+      <input class="sr-only" type="file" id="csvFile" accept=".csv,text/csv,.zip,application/zip" />
+      <button class="btn" type="button" id="downloadBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download CSV
+      </button>
+      <button class="btn" type="button" id="bundleBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download bundle (ZIP) — CSV + photos
+      </button>
+      <button class="btn primary" type="button" id="packetBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download Monday packet — dated master bundle for hosts
+      </button>
+      <button class="btn" type="button" id="templateBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        Blank CSV template
+      </button>
+      <button class="btn" type="button" id="demoBtn">Load demo data</button>
+      <a class="btn" href="#printables" id="printFormsLink">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Printable forms
+      </a>
+      <a class="btn rust" href="https://camphostcentral.gumroad.com/l/uqvwpm" target="_blank" rel="noopener">Get the free checklists</a>
+    </div>
+    <div class="import-report" id="importReport" hidden></div>
+      </div>
+    </div>
+    <div>
+      <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="statsBody"><span>Park numbers</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="panel-body" id="statsBody" hidden>
+    <div class="stats" role="status" aria-live="polite">
+      <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Entries in this log</div></div>
+      <div class="stat warn"><div class="n" id="statOpen">0</div><div class="l">Still open</div></div>
+      <div class="stat alert"><div class="n" id="statSafety">0</div><div class="l">Open safety items</div></div>
+      <div class="stat warn"><div class="n" id="statBandaid">0</div><div class="l">Open band-aids awaiting a proper fix</div></div>
+      <div class="stat"><div class="n" id="statDeferred">0</div><div class="l">Deferred to a later season</div></div>
+      <div class="stat"><div class="n" id="statSpent">$0</div><div class="l">Parts + labor logged, all entries</div></div>
+      <div class="stat"><div class="n" id="statOpenValue">$0</div><div class="l">Cost sitting in still-open work</div></div>
+      <div class="stat"><div class="n" id="statDeferredValue">$0</div><div class="l">Estimated cost of deferred work</div></div>
+    </div>
+    <div class="cost-months" id="costByMonth"></div>
+    </div>
+    </div>
+    </div>
+  </header>
+
+  <div class="demo-banner no-print" id="demoBanner" hidden>
+    <span><b>Demo data — you're exploring sample entries.</b> Your real log is saved untouched on this device; anything you change here is thrown away when you exit.</span>
+    <button class="btn primary" type="button" id="exitDemoBtn">Exit demo — back to my log</button>
+  </div>
+
+  <!-- ================= ENTRY FORM ================= -->
+  <section class="block no-print" aria-labelledby="entryHead">
+    <div class="block-head">
+      <h2 id="entryHead">New repair entry</h2>
+      <p>Filled out in the same order as the paper Repair Report, top to bottom.</p>
+    </div>
+    <form class="card" id="entryForm" novalidate>
+      <div class="form-error" id="formError" role="alert"></div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="fPark">Park name</label>
+          <input type="text" id="fPark" placeholder="e.g. Honeycomb Campground" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="fSite">Site / asset <span class="req">*</span></label>
+          <input type="text" id="fSite" placeholder="e.g. Site 42 pedestal, Bathhouse B, Cabin 3" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>Date &amp; time reported <span class="req">*</span></label>
+          <div class="dt-row">
+            <input type="date" id="fDate" aria-label="Date reported" />
+            <input type="time" id="fTime" aria-label="Time reported" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="fBy">Reported by</label>
+          <input type="text" id="fBy" placeholder="Name of host, guest, or crew" autocomplete="off" />
+        </div>
+        <div class="field span2">
+          <label>Priority</label>
+          <div class="prio" role="radiogroup" aria-label="Priority">
+            <label class="p-safety"><input type="radio" name="prio" value="Safety" /> Safety</label>
+            <label class="p-urgent"><input type="radio" name="prio" value="Urgent" /> Urgent</label>
+            <label><input type="radio" name="prio" value="Routine" checked /> Routine</label>
+            <label><input type="radio" name="prio" value="Cosmetic" /> Cosmetic</label>
+          </div>
+        </div>
+        <div class="field span2">
+          <label for="fProblem">Problem <span class="req">*</span></label>
+          <textarea id="fProblem" placeholder="What's broken, where exactly, and what a guest or host would notice"></textarea>
+        </div>
+        <div class="field span2">
+          <label for="fAction">Action taken</label>
+          <textarea id="fAction" placeholder="What was done on the spot — shut off, taped off, swapped, scheduled…"></textarea>
+        </div>
+        <div class="field">
+          <label>Band-aid applied?</label>
+          <div class="yn" role="radiogroup" aria-label="Band-aid applied">
+            <label><input type="radio" name="bandaid" value="No" checked /> No</label>
+            <label><input type="radio" name="bandaid" value="Yes" /> Yes — temporary fix</label>
+          </div>
+        </div>
+        <div class="field" id="dueWrap" hidden>
+          <label for="fDue">Proper-fix due date</label>
+          <input type="date" id="fDue" />
+        </div>
+        <div class="field">
+          <label>Photo taken?</label>
+          <div class="yn" role="radiogroup" aria-label="Photo taken">
+            <label><input type="radio" name="photo" value="No" checked /> No</label>
+            <label><input type="radio" name="photo" value="Yes" /> Yes</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="fPhotoLoc">Where the photo is saved</label>
+          <input type="text" id="fPhotoLoc" placeholder="e.g. Crew phone roll, shared drive / Repairs" autocomplete="off" />
+        </div>
+        <div class="field span2">
+          <label>Photo of the problem</label>
+          <div class="photo-attach">
+            <label class="btn" for="fPhotoFile">Attach a photo</label>
+            <input class="sr-only" type="file" id="fPhotoFile" accept="image/*" />
+            <span class="photo-note">From the camera or the device's files. It stays on this device with the entry and rides in the ZIP bundle, named by its Entry ID.</span>
+          </div>
+          <div class="photo-preview" id="photoPreview" hidden>
+            <img id="photoPreviewImg" alt="Attached photo preview" />
+            <span id="photoPreviewCap"></span>
+            <button class="btn small" type="button" id="photoRemoveBtn">Remove photo</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="fStatus">Status</label>
+          <select id="fStatus">
+            <option>Open</option>
+            <option>In Progress</option>
+            <option>Band-Aid Applied</option>
+            <option>Waiting on Parts</option>
+            <option>Deferred</option>
+            <option>Completed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fAssigned">Assigned to</label>
+          <input type="text" id="fAssigned" placeholder="Who owns the fix" autocomplete="off" />
+        </div>
+        <div class="field span2">
+          <div class="defer-box" id="deferBox">
+            <label class="defer-check">
+              <input type="checkbox" id="fDeferred" />
+              <span>Defer this fix — record it as deferred maintenance
+                <small>Use this when the problem is real but the proper repair is deliberately pushed to the shoulder or off season. It sets the status to Deferred and puts the entry on the Deferred Maintenance board and the filled deferred sheet.</small>
+              </span>
+            </label>
+            <div class="defer-fields" id="deferFields" hidden>
+              <div>
+                <label for="fDefReason">Why it's deferred</label>
+                <input type="text" id="fDefReason" placeholder="e.g. Needs a full rewire — budget opens in the off season" autocomplete="off" />
+              </div>
+              <div>
+                <label for="fDefUntil">Revisit by</label>
+                <input type="date" id="fDefUntil" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field span2">
+          <label>Cost &amp; downtime</label>
+          <div class="money-row">
+            <input type="number" id="fParts" min="0" step="0.01" placeholder="Parts $" aria-label="Parts cost in dollars" />
+            <input type="number" id="fLabor" min="0" step="0.01" placeholder="Labor $" aria-label="Labor cost in dollars" />
+            <input type="number" id="fDown" min="0" step="0.5" placeholder="Downtime hrs" aria-label="Downtime in hours" />
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" type="submit" id="submitBtn">Add entry to log</button>
+        <button class="btn" type="button" id="cancelEditBtn" hidden>Cancel edit</button>
+        <span class="editing-note" id="editingNote">Editing an existing entry — save to update it in place.</span>
+      </div>
+    </form>
+  </section>
+
+  <!-- ================= THE LOG ================= -->
+  <section class="block no-print" aria-labelledby="logHead">
+    <div class="block-head">
+      <h2 id="logHead">The log</h2>
+      <p>Search by site, asset, person, or problem. Upload a CSV and its entries join this list — add new ones on top, then download the whole thing back as one file.</p>
+    </div>
+    <button class="due-strip" type="button" id="dueStrip" hidden></button>
+    <div class="log-controls">
+      <input type="search" id="searchBox" placeholder="Search the log…" aria-label="Search the log" />
+      <select id="statusFilter" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        <option>Open</option>
+        <option>In Progress</option>
+        <option>Band-Aid Applied</option>
+        <option>Waiting on Parts</option>
+        <option>Deferred</option>
+        <option>Completed</option>
+      </select>
+      <select id="prioFilter" aria-label="Filter by priority">
+        <option value="">All priorities</option>
+        <option>Safety</option>
+        <option>Urgent</option>
+        <option>Routine</option>
+        <option>Cosmetic</option>
+      </select>
+      <div class="view-toggle" role="group" aria-label="Log view">
+        <button type="button" id="viewAll" aria-pressed="true">All entries</button>
+        <button type="button" id="viewBandaid" aria-pressed="false">Band-aids only</button>
+        <button type="button" id="viewDeferred" aria-pressed="false">Deferred only</button>
+      </div>
+    </div>
+    <div id="logWrap"></div>
+  </section>
+
+  <!-- ================= BAND-AID BOARD ================= -->
+  <section class="block panel no-print" aria-labelledby="baHead">
+    <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="baBody"><span id="baHead">Open band-aids</span><span class="count" id="baCount" hidden>0</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="panel-body" id="baBody" hidden>
+    <p class="panel-desc">Every temporary fix still waiting on its proper repair, sorted by the date it was promised. This is the shoulder-season hit list.</p>
+    <div class="ba-list" id="baList"></div>
+    <p class="rule-quote">“A band-aid is a promise to come back.” <span>— the rule printed on every sheet in the pack</span></p>
+    </div>
+  </section>
+
+  <!-- ================= DEFERRED BOARD ================= -->
+  <section class="block panel no-print" aria-labelledby="defHead">
+    <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="defBody"><span id="defHead">Deferred maintenance</span><span class="count" id="defCount" hidden>0</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="panel-body" id="defBody" hidden>
+    <p class="panel-desc">Real problems whose proper fix is deliberately pushed to the shoulder or off season — recorded here so the decision is on paper, with the reason and the date it comes back. This is the list you walk the park with when the season turns.</p>
+    <div style="margin-bottom:12px">
+      <button class="btn primary" type="button" id="recordDeferredBtn">Record deferred maintenance</button>
+    </div>
+    <div class="ba-list" id="defList"></div>
+    <p class="rule-quote">“Deferred is a decision, not a disappearance.” <span>— every item here has a season it comes back in</span></p>
+    </div>
+  </section>
+
+  <!-- ================= PRINTABLES ================= -->
+  <section class="block panel" id="printables" aria-labelledby="printHead">
+    <button class="panel-toggle no-print" type="button" aria-expanded="false" aria-controls="printBody"><span id="printHead">Printable form — blank Repair Report</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="panel-body" id="printBody" hidden>
+    <p class="panel-desc no-print">The one paper sheet: the blank Repair Report, sized for a clipboard and a work glove. Everything else — the running log, the Band-Aid Tracker, the deferred list — is generated by the app from your entries (see the filled sheets right below), so paper only has to do the field work. Download it below and the sheet opens as its own page, ready to print or save as a PDF.</p>
+    <div class="print-banner no-print" id="printBanner">
+      <span id="printBannerText">Sheet selected.</span>
+      <span style="display:inline-flex;gap:8px;flex-wrap:wrap">
+        <button class="btn small primary" type="button" id="printNowBtn">Download the sheet</button>
+        <button class="btn small" type="button" id="printAllBtn">Back to the paper sheet</button>
+      </span>
+    </div>
+    <div class="no-print" style="margin-bottom:14px">
+      <button class="btn primary" type="button" id="printReportBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download the blank Repair Report
+      </button>
+    </div>
+
+    <!-- Sheet 1: single-incident report -->
+    <div class="sheet" id="sheet-report">
+      <h3>Repair Report <span class="brand">Camp Host Central</span></h3>
+      <div class="row">
+        <div class="f wide"><div class="lab">Park</div><div class="line"></div></div>
+        <div class="f"><div class="lab">Site / Asset</div><div class="line"></div></div>
+      </div>
+      <div class="row">
+        <div class="f"><div class="lab">Date</div><div class="line"></div></div>
+        <div class="f"><div class="lab">Time</div><div class="line"></div></div>
+        <div class="f wide"><div class="lab">Reported by</div><div class="line"></div></div>
+      </div>
+      <div class="row">
+        <div class="f wide">
+          <div class="lab">Priority — check one</div>
+          <div class="checks">
+            <span class="safety-first"><span class="box"></span>Safety</span>
+            <span><span class="box"></span>Urgent</span>
+            <span><span class="box"></span>Routine</span>
+            <span><span class="box"></span>Cosmetic</span>
+          </div>
+        </div>
+      </div>
+      <div class="row"><div class="f wide"><div class="lab">Problem — what's broken, where exactly</div><div class="writebox h3"></div></div></div>
+      <div class="row"><div class="f wide"><div class="lab">Action taken</div><div class="writebox h3"></div></div></div>
+      <div class="row">
+        <div class="f">
+          <div class="lab">Band-aid applied?</div>
+          <div class="checks"><span><span class="box"></span>Yes</span><span><span class="box"></span>No</span></div>
+        </div>
+        <div class="f"><div class="lab">If yes — proper fix due by (date)</div><div class="line"></div></div>
+      </div>
+      <div class="row">
+        <div class="f">
+          <div class="lab">Photo taken?</div>
+          <div class="checks"><span><span class="box"></span>Yes</span><span><span class="box"></span>No</span></div>
+        </div>
+        <div class="f wide"><div class="lab">Where the photo is saved</div><div class="line"></div></div>
+      </div>
+      <div class="row">
+        <div class="f"><div class="lab">Status</div><div class="line"></div></div>
+        <div class="f"><div class="lab">Assigned to</div><div class="line"></div></div>
+        <div class="f"><div class="lab">Parts $</div><div class="line"></div></div>
+        <div class="f"><div class="lab">Labor $</div><div class="line"></div></div>
+        <div class="f"><div class="lab">Downtime (hrs)</div><div class="line"></div></div>
+      </div>
+      <div class="foot">
+        <span>A band-aid is a promise to come back — write the due date down.</span>
+        <span>Full system: The Campground Maintenance Log Book · camphostcentral.gumroad.com</span>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ================= FILLED SHEETS ================= -->
+  <section class="block panel" id="filled" aria-labelledby="filledHead">
+    <button class="panel-toggle no-print" type="button" aria-expanded="false" aria-controls="filledBody"><span id="filledHead">Filled sheets — your log, filled in</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="panel-body" id="filledBody" hidden>
+    <p class="panel-desc no-print">Your digital entries, laid out on the same sheets. Every problem prints as its own filled Repair Report, and the filled Band-Aid Tracker and Deferred Maintenance sheets ride along at the end of the same stack — they're snapshots of the boards above, so there's nothing separate to click. Pull one problem on its own with the picker (the Filled sheet button on any log row does the same thing). To record deferred maintenance, tick <b>“Defer this fix”</b> in the entry form (or use the Record deferred maintenance button on the board above) — the entry lands on the Deferred Maintenance board and on its filled sheet. Check the preview, then hit <b>Download the sheet</b> — you get the sheets as their own printable pages, which open with the print dialog ready (Save as PDF is in there too).</p>
+    <div class="filled-controls no-print" role="group" aria-label="Choose a filled sheet">
+      <button class="btn active" type="button" data-filled="all">All filled sheets</button>
+      <select id="filledPick" aria-label="Pick one problem to print on its own"></select>
+      <button class="btn" type="button" id="filledOneBtn">Show one problem</button>
+      <button class="btn rust" type="button" id="closeoutBtn">Season close-out report</button>
+    </div>
+    <div class="filled-printbar no-print" id="filledPrintBar">
+      <span class="what"><span id="filledPrintWhat">Every problem as its own filled Repair Report.</span>
+      <small>Downloads as its own printable pages — just these sheets, nothing else from the app.</small></span>
+      <button class="btn primary" type="button" id="printFilledBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download the sheet
+      </button>
+    </div>
+    <div id="filledPreview"></div>
+    </div>
+  </section>
+
+  <!-- ================= STORE ================= -->
+  <section class="block panel no-print" aria-labelledby="storeHead">
+    <button class="panel-toggle" type="button" aria-expanded="false" aria-controls="storeBody"><span id="storeHead">Books &amp; the store</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="panel-body" id="storeBody" hidden>
+    <p class="panel-desc">This log is one page out of a bigger kit. The book and the store carry the full set — SOPs, checklists, and the bound log book built to live in the shop.</p>
+    <div class="store-grid">
+      <div class="product">
+        <h3>The Campground Maintenance Log Book</h3>
+        <p>The bound, print edition of this system — a season of repair reports, running logs, and band-aid trackers in one book that lives on the shop counter.</p>
+        <div class="price">$24.95 <small>paperback on Lulu</small></div>
+        <a class="btn primary" href="https://www.lulu.com/shop/jerry-ross/the-campground-maintenance-log-book/paperback/product-nveqrg8.html" target="_blank" rel="noopener">Get the Log Book</a>
+      </div>
+      <div class="product">
+        <h3>Free Camp Host Checklists</h3>
+        <p>Opening, closing, turnover, and inspection checklists from the same system — free on Gumroad, email at checkout and they're yours.</p>
+        <div class="price">Free <small>on Gumroad</small></div>
+        <a class="btn primary" href="https://camphostcentral.gumroad.com/l/uqvwpm" target="_blank" rel="noopener">Get the free checklists</a>
+      </div>
+      <div class="product">
+        <h3>Camp Host Central — full store</h3>
+        <p>The SOP bundle, the Complete Bundle, the True Pay Calculator, the social media calendar, and Campground Tycoon — every tool in one place.</p>
+        <div class="price">From $4.99 <small>digital downloads</small></div>
+        <a class="btn primary" href="https://camphostcentral.gumroad.com/" target="_blank" rel="noopener">Browse the store</a>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <footer class="page no-print">
+    Camp Host Central — built by working camp hosts, for working camp hosts. Paper in the field, digital at the desk, one log either way.
+  </footer>
+</div>
+
+<div class="photo-viewer no-print" id="photoViewer" hidden>
+  <div class="pv-card">
+    <img id="pvImg" alt="Entry photo, full size" />
+    <div class="pv-bar"><span id="pvCap"></span><button class="btn" type="button" id="pvClose">Close</button></div>
+  </div>
+</div>
+
+<div class="import-overlay no-print" id="importPreview" hidden>
+  <div class="import-card" role="dialog" aria-modal="true" aria-labelledby="importPreviewTitle">
+    <h3 id="importPreviewTitle">Review this import before it lands</h3>
+    <p class="sub" id="importPreviewSub">Nothing changes until you apply it.</p>
+    <div id="importPreviewBody"></div>
+    <div class="import-actions">
+      <button class="btn primary" type="button" id="importApplyBtn">Apply merge</button>
+      <button class="btn" type="button" id="importCancelBtn">Cancel — leave my log as it is</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* MiniZip — a small ZIP writer/reader built into this file, standing in for
+   the JSZip library this app used to load from a CDN. It covers exactly the
+   surface the app calls (file / folder / generateAsync / loadAsync /
+   forEach / entry.async), writes stored (uncompressed) entries, and reads
+   both stored entries and deflated ones from older bundles. Building it in
+   is what makes the photo bundle work with no connection at all — this one
+   file is the whole app, the way it ships on Gumroad. */
+(function(){
+  "use strict";
+
+  var crcTable = null;
+  function crc32(bytes){
+    if(!crcTable){
+      crcTable = [];
+      for(var n = 0; n < 256; n++){
+        var c = n;
+        for(var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        crcTable[n] = c >>> 0;
+      }
+    }
+    var crc = 0xFFFFFFFF;
+    for(var i = 0; i < bytes.length; i++) crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  function toBytes(data){
+    if(typeof data === "string") return Promise.resolve(new TextEncoder().encode(data));
+    if(typeof Blob !== "undefined" && data instanceof Blob){
+      if(data.arrayBuffer) return data.arrayBuffer().then(function(ab){ return new Uint8Array(ab); });
+      return new Promise(function(resolve, reject){
+        var r = new FileReader();
+        r.onload = function(){ resolve(new Uint8Array(r.result)); };
+        r.onerror = function(){ reject(r.error); };
+        r.readAsArrayBuffer(data);
+      });
+    }
+    if(data instanceof Uint8Array) return Promise.resolve(data);
+    if(data instanceof ArrayBuffer) return Promise.resolve(new Uint8Array(data));
+    return Promise.resolve(new Uint8Array(0));
+  }
+
+  function MiniZip(){ this._write = []; this._read = []; }
+  MiniZip.prototype.file = function(name, data){
+    this._write.push({ name: name, data: data });
+    return this;
+  };
+  MiniZip.prototype.folder = function(name){
+    var self = this;
+    var prefix = String(name).replace(/\/?$/, "/");
+    return { file: function(fileName, data){
+      self._write.push({ name: prefix + fileName, data: data });
+      return this;
+    } };
+  };
+  MiniZip.prototype.generateAsync = function(){
+    var self = this;
+    return Promise.all(self._write.map(function(e){
+      return toBytes(e.data).then(function(b){ return { name: e.name, bytes: b }; });
+    })).then(function(list){
+      var now = new Date();
+      var dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+      var dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+      var chunks = [], central = [], offset = 0, centralSize = 0;
+      var enc = new TextEncoder();
+      list.forEach(function(f){
+        var nameBytes = enc.encode(f.name);
+        var crc = crc32(f.bytes);
+        var lh = new DataView(new ArrayBuffer(30));
+        lh.setUint32(0, 0x04034b50, true);
+        lh.setUint16(4, 20, true);
+        lh.setUint16(6, 0x0800, true);      /* UTF-8 names */
+        lh.setUint16(8, 0, true);           /* stored, no compression */
+        lh.setUint16(10, dosTime, true);
+        lh.setUint16(12, dosDate, true);
+        lh.setUint32(14, crc, true);
+        lh.setUint32(18, f.bytes.length, true);
+        lh.setUint32(22, f.bytes.length, true);
+        lh.setUint16(26, nameBytes.length, true);
+        lh.setUint16(28, 0, true);
+        chunks.push(new Uint8Array(lh.buffer), nameBytes, f.bytes);
+        var ch = new DataView(new ArrayBuffer(46));
+        ch.setUint32(0, 0x02014b50, true);
+        ch.setUint16(4, 20, true);
+        ch.setUint16(6, 20, true);
+        ch.setUint16(8, 0x0800, true);
+        ch.setUint16(10, 0, true);
+        ch.setUint16(12, dosTime, true);
+        ch.setUint16(14, dosDate, true);
+        ch.setUint32(16, crc, true);
+        ch.setUint32(20, f.bytes.length, true);
+        ch.setUint32(24, f.bytes.length, true);
+        ch.setUint16(28, nameBytes.length, true);
+        ch.setUint32(42, offset, true);
+        central.push(new Uint8Array(ch.buffer), nameBytes);
+        centralSize += 46 + nameBytes.length;
+        offset += 30 + nameBytes.length + f.bytes.length;
+      });
+      var eo = new DataView(new ArrayBuffer(22));
+      eo.setUint32(0, 0x06054b50, true);
+      eo.setUint16(8, list.length, true);
+      eo.setUint16(10, list.length, true);
+      eo.setUint32(12, centralSize, true);
+      eo.setUint32(16, offset, true);
+      return new Blob(chunks.concat(central, [new Uint8Array(eo.buffer)]), { type: "application/zip" });
+    });
+  };
+  MiniZip.prototype.forEach = function(cb){
+    this._read.forEach(function(f){ cb(f.name, f); });
+  };
+
+  function readEntry(bytes, dv, name, method, compSize, localOff){
+    var entry = { name: name, dir: /\/$/.test(name) };
+    entry.async = function(type){
+      var start = localOff + 30 + dv.getUint16(localOff + 26, true) + dv.getUint16(localOff + 28, true);
+      var data = bytes.subarray(start, start + compSize);
+      var p;
+      if(method === 0){
+        p = Promise.resolve(data.slice());
+      } else if(method === 8){
+        if(typeof DecompressionStream === "undefined"){
+          return Promise.reject(new Error("This browser can't unpack a compressed bundle entry."));
+        }
+        var stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+        p = new Response(stream).arrayBuffer().then(function(ab){ return new Uint8Array(ab); });
+      } else {
+        return Promise.reject(new Error("Unsupported ZIP compression."));
+      }
+      if(type === "text") return p.then(function(b){ return new TextDecoder().decode(b); });
+      if(type === "blob") return p.then(function(b){ return new Blob([b]); });
+      return p; /* "uint8array" and anything else */
+    };
+    return entry;
+  }
+
+  MiniZip.loadAsync = function(input){
+    return toBytes(input instanceof Blob || typeof input === "string" ? input : new Blob([input])).then(function(bytes){
+      if(input && typeof input === "object" && !(input instanceof Blob) && !(input instanceof Uint8Array) && !(input instanceof ArrayBuffer)){
+        /* not file data at all */
+        throw new Error("Not a ZIP file.");
+      }
+      var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      var eocd = -1;
+      var floor = Math.max(0, bytes.length - 22 - 65536);
+      for(var i = bytes.length - 22; i >= floor; i--){
+        if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+      }
+      if(eocd < 0) throw new Error("Not a ZIP file.");
+      var count = dv.getUint16(eocd + 10, true);
+      var pos = dv.getUint32(eocd + 16, true);
+      var dec = new TextDecoder();
+      var zip = new MiniZip();
+      for(var n = 0; n < count; n++){
+        if(pos + 46 > bytes.length || dv.getUint32(pos, true) !== 0x02014b50) break;
+        var method = dv.getUint16(pos + 10, true);
+        var compSize = dv.getUint32(pos + 20, true);
+        var nameLen = dv.getUint16(pos + 28, true);
+        var extraLen = dv.getUint16(pos + 30, true);
+        var commentLen = dv.getUint16(pos + 32, true);
+        var localOff = dv.getUint32(pos + 42, true);
+        var name = dec.decode(bytes.subarray(pos + 46, pos + 46 + nameLen));
+        zip._read.push(readEntry(bytes, dv, name, method, compSize, localOff));
+        pos += 46 + nameLen + extraLen + commentLen;
+      }
+      return zip;
+    });
+  };
+
+  window.JSZip = MiniZip;
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- state: saved on this device; the CSV is the backup / sharing copy ---------- */
+  var entries = [];
+  var nextNum = 1;
+  var editingId = null;
+  var viewMode = "all"; // "all" | "bandaid" | "deferred"
+  var demoMode = false;
+  var realSnapshot = null;
+
+  var LS_KEY = "chc-repair-log-v1";
+  function saveLocal(){
+    if(demoMode) return; /* demo data never overwrites the real log */
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ entries: entries, nextNum: nextNum }));
+    } catch(e){ /* storage unavailable (private mode, full) — the CSV download still works */ }
+  }
+  function loadLocal(){
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if(!raw) return;
+      var data = JSON.parse(raw);
+      if(!data || !Array.isArray(data.entries)) return;
+      entries = data.entries.filter(function(e){ return e && typeof e === "object"; });
+      entries.forEach(function(e){ bumpNextNum(e.id); });
+      if(typeof data.nextNum === "number" && data.nextNum > nextNum) nextNum = data.nextNum;
+    } catch(e){ /* unreadable saved data — start clean rather than crash */ }
+  }
+
+  /* ---------- entry photos: blobs live in IndexedDB, keyed by Entry ID ----------
+     localStorage holds the entries (including the photo_file reference); the
+     picture bytes themselves need a store that can actually hold them. */
+  var photoURLs = {};   /* Entry ID -> object URL for the stored photo */
+  var photoIds = {};    /* Entry ID -> true when a photo is stored on this device */
+  var pendingPhotoBlob = null;
+  var pendingPhotoURL = null;
+  var photoRemoved = false;
+
+  function idbOpen(){
+    return new Promise(function(resolve, reject){
+      if(!("indexedDB" in window)){ reject(new Error("indexedDB unavailable")); return; }
+      var rq = indexedDB.open("chc-repair-log", 1);
+      rq.onupgradeneeded = function(){ rq.result.createObjectStore("photos"); };
+      rq.onsuccess = function(){ resolve(rq.result); };
+      rq.onerror = function(){ reject(rq.error); };
+    });
+  }
+  function idbPut(id, blob){
+    return idbOpen().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction("photos", "readwrite");
+        tx.objectStore("photos").put(blob, id);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+  function idbGet(id){
+    return idbOpen().then(function(db){
+      return new Promise(function(resolve, reject){
+        var rq = db.transaction("photos", "readonly").objectStore("photos").get(id);
+        rq.onsuccess = function(){ resolve(rq.result || null); };
+        rq.onerror = function(){ reject(rq.error); };
+      });
+    });
+  }
+  function idbDel(id){
+    return idbOpen().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction("photos", "readwrite");
+        tx.objectStore("photos").delete(id);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+  function idbAll(){
+    return idbOpen().then(function(db){
+      return new Promise(function(resolve, reject){
+        var store = db.transaction("photos", "readonly").objectStore("photos");
+        var keys = null, vals = null;
+        function fin(){
+          if(keys === null || vals === null) return;
+          var m = {};
+          keys.forEach(function(k, i){ m[k] = vals[i]; });
+          resolve(m);
+        }
+        var krq = store.getAllKeys(), vrq = store.getAll();
+        krq.onsuccess = function(){ keys = krq.result; fin(); };
+        vrq.onsuccess = function(){ vals = vrq.result; fin(); };
+        krq.onerror = function(){ reject(krq.error); };
+        vrq.onerror = function(){ reject(vrq.error); };
+      });
+    });
+  }
+  function extForType(t){
+    return {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif","image/bmp":"bmp"}[t] || "jpg";
+  }
+  function typeForExt(x){
+    return {"jpg":"image/jpeg","jpeg":"image/jpeg","png":"image/png","webp":"image/webp","gif":"image/gif","bmp":"image/bmp"}[(x || "").toLowerCase()] || "image/jpeg";
+  }
+  function photoFileName(id, blob){ return id + "." + extForType(blob && blob.type); }
+  function setPhotoURL(id, blob){
+    if(photoURLs[id]) URL.revokeObjectURL(photoURLs[id]);
+    photoURLs[id] = URL.createObjectURL(blob);
+    photoIds[id] = true;
+  }
+  function dropPhotoURL(id){
+    if(photoURLs[id]) URL.revokeObjectURL(photoURLs[id]);
+    delete photoURLs[id];
+    delete photoIds[id];
+  }
+  /* load every stored photo into the URL cache; resolves true if the set changed */
+  function refreshPhotos(){
+    return idbAll().then(function(map){
+      var changed = false;
+      Object.keys(map).forEach(function(id){
+        if(!photoIds[id]){ setPhotoURL(id, map[id]); changed = true; }
+      });
+      Object.keys(photoIds).forEach(function(id){
+        if(!(id in map)){ dropPhotoURL(id); changed = true; }
+      });
+      return changed;
+    }).catch(function(){ return false; });
+  }
+
+  var COLUMNS = ["id","date_reported","time_reported","park","site_asset","reported_by","priority",
+    "problem","action_taken","bandaid","fix_due_date","photo_taken","photo_location",
+    "status","assigned_to","parts_cost","labor_cost","downtime_hours",
+    "deferred_reason","deferred_until","photo_file","updated_at"];
+
+  /* ---------- last-updated stamps: the newer-wins guard ---------- */
+  function nowStamp(){ return new Date().toISOString(); }
+  function stampOf(e){
+    if(!e) return 0;
+    var t = Date.parse(e.updated_at || "");
+    if(!isNaN(t)) return t;
+    if(e.date_reported){
+      var d = Date.parse(e.date_reported + "T" + (e.time_reported || "00:00") + ":00");
+      if(!isNaN(d)) return d;
+    }
+    return 0;
+  }
+  function fmtStamp(e){
+    var t = stampOf(e);
+    if(!t) return "no stamp (older file)";
+    var d = new Date(t);
+    return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  }
+  function touch(e){ if(e) e.updated_at = nowStamp(); }
+  function entriesEqual(a, b){
+    for(var i = 0; i < COLUMNS.length; i++){
+      var c = COLUMNS[i];
+      if(c === "updated_at") continue;
+      if(String(a[c] == null ? "" : a[c]).trim() !== String(b[c] == null ? "" : b[c]).trim()) return false;
+    }
+    return true;
+  }
+  function looksLikeDifferentEntry(a, b){
+    var sa = String(a.site_asset || "").trim().toLowerCase(), sb = String(b.site_asset || "").trim().toLowerCase();
+    var pa = String(a.problem || "").trim().toLowerCase(), pb = String(b.problem || "").trim().toLowerCase();
+    return sa && sb && pa && pb && sa !== sb && pa !== pb;
+  }
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function todayStr(){
+    var d = new Date();
+    var m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+    return d.getFullYear()+"-"+m+"-"+day;
+  }
+  function isOpen(e){ return e.status !== "Completed"; }
+  function isOpenBandaid(e){ return e.bandaid === "Yes" && isOpen(e); }
+  function isDeferred(e){ return e.status === "Deferred"; }
+  function entryCost(e){
+    var p = parseFloat(e.parts_cost), l = parseFloat(e.labor_cost);
+    return (isNaN(p) ? 0 : p) + (isNaN(l) ? 0 : l);
+  }
+  function money(n){ return "$" + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function datePlus(days){
+    var d = new Date();
+    d.setDate(d.getDate() + days);
+    var m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+    return d.getFullYear()+"-"+m+"-"+day;
+  }
+
+  var toastTimer = null;
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 4200);
+  }
+
+  /* ---------- form ---------- */
+  var form = $("entryForm");
+  $("fDate").value = todayStr();
+
+  function checkedVal(name){
+    var el = form.querySelector('input[name="'+name+'"]:checked');
+    return el ? el.value : "";
+  }
+  function setChecked(name, val){
+    var els = form.querySelectorAll('input[name="'+name+'"]');
+    els.forEach(function(el){ el.checked = (el.value === val); });
+  }
+  function syncDue(){
+    $("dueWrap").hidden = checkedVal("bandaid") !== "Yes";
+  }
+  form.querySelectorAll('input[name="bandaid"]').forEach(function(el){
+    el.addEventListener("change", syncDue);
+  });
+
+  /* deferred: the checkbox, the status select, and the reason/date fields stay in step */
+  function syncDeferred(){
+    var on = $("fStatus").value === "Deferred";
+    $("fDeferred").checked = on;
+    $("deferFields").hidden = !on;
+    $("deferBox").classList.toggle("on", on);
+  }
+  $("fStatus").addEventListener("change", syncDeferred);
+  $("fDeferred").addEventListener("change", function(){
+    $("fStatus").value = this.checked ? "Deferred" : "Open";
+    syncDeferred();
+    if(this.checked) $("fDefReason").focus();
+  });
+
+  /* ---------- attach a photo to the entry being written or edited ---------- */
+  function showPhotoPreview(url, cap){
+    $("photoPreviewImg").src = url;
+    $("photoPreviewCap").textContent = cap || "";
+    $("photoPreview").hidden = false;
+  }
+  function hidePhotoPreview(){
+    $("photoPreview").hidden = true;
+    $("photoPreviewImg").removeAttribute("src");
+    $("photoPreviewCap").textContent = "";
+  }
+  function clearPendingPhoto(){
+    if(pendingPhotoURL) URL.revokeObjectURL(pendingPhotoURL);
+    pendingPhotoBlob = null;
+    pendingPhotoURL = null;
+    photoRemoved = false;
+  }
+  /* shrink big camera photos before storing, so a season of them fits on the device */
+  function processPhoto(file){
+    return new Promise(function(resolve){
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var scale = (w && h) ? Math.min(1, 1600 / Math.max(w, h)) : 1;
+          if(!w || !h || (scale === 1 && file.size < 1500000)){ URL.revokeObjectURL(url); resolve(file); return; }
+          var cv = document.createElement("canvas");
+          cv.width = Math.round(w * scale);
+          cv.height = Math.round(h * scale);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          URL.revokeObjectURL(url);
+          if(cv.toBlob){ cv.toBlob(function(b){ resolve(b || file); }, "image/jpeg", 0.85); }
+          else resolve(file);
+        } catch(e){ URL.revokeObjectURL(url); resolve(file); }
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+  $("fPhotoFile").addEventListener("change", function(){
+    var f = this.files && this.files[0];
+    this.value = "";
+    if(!f) return;
+    processPhoto(f).then(function(blob){
+      clearPendingPhoto();
+      pendingPhotoBlob = blob;
+      pendingPhotoURL = URL.createObjectURL(blob);
+      setChecked("photo", "Yes");
+      showPhotoPreview(pendingPhotoURL, "New photo attached — it saves with the entry.");
+    });
+  });
+  $("photoRemoveBtn").addEventListener("click", function(){
+    clearPendingPhoto();
+    photoRemoved = true;
+    hidePhotoPreview();
+    toast("Photo taken off — save the entry to make it stick.");
+  });
+  function loadFormPhoto(e){
+    clearPendingPhoto();
+    hidePhotoPreview();
+    if(!e) return;
+    if(photoURLs[e.id]){ showPhotoPreview(photoURLs[e.id], "Photo on file for " + e.id + " — attach a new one to replace it."); return; }
+    if(e.photo_file){
+      idbGet(e.id).then(function(blob){
+        if(blob && editingId === e.id && !pendingPhotoBlob && !photoRemoved){
+          setPhotoURL(e.id, blob);
+          showPhotoPreview(photoURLs[e.id], "Photo on file for " + e.id + " — attach a new one to replace it.");
+        }
+      }).catch(function(){});
+    }
+  }
+
+  function showError(msg){
+    var e = $("formError");
+    e.textContent = msg;
+    e.classList.add("show");
+  }
+  function clearError(){ $("formError").classList.remove("show"); }
+
+  function readForm(){
+    return {
+      park: $("fPark").value.trim(),
+      site_asset: $("fSite").value.trim(),
+      date_reported: $("fDate").value,
+      time_reported: $("fTime").value,
+      reported_by: $("fBy").value.trim(),
+      priority: checkedVal("prio") || "Routine",
+      problem: $("fProblem").value.trim(),
+      action_taken: $("fAction").value.trim(),
+      bandaid: checkedVal("bandaid") || "No",
+      fix_due_date: checkedVal("bandaid") === "Yes" ? $("fDue").value : "",
+      photo_taken: checkedVal("photo") || "No",
+      photo_location: $("fPhotoLoc").value.trim(),
+      status: $("fStatus").value,
+      deferred_reason: $("fStatus").value === "Deferred" ? $("fDefReason").value.trim() : "",
+      deferred_until: $("fStatus").value === "Deferred" ? $("fDefUntil").value : "",
+      assigned_to: $("fAssigned").value.trim(),
+      parts_cost: $("fParts").value,
+      labor_cost: $("fLabor").value,
+      downtime_hours: $("fDown").value
+    };
+  }
+
+  function fillForm(e){
+    $("fPark").value = e.park || "";
+    $("fSite").value = e.site_asset || "";
+    $("fDate").value = e.date_reported || todayStr();
+    $("fTime").value = e.time_reported || "";
+    $("fBy").value = e.reported_by || "";
+    setChecked("prio", e.priority || "Routine");
+    $("fProblem").value = e.problem || "";
+    $("fAction").value = e.action_taken || "";
+    setChecked("bandaid", e.bandaid || "No");
+    $("fDue").value = e.fix_due_date || "";
+    setChecked("photo", e.photo_taken || "No");
+    $("fPhotoLoc").value = e.photo_location || "";
+    $("fStatus").value = e.status || "Open";
+    $("fDefReason").value = e.deferred_reason || "";
+    $("fDefUntil").value = e.deferred_until || "";
+    syncDeferred();
+    $("fAssigned").value = e.assigned_to || "";
+    $("fParts").value = e.parts_cost || "";
+    $("fLabor").value = e.labor_cost || "";
+    $("fDown").value = e.downtime_hours || "";
+    syncDue();
+    loadFormPhoto(e);
+  }
+
+  function resetForm(){
+    form.reset();
+    $("fDate").value = todayStr();
+    setChecked("prio","Routine");
+    setChecked("bandaid","No");
+    setChecked("photo","No");
+    syncDue();
+    syncDeferred();
+    clearPendingPhoto();
+    hidePhotoPreview();
+    editingId = null;
+    $("submitBtn").textContent = "Add entry to log";
+    $("cancelEditBtn").hidden = true;
+    $("editingNote").classList.remove("show");
+    clearError();
+  }
+
+  form.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    clearError();
+    var data = readForm();
+    if(!data.site_asset){ showError("Site / asset is required — where is the problem?"); $("fSite").focus(); return; }
+    if(!data.date_reported){ showError("Add the date the problem was reported."); $("fDate").focus(); return; }
+    if(!data.problem){ showError("Describe the problem — that's the whole point of the report."); $("fProblem").focus(); return; }
+    if(data.bandaid === "Yes" && data.status === "Open"){ data.status = "Band-Aid Applied"; }
+
+    var targetId, savedMsg;
+    if(editingId){
+      for(var i=0;i<entries.length;i++){
+        if(entries[i].id === editingId){ for(var k in data){ entries[i][k] = data[k]; } entries[i].updated_at = nowStamp(); break; }
+      }
+      targetId = editingId;
+      savedMsg = "Entry updated.";
+    } else {
+      data.id = "RL-" + String(nextNum++).padStart(3,"0");
+      data.photo_file = "";
+      data.updated_at = nowStamp();
+      entries.unshift(data);
+      targetId = data.id;
+      savedMsg = "Entry " + data.id + " added to the log.";
+    }
+    var savedEntry = null;
+    entries.forEach(function(e){ if(e.id === targetId) savedEntry = e; });
+    function finishSubmit(){
+      resetForm();
+      saveLocal();
+      render();
+      toast(savedMsg);
+    }
+    if(photoRemoved){
+      if(savedEntry) savedEntry.photo_file = "";
+      dropPhotoURL(targetId);
+      idbDel(targetId).then(finishSubmit, finishSubmit);
+    } else if(pendingPhotoBlob){
+      var blobToSave = pendingPhotoBlob;
+      idbPut(targetId, blobToSave).then(function(){
+        if(savedEntry) savedEntry.photo_file = photoFileName(targetId, blobToSave);
+        setPhotoURL(targetId, blobToSave);
+        finishSubmit();
+      }, function(){
+        toast("The entry saved, but the photo couldn't be stored on this device.");
+        finishSubmit();
+      });
+    } else {
+      finishSubmit();
+    }
+  });
+
+  $("cancelEditBtn").addEventListener("click", function(){ resetForm(); });
+
+  /* ---------- rendering ---------- */
+  function prioBadge(p){
+    var cls = {Safety:"safety",Urgent:"urgent",Routine:"routine",Cosmetic:"cosmetic"}[p] || "routine";
+    return '<span class="badge '+cls+'">'+esc(p)+'</span>';
+  }
+  function statusBadge(s){
+    var cls = {"Open":"st-open","In Progress":"st-progress","Band-Aid Applied":"st-bandaid","Waiting on Parts":"st-parts","Deferred":"st-deferred","Completed":"st-done"}[s] || "st-open";
+    return '<span class="badge '+cls+'">'+esc(s)+'</span>';
+  }
+  function fmtDate(d){
+    if(!d) return "—";
+    var parts = d.split("-");
+    if(parts.length !== 3) return d;
+    return parts[1]+"/"+parts[2]+"/"+parts[0];
+  }
+
+  function visibleEntries(){
+    var q = $("searchBox").value.trim().toLowerCase();
+    var sf = $("statusFilter").value;
+    var pf = $("prioFilter").value;
+    var list = entries.filter(function(e){
+      if(viewMode === "bandaid" && !isOpenBandaid(e)) return false;
+      if(viewMode === "deferred" && !isDeferred(e)) return false;
+      if(sf && e.status !== sf) return false;
+      if(pf && e.priority !== pf) return false;
+      if(q){
+        var hay = [e.id,e.park,e.site_asset,e.reported_by,e.problem,e.action_taken,e.assigned_to,e.status,e.priority].join(" ").toLowerCase();
+        if(hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    if(viewMode === "bandaid"){
+      list.sort(function(a,b){
+        return (a.fix_due_date || "9999-12-31").localeCompare(b.fix_due_date || "9999-12-31");
+      });
+    }
+    if(viewMode === "deferred"){
+      list.sort(function(a,b){
+        return (a.deferred_until || "9999-12-31").localeCompare(b.deferred_until || "9999-12-31");
+      });
+    }
+    return list;
+  }
+
+  function render(){
+    /* stats */
+    $("statTotal").textContent = entries.length;
+    $("statOpen").textContent = entries.filter(isOpen).length;
+    $("statSafety").textContent = entries.filter(function(e){ return e.priority === "Safety" && isOpen(e); }).length;
+    $("statBandaid").textContent = entries.filter(isOpenBandaid).length;
+    $("statDeferred").textContent = entries.filter(isDeferred).length;
+    var baN = entries.filter(isOpenBandaid).length;
+    $("baCount").textContent = baN;
+    $("baCount").hidden = baN === 0;
+    var defN = entries.filter(isDeferred).length;
+    $("defCount").textContent = defN;
+    $("defCount").hidden = defN === 0;
+
+    /* cost rollups */
+    var totalSpent = 0, openValue = 0, deferredValue = 0;
+    var byMonth = {};
+    entries.forEach(function(e){
+      var c = entryCost(e);
+      totalSpent += c;
+      if(isOpen(e)) openValue += c;
+      if(isDeferred(e)) deferredValue += c;
+      var mk = (e.date_reported || "").slice(0,7);
+      if(/^\d{4}-\d{2}$/.test(mk)){
+        if(!byMonth[mk]) byMonth[mk] = { total:0, n:0 };
+        byMonth[mk].total += c; byMonth[mk].n++;
+      }
+    });
+    $("statSpent").textContent = money(totalSpent);
+    $("statOpenValue").textContent = money(openValue);
+    $("statDeferredValue").textContent = money(deferredValue);
+    var monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    var mks = Object.keys(byMonth).sort().reverse();
+    $("costByMonth").innerHTML = mks.length
+      ? '<h3>Parts + labor by month reported</h3><table><thead><tr><th>Month</th><th>Entries</th><th>Total</th></tr></thead><tbody>' +
+        mks.map(function(mk){
+          var y = mk.slice(0,4), mo = monthNames[parseInt(mk.slice(5,7),10)-1] || mk;
+          return '<tr><td>'+mo+' '+y+'</td><td>'+byMonth[mk].n+'</td><td>'+money(byMonth[mk].total)+'</td></tr>';
+        }).join("") + '</tbody></table>'
+      : "";
+
+    /* band-aids coming due — the actionable strip on the log */
+    var t0 = todayStr(), t14 = datePlus(14);
+    var dueSoon = 0, overdueN = 0;
+    entries.forEach(function(e){
+      if(!isOpenBandaid(e) || !e.fix_due_date) return;
+      if(e.fix_due_date < t0) overdueN++;
+      else if(e.fix_due_date <= t14) dueSoon++;
+    });
+    var strip = $("dueStrip");
+    if(dueSoon || overdueN){
+      strip.hidden = false;
+      strip.innerHTML =
+        (dueSoon ? '<span>'+dueSoon+' band-aid'+(dueSoon === 1 ? "" : "s")+' due in the next 14 days</span>' : "") +
+        (overdueN ? '<span class="overdue">'+overdueN+' overdue</span>' : "") +
+        '<small>Tap to see just the band-aids.</small>';
+    } else {
+      strip.hidden = true;
+      strip.innerHTML = "";
+    }
+
+    /* log */
+    var wrap = $("logWrap");
+    var list = visibleEntries();
+    if(!entries.length){
+      wrap.innerHTML = '<div class="empty"><b>No entries yet.</b><br/>Add the first report with the form above, or upload a CSV log to pick up where a previous file left off.</div>';
+    } else if(!list.length){
+      wrap.innerHTML = '<div class="empty"><b>Nothing matches that view.</b><br/>Clear the search or filters to see the full log.</div>';
+    } else {
+      var today = todayStr();
+      var siteCounts = {};
+      entries.forEach(function(x){
+        var k = (x.site_asset || "").trim().toLowerCase();
+        if(k) siteCounts[k] = (siteCounts[k] || 0) + 1;
+      });
+      var rows = list.map(function(e){
+        var ba = "";
+        if(e.bandaid === "Yes"){
+          var od = e.fix_due_date && e.fix_due_date < today && isOpen(e);
+          ba = '<span class="ba-flag'+(od ? " overdue" : "")+'">Band-aid — fix due '+(e.fix_due_date ? fmtDate(e.fix_due_date) : "—")+(od ? " (overdue)" : "")+'</span>';
+        }
+        var df = "";
+        if(isDeferred(e)){
+          var dod = e.deferred_until && e.deferred_until < today;
+          df = '<span class="def-flag'+(dod ? " overdue" : "")+'">Deferred'+(e.deferred_until ? " — revisit by "+fmtDate(e.deferred_until) : " — no revisit date set")+(dod ? " (past due)" : "")+(e.deferred_reason ? " · "+esc(e.deferred_reason) : "")+'</span>';
+        }
+        var chronic = "";
+        var sc = siteCounts[(e.site_asset || "").trim().toLowerCase()] || 0;
+        if(sc >= 2) chronic = '<span class="chronic-flag">Repeat problem — '+sc+' entries for this site / asset</span>';
+        var photo = "";
+        if(photoURLs[e.id]){
+          photo = '<br/><button type="button" class="thumb-btn" data-act="photo" data-id="'+esc(e.id)+'" aria-label="View the photo for '+esc(e.id)+'"><img src="'+photoURLs[e.id]+'" alt="Photo attached to '+esc(e.id)+'" loading="lazy"/></button>';
+        } else if(e.photo_file){
+          photo = '<span class="photo-flag">Photo: '+esc(e.photo_file)+' — travels in the ZIP bundle; not stored on this device</span>';
+        }
+        var cost = "";
+        var pc = parseFloat(e.parts_cost), lc = parseFloat(e.labor_cost);
+        if(!isNaN(pc) || !isNaN(lc)){ cost = "$" + ((isNaN(pc)?0:pc) + (isNaN(lc)?0:lc)).toFixed(2); }
+        var doneBtn = isOpen(e) ? '<button type="button" data-act="done" data-id="'+esc(e.id)+'">Mark done</button>' : "";
+        var deferBtn = "";
+        if(isOpen(e) && !isDeferred(e)) deferBtn = '<button type="button" data-act="defer" data-id="'+esc(e.id)+'">Defer</button>';
+        if(isDeferred(e)) deferBtn = '<button type="button" data-act="reopen" data-id="'+esc(e.id)+'">Reopen</button>';
+        return '<tr>' +
+          '<td data-l="Date">'+esc(fmtDate(e.date_reported))+'<br/><span style="color:var(--muted);font-size:12.5px">'+esc(e.id)+'</span></td>' +
+          '<td data-l="Site / Asset" class="site">'+esc(e.site_asset)+(e.park ? '<br/><span style="font-weight:400;color:var(--muted);font-size:13px">'+esc(e.park)+'</span>' : "")+'</td>' +
+          '<td data-l="Problem" class="prob">'+esc(e.problem)+(e.action_taken ? '<br/><span style="color:var(--muted)">Action: '+esc(e.action_taken)+'</span>' : "")+'<br/>'+ba+df+chronic+photo+'</td>' +
+          '<td data-l="Priority">'+prioBadge(e.priority)+'</td>' +
+          '<td data-l="Status">'+statusBadge(e.status)+(e.assigned_to ? '<br/><span style="color:var(--muted);font-size:13px">→ '+esc(e.assigned_to)+'</span>' : "")+'</td>' +
+          '<td data-l="Cost">'+(cost || "—")+(e.downtime_hours ? '<br/><span style="color:var(--muted);font-size:13px">'+esc(e.downtime_hours)+' hrs down</span>' : "")+'</td>' +
+          '<td data-l=""><span class="row-actions">' +
+            '<button type="button" data-act="edit" data-id="'+esc(e.id)+'">Edit</button>' +
+            '<button type="button" data-act="print" data-id="'+esc(e.id)+'">Filled sheet</button>' + deferBtn + doneBtn +
+            '<button type="button" class="danger" data-act="del" data-id="'+esc(e.id)+'">Delete</button>' +
+          '</span></td></tr>';
+      }).join("");
+      wrap.innerHTML = '<table class="log"><thead><tr><th>Date</th><th>Site / Asset</th><th>Problem</th><th>Priority</th><th>Status</th><th>Cost</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+    }
+
+    /* band-aid board */
+    var baWrap = $("baList");
+    var bas = entries.filter(isOpenBandaid).sort(function(a,b){
+      return (a.fix_due_date || "9999-12-31").localeCompare(b.fix_due_date || "9999-12-31");
+    });
+    if(!bas.length){
+      baWrap.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>No open band-aids.</b><br/>When a temporary fix goes on, mark it in the entry form and it lands here with its promised date.</div>';
+    } else {
+      var t = todayStr();
+      baWrap.innerHTML = bas.map(function(e){
+        var od = e.fix_due_date && e.fix_due_date < t;
+        return '<div class="ba-item'+(od ? " overdue" : "")+'">' +
+          '<div class="top"><span class="site">'+esc(e.site_asset)+'</span>' +
+          '<span class="due">Fix due '+(e.fix_due_date ? fmtDate(e.fix_due_date) : "— no date set")+(od ? " · OVERDUE" : "")+'</span></div>' +
+          '<p>'+esc(e.problem)+'</p>' +
+          (e.action_taken ? '<p>Band-aid: '+esc(e.action_taken)+'</p>' : "") +
+          (e.assigned_to ? '<p>Assigned to '+esc(e.assigned_to)+'</p>' : "") +
+        '</div>';
+      }).join("");
+    }
+
+    /* deferred board */
+    var defWrap = $("defList");
+    var defs = entries.filter(isDeferred).sort(function(a,b){
+      return (a.deferred_until || "9999-12-31").localeCompare(b.deferred_until || "9999-12-31");
+    });
+    if(!defs.length){
+      defWrap.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>Nothing deferred right now.</b><br/>To record deferred maintenance, hit <b>Record deferred maintenance</b> above, or tick “Defer this fix” in the entry form — the entry lands here with its reason and revisit date, and on the filled Deferred Maintenance sheet below.</div>';
+    } else {
+      var dt2 = todayStr();
+      defWrap.innerHTML = defs.map(function(e){
+        var od = e.deferred_until && e.deferred_until < dt2;
+        return '<div class="def-item'+(od ? " overdue" : "")+'">' +
+          '<div class="top"><span class="site">'+esc(e.site_asset)+'</span>' +
+          '<span class="due">Revisit by '+(e.deferred_until ? fmtDate(e.deferred_until) : "— no date set")+(od ? " · PAST DUE" : "")+'</span></div>' +
+          '<p>'+esc(e.problem)+'</p>' +
+          (e.deferred_reason ? '<p>Why deferred: '+esc(e.deferred_reason)+'</p>' : "") +
+          (e.action_taken ? '<p>So far: '+esc(e.action_taken)+'</p>' : "") +
+          (entryCost(e) ? '<p>Estimated cost so far: '+money(entryCost(e))+'</p>' : "") +
+          (e.assigned_to ? '<p>Assigned to '+esc(e.assigned_to)+'</p>' : "") +
+        '</div>';
+      }).join("") +
+      '<p class="panel-desc" style="grid-column:1/-1;margin:2px 0 0">Estimated cost of all deferred work (parts + labor): <b>' +
+        money(defs.reduce(function(sum, e){ return sum + entryCost(e); }, 0)) + '</b></p>';
+    }
+
+    refreshFilled();
+  }
+
+  /* row actions (event delegation) */
+  $("logWrap").addEventListener("click", function(ev){
+    var btn = ev.target.closest("button[data-act]");
+    if(!btn) return;
+    var id = btn.getAttribute("data-id");
+    var act = btn.getAttribute("data-act");
+    var entry = null;
+    for(var i=0;i<entries.length;i++){ if(entries[i].id === id){ entry = entries[i]; break; } }
+    if(!entry) return;
+    if(act === "edit"){
+      editingId = id;
+      fillForm(entry);
+      $("submitBtn").textContent = "Save changes";
+      $("cancelEditBtn").hidden = false;
+      $("editingNote").classList.add("show");
+      $("entryForm").scrollIntoView({behavior:"smooth", block:"start"});
+    } else if(act === "done"){
+      entry.status = "Completed";
+      touch(entry);
+      toast(id + " marked completed.");
+      saveLocal();
+      render();
+    } else if(act === "defer"){
+      editingId = id;
+      fillForm(entry);
+      $("fStatus").value = "Deferred";
+      syncDeferred();
+      $("submitBtn").textContent = "Save changes";
+      $("cancelEditBtn").hidden = false;
+      $("editingNote").classList.add("show");
+      $("entryForm").scrollIntoView({behavior:"smooth", block:"start"});
+      toast(id + " is being deferred — add why and a revisit date, then save.");
+      setTimeout(function(){ $("fDefReason").focus(); }, 350);
+    } else if(act === "reopen"){
+      entry.status = "Open";
+      entry.deferred_reason = "";
+      entry.deferred_until = "";
+      touch(entry);
+      if(editingId === id) resetForm();
+      toast(id + " reopened — it's back on the active list.");
+      saveLocal();
+      render();
+    } else if(act === "print"){
+      showFilled({type:"one", id:id}, true);
+    } else if(act === "photo"){
+      if(photoURLs[id]){
+        $("pvImg").src = photoURLs[id];
+        $("pvImg").alt = "Photo for " + id + " — " + (entry.site_asset || "");
+        $("pvCap").textContent = id + " — " + (entry.site_asset || "");
+        $("photoViewer").hidden = false;
+      }
+    } else if(act === "del"){
+      if(btn.classList.contains("armed")){
+        entries = entries.filter(function(e){ return e.id !== id; });
+        dropPhotoURL(id);
+        idbDel(id).then(function(){}, function(){});
+        if(editingId === id) resetForm();
+        toast(id + " deleted.");
+        saveLocal();
+        render();
+      } else {
+        btn.classList.add("armed");
+        btn.textContent = "Tap again to delete";
+        setTimeout(function(){ btn.classList.remove("armed"); btn.textContent = "Delete"; }, 3000);
+      }
+    }
+  });
+
+  /* full-size photo viewer */
+  function closePhotoViewer(){
+    $("photoViewer").hidden = true;
+    $("pvImg").removeAttribute("src");
+  }
+  $("pvClose").addEventListener("click", closePhotoViewer);
+  $("photoViewer").addEventListener("click", function(ev){ if(ev.target === this) closePhotoViewer(); });
+
+  /* filters */
+  ["searchBox","statusFilter","prioFilter"].forEach(function(id){
+    $(id).addEventListener("input", render);
+    $(id).addEventListener("change", render);
+  });
+  function setView(mode){
+    viewMode = mode;
+    $("viewAll").setAttribute("aria-pressed", mode === "all" ? "true" : "false");
+    $("viewBandaid").setAttribute("aria-pressed", mode === "bandaid" ? "true" : "false");
+    $("viewDeferred").setAttribute("aria-pressed", mode === "deferred" ? "true" : "false");
+    render();
+  }
+  $("viewAll").addEventListener("click", function(){ setView("all"); });
+  $("viewBandaid").addEventListener("click", function(){ setView("bandaid"); });
+  $("viewDeferred").addEventListener("click", function(){ setView("deferred"); });
+  $("dueStrip").addEventListener("click", function(){ setView("bandaid"); });
+
+  /* record deferred maintenance: jump to the form with Deferred already switched on */
+  $("recordDeferredBtn").addEventListener("click", function(){
+    if(editingId) resetForm();
+    $("fStatus").value = "Deferred";
+    syncDeferred();
+    $("entryForm").scrollIntoView({behavior:"smooth", block:"start"});
+    setTimeout(function(){ $("fSite").focus(); }, 350);
+    toast("Recording deferred maintenance — fill in the problem, why it's deferred, and the revisit date, then add it to the log.");
+  });
+
+  /* ---------- CSV out ---------- */
+  function csvCell(v){
+    v = String(v == null ? "" : v);
+    if(/[",\n\r]/.test(v)){ return '"' + v.replace(/"/g,'""') + '"'; }
+    return v;
+  }
+  function toCSV(list){
+    var lines = [COLUMNS.join(",")];
+    list.forEach(function(e){
+      lines.push(COLUMNS.map(function(c){ return csvCell(e[c]); }).join(","));
+    });
+    return lines.join("\r\n") + "\r\n";
+  }
+  function downloadFile(name, text){
+    var blob = new Blob([text], {type:"text/csv;charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+  $("downloadBtn").addEventListener("click", function(){
+    if(demoMode){ toast("That's the demo data — exit demo to download your real log."); return; }
+    if(!entries.length){ toast("The log is empty — add an entry or upload a CSV first."); return; }
+    var name = "campground-repair-log-" + todayStr() + ".csv";
+    downloadFile(name, toCSV(entries));
+    toast("Downloaded " + name + " — " + entries.length + (entries.length === 1 ? " entry" : " entries") + ", dated so it never gets confused with last week's file.");
+  });
+  $("templateBtn").addEventListener("click", function(){
+    downloadFile("campground-repair-log-template.csv", COLUMNS.join(",") + "\r\n");
+    toast("Blank template downloaded — same columns the upload expects.");
+  });
+
+  /* ---------- the bundle: CSV + every photo, zipped as the full-fidelity save ---------- */
+  function downloadBlob(name, blob){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+  function buildBundle(isPacket){
+    if(demoMode){ toast("That's the demo data — exit demo to download your real log."); return; }
+    if(!entries.length){ toast("The log is empty — add an entry or upload a CSV first."); return; }
+    var stamp = todayStr();
+    var zip = new JSZip();
+    var csvName = "campground-repair-log-" + stamp + ".csv";
+    zip.file(csvName, toCSV(entries));
+    if(isPacket){
+      zip.file("packet-note.txt",
+        "Campground Repair Log — Monday master packet\r\n" +
+        "Packet date: " + stamp + "\r\n" +
+        "Entries in this packet: " + entries.length + "\r\n\r\n" +
+        "Hosts: upload this bundle in your copy of the Repair Log app (Log files — Upload CSV or bundle). " +
+        "Review the import preview, then Apply. Your own newer entries stay in your log — nothing is deleted " +
+        "just because it is not in this packet, and the manager's master file picks your entries up the same way " +
+        "when you send your file back.\r\n");
+    }
+    idbAll().then(function(map){
+      var folder = zip.folder("photos");
+      var n = 0;
+      entries.forEach(function(e){
+        var blob = map[e.id];
+        if(blob){ folder.file(photoFileName(e.id, blob), blob); n++; }
+      });
+      return zip.generateAsync({type:"blob"}).then(function(bundle){
+        var name = isPacket ? "campground-master-packet-" + stamp + ".zip" : "campground-repair-bundle-" + stamp + ".zip";
+        downloadBlob(name, bundle);
+        toast(isPacket
+          ? "Monday packet downloaded: " + name + " — the dated master log (" + entries.length + " entries, " + n + " photo" + (n === 1 ? "" : "s") + ") to send every host."
+          : "Bundle downloaded: the CSV log plus " + n + " photo" + (n === 1 ? "" : "s") + ", each named by its Entry ID.");
+      });
+    }).catch(function(){
+      toast("Couldn't read the stored photos on this device — the plain CSV download still works.");
+    });
+  }
+  $("bundleBtn").addEventListener("click", function(){ buildBundle(false); });
+  $("packetBtn").addEventListener("click", function(){ buildBundle(true); });
+
+  /* ---------- CSV in (parse + merge by ID, no duplicates) ---------- */
+  function parseCSV(text){
+    var rows = [], row = [], field = "", inQ = false, i, c;
+    text = text.replace(/^\uFEFF/, "");
+    for(i=0;i<text.length;i++){
+      c = text[i];
+      if(inQ){
+        if(c === '"'){
+          if(text[i+1] === '"'){ field += '"'; i++; }
+          else { inQ = false; }
+        } else { field += c; }
+      } else {
+        if(c === '"'){ inQ = true; }
+        else if(c === ","){ row.push(field); field = ""; }
+        else if(c === "\n"){ row.push(field); rows.push(row); row = []; field = ""; }
+        else if(c === "\r"){ /* handled by \n */ }
+        else { field += c; }
+      }
+    }
+    if(field.length || row.length){ row.push(field); rows.push(row); }
+    return rows.filter(function(r){ return !(r.length === 1 && r[0].trim() === ""); });
+  }
+
+  function bumpNextNum(id){
+    var m = /^RL-(\d+)$/i.exec(id || "");
+    if(m){ var n = parseInt(m[1],10) + 1; if(n > nextNum) nextNum = n; }
+  }
+
+  /* ---------- master merge: parse, preview, then apply ----------
+     Nothing lands on upload. The incoming file is parsed and compared
+     against this log first; the manager reviews the plan — added,
+     updated (newer wins), unchanged, protected (this file's fresher
+     copy wins over a stale incoming one), and ID collisions renumbered
+     so a host's new entry is never lost — then Applies or Cancels.
+     Entries missing from the incoming file are never deleted. */
+  function parseIncomingCSV(text){
+    var rows = parseCSV(String(text || ""));
+    if(rows.length < 2) return { error: "That file has a header but no entries in it." };
+    var header = rows[0].map(function(h){ return h.trim().toLowerCase(); });
+    function idx(name){ return header.indexOf(name); }
+    var need = ["site_asset","problem"];
+    for(var n = 0; n < need.length; n++){
+      if(idx(need[n]) === -1) return { error: "That CSV is missing the \"" + need[n] + "\" column — use the template from this page." };
+    }
+    var incoming = [], invalid = 0;
+    for(var r = 1; r < rows.length; r++){
+      var row = rows[r];
+      function get(name){ var i = idx(name); return i === -1 ? "" : (row[i] || "").trim(); }
+      var e = {};
+      COLUMNS.forEach(function(c){ e[c] = get(c); });
+      if(!e.site_asset && !e.problem){ invalid++; continue; }
+      if(["Safety","Urgent","Routine","Cosmetic"].indexOf(e.priority) === -1) e.priority = "Routine";
+      if(["Open","In Progress","Band-Aid Applied","Waiting on Parts","Deferred","Completed"].indexOf(e.status) === -1) e.status = "Open";
+      e.bandaid = (e.bandaid || "").toLowerCase() === "yes" ? "Yes" : "No";
+      e.photo_taken = (e.photo_taken || "").toLowerCase() === "yes" ? "Yes" : "No";
+      incoming.push(e);
+    }
+    return { incoming: incoming, invalid: invalid };
+  }
+
+  function computeMergePlan(incoming){
+    var byId = {};
+    entries.forEach(function(e){ byId[e.id] = e; });
+    var plan = { added: [], updated: [], unchanged: [], stale: [], renumbered: [], invalid: 0, seen: {} };
+    /* work on a copy of nextNum so a cancelled preview doesn't burn numbers;
+       Apply commits the advanced counter */
+    var simNext = nextNum;
+    function freshId(){
+      var id;
+      do { id = "RL-" + String(simNext++).padStart(3, "0"); } while(byId[id] || plan.seen[id]);
+      return id;
+    }
+    incoming.forEach(function(raw){
+      var e = {};
+      COLUMNS.forEach(function(c){ e[c] = raw[c] || ""; });
+      if(!e.id){
+        e.id = freshId();
+        plan.added.push(e); plan.seen[e.id] = true;
+        return;
+      }
+      if(plan.seen[e.id]){
+        /* the same ID twice inside one incoming file: keep the first, count the rest as unchanged duplicates */
+        plan.unchanged.push(e);
+        return;
+      }
+      plan.seen[e.id] = true;
+      var existing = byId[e.id];
+      if(!existing){ plan.added.push(e); return; }
+      if(entriesEqual(existing, e)){ plan.unchanged.push(e); return; }
+      if(looksLikeDifferentEntry(existing, e)){
+        /* same number, different problem: two copies of the log both handed
+           out the next ID (classic Monday-packet collision). Renumber the
+           incoming entry instead of overwriting or dropping it. */
+        var oldId = e.id;
+        e.id = freshId();
+        plan.renumbered.push({ entry: e, fromId: oldId });
+        return;
+      }
+      var inT = stampOf(e), exT = stampOf(existing);
+      if(inT > exT){ plan.updated.push({ entry: e, existing: existing }); return; }
+      if(inT < exT){ plan.stale.push({ entry: e, existing: existing }); return; }
+      /* no usable stamps on either side (older files): fall back to the
+         incoming copy so a host's edit isn't silently lost */
+      if(!e.updated_at && !existing.updated_at){ plan.updated.push({ entry: e, existing: existing }); return; }
+      plan.stale.push({ entry: e, existing: existing });
+    });
+    plan._simNext = simNext;
+    return plan;
+  }
+
+  var pendingImport = null; /* { plan, sourceName, photos: {origId: {blob, name}} } */
+
+  function planList(items, fn){
+    if(!items.length) return "";
+    return "<ul>" + items.map(fn).join("") + "</ul>";
+  }
+  function entryLine(e){
+    return "<li><b>" + esc(e.id) + "</b> — " + esc(e.site_asset || "—") +
+      (e.problem ? ' <span class="meta">' + esc(e.problem.slice(0, 70)) + "</span>" : "") + "</li>";
+  }
+  function showImportPreview(plan, sourceName, photos){
+    pendingImport = { plan: plan, sourceName: sourceName, photos: photos || {} };
+    var photoN = Object.keys(pendingImport.photos).length;
+    $("importPreviewSub").textContent = "From " + sourceName + " — nothing changes until you apply it. Entries missing from that file are never deleted from this log." +
+      (photoN ? " The bundle also carries " + photoN + " photo" + (photoN === 1 ? "" : "s") + ", reattached on apply." : "");
+    var changes = plan.added.length + plan.updated.length + plan.renumbered.length;
+    var html = '<div class="import-nums">' +
+      '<div class="nbox"><div class="n">' + plan.added.length + '</div><div class="l">New entries added</div></div>' +
+      '<div class="nbox"><div class="n">' + plan.updated.length + '</div><div class="l">Entries updated (incoming is newer)</div></div>' +
+      '<div class="nbox"><div class="n">' + plan.renumbered.length + '</div><div class="l">New entries renumbered (ID already in use)</div></div>' +
+      '<div class="nbox"><div class="n">' + plan.unchanged.length + '</div><div class="l">Already here, unchanged</div></div>' +
+      '<div class="nbox protect"><div class="n">' + plan.stale.length + '</div><div class="l">Held back — this log\u2019s copy is newer</div></div>' +
+      "</div>";
+    if(plan.added.length) html += '<div class="import-group"><h4>Will be added</h4>' + planList(plan.added, entryLine) + "</div>";
+    if(plan.renumbered.length){
+      html += '<div class="import-group"><h4>Will be added under a new number — the incoming ID already belongs to a different problem here, so nothing gets overwritten</h4>' +
+        planList(plan.renumbered, function(r){
+          return "<li><b>" + esc(r.fromId) + " \u2192 " + esc(r.entry.id) + "</b> — " + esc(r.entry.site_asset || "—") +
+            (r.entry.problem ? ' <span class="meta">' + esc(r.entry.problem.slice(0, 70)) + "</span>" : "") + "</li>";
+        }) + "</div>";
+    }
+    if(plan.updated.length){
+      html += '<div class="import-group"><h4>Will be updated — the incoming copy is newer</h4>' +
+        planList(plan.updated, function(u){
+          return "<li><b>" + esc(u.entry.id) + "</b> — " + esc(u.entry.site_asset || "—") +
+            ' <span class="meta">incoming ' + esc(fmtStamp(u.entry)) + " replaces this log\u2019s " + esc(fmtStamp(u.existing)) + "</span></li>";
+        }) + "</div>";
+    }
+    if(plan.stale.length){
+      html += '<div class="import-group"><h4>Held back — this log already has a newer copy, so the older incoming copy will not overwrite it</h4>' +
+        planList(plan.stale, function(u){
+          return "<li><b>" + esc(u.entry.id) + "</b> — " + esc(u.entry.site_asset || "—") +
+            ' <span class="meta">this log\u2019s ' + esc(fmtStamp(u.existing)) + " beats incoming " + esc(fmtStamp(u.entry)) + "</span></li>";
+        }) + "</div>";
+    }
+    if(plan.invalid) html += '<p class="meta" style="font-size:13.5px;color:var(--muted)">' + plan.invalid + " blank row" + (plan.invalid === 1 ? "" : "s") + " in the file will be skipped.</p>";
+    if(!changes) html += "<p><b>Nothing to change</b> — this log already holds everything in that file, at the same or a newer version.</p>";
+    $("importPreviewBody").innerHTML = html;
+    $("importApplyBtn").textContent = changes
+      ? "Apply merge — add " + (plan.added.length + plan.renumbered.length) + ", update " + plan.updated.length
+      : "Close — nothing to apply";
+    $("importPreview").hidden = false;
+    $("importPreview").scrollTop = 0;
+  }
+
+  function renderImportReport(report){
+    var box = $("importReport");
+    box.hidden = false;
+    box.innerHTML = "<b>Import report — " + esc(report.sourceName) + "</b> · " + esc(report.when) + "<ul>" +
+      "<li>" + report.added + " added" + (report.renumbered ? ", including " + report.renumbered + " renumbered so no new entry was lost to an ID clash" : "") + "</li>" +
+      "<li>" + report.updated + " updated (the incoming copy was newer)</li>" +
+      "<li>" + report.unchanged + " already here, unchanged</li>" +
+      "<li>" + report.stale + " held back — this log\u2019s newer copy won</li>" +
+      (report.photos ? "<li>" + report.photos + " photo" + (report.photos === 1 ? "" : "s") + " reattached to their entries</li>" : "") +
+      "<li>The log now holds " + entries.length + " entries. Nothing was deleted.</li></ul>";
+  }
+
+  function applyPendingImport(){
+    if(!pendingImport){ $("importPreview").hidden = true; return; }
+    var plan = pendingImport.plan, photos = pendingImport.photos, sourceName = pendingImport.sourceName;
+    pendingImport = null;
+    $("importPreview").hidden = true;
+    var changes = plan.added.length + plan.updated.length + plan.renumbered.length;
+    if(!changes && !Object.keys(photos).length){
+      toast("Nothing to change — this log already holds everything in that file.");
+      renderImportReport({ sourceName: sourceName, when: new Date().toLocaleString(), added: 0, updated: 0, renumbered: 0, unchanged: plan.unchanged.length, stale: plan.stale.length, photos: 0 });
+      openPanel("csvBody");
+      return;
+    }
+    var byId = {};
+    entries.forEach(function(e){ byId[e.id] = e; });
+    plan.updated.forEach(function(u){
+      var target = byId[u.entry.id];
+      if(!target) return;
+      var keepPhoto = target.photo_file;
+      COLUMNS.forEach(function(c){ target[c] = u.entry[c]; });
+      if(!target.photo_file && keepPhoto) target.photo_file = keepPhoto;
+    });
+    var fresh = plan.added.concat(plan.renumbered.map(function(r){ return r.entry; }));
+    fresh.forEach(function(e){ bumpNextNum(e.id); });
+    if(typeof plan._simNext === "number" && plan._simNext > nextNum) nextNum = plan._simNext;
+    entries = fresh.concat(entries);
+    /* photos from a bundle reattach by Entry ID; a renumbered entry's photo follows it to the new ID */
+    var idMap = {};
+    plan.renumbered.forEach(function(r){ idMap[r.fromId] = r.entry.id; });
+    var jobs = [];
+    Object.keys(photos).forEach(function(origId){
+      var targetId = idMap[origId] || origId;
+      var match = null;
+      entries.forEach(function(e){ if(e.id === targetId) match = e; });
+      if(!match) return;
+      var ph = photos[origId];
+      jobs.push(idbPut(targetId, ph.blob).then(function(){
+        match.photo_file = targetId + "." + ph.name.split(".").pop();
+        match.photo_taken = "Yes";
+        setPhotoURL(targetId, ph.blob);
+      }).catch(function(){}));
+    });
+    Promise.all(jobs).then(function(){
+      saveLocal();
+      render();
+      renderImportReport({ sourceName: sourceName, when: new Date().toLocaleString(),
+        added: plan.added.length + plan.renumbered.length, updated: plan.updated.length,
+        renumbered: plan.renumbered.length, unchanged: plan.unchanged.length,
+        stale: plan.stale.length, photos: jobs.length });
+      openPanel("csvBody");
+      toast("Import applied: " + (plan.added.length + plan.renumbered.length) + " added, " + plan.updated.length + " updated, " +
+        plan.unchanged.length + " unchanged" + (plan.stale.length ? ", " + plan.stale.length + " held back (this log\u2019s copy was newer)" : "") + ".");
+    });
+  }
+  $("importApplyBtn").addEventListener("click", applyPendingImport);
+  $("importCancelBtn").addEventListener("click", function(){
+    pendingImport = null;
+    $("importPreview").hidden = true;
+    toast("Import cancelled — your log is exactly as it was.");
+  });
+
+  function previewCSVText(text, sourceName, photos){
+    var parsed = parseIncomingCSV(text);
+    if(parsed.error){ toast(parsed.error); return; }
+    var plan = computeMergePlan(parsed.incoming);
+    plan.invalid = parsed.invalid || 0;
+    showImportPreview(plan, sourceName, photos);
+  }
+
+  /* a ZIP bundle: the CSV is previewed the same way; photos/<Entry ID>.<ext>
+     are held with the preview and reattach only if the manager applies it */
+  function handleZipBundle(file){
+    JSZip.loadAsync(file).then(function(zip){
+      var csvEntry = null;
+      zip.forEach(function(path, zf){
+        if(!csvEntry && /\.csv$/i.test(path) && path.indexOf("__MACOSX") === -1 && !zf.dir) csvEntry = zf;
+      });
+      if(!csvEntry){ toast("That bundle has no CSV log in it — nothing to merge."); return null; }
+      return csvEntry.async("text").then(function(text){
+        var photoJobs = [];
+        zip.forEach(function(path, zf){
+          if(zf.dir || path.indexOf("photos/") !== 0) return;
+          var base = path.split("/").pop();
+          var dot = base.lastIndexOf(".");
+          if(dot < 1) return;
+          var id = base.slice(0, dot), ext = base.slice(dot + 1);
+          photoJobs.push(zf.async("uint8array").then(function(bytes){
+            return { id: id, name: base, blob: new Blob([bytes], {type: typeForExt(ext)}) };
+          }).catch(function(){ return null; }));
+        });
+        return Promise.all(photoJobs).then(function(list){
+          var photos = {};
+          list.forEach(function(ph){ if(ph) photos[ph.id] = { blob: ph.blob, name: ph.name }; });
+          previewCSVText(text, file.name, photos);
+        });
+      });
+    }).catch(function(){
+      toast("Couldn't open that ZIP — make sure it's a bundle downloaded from this page.");
+    });
+  }
+
+  $("csvFile").addEventListener("change", function(){
+    var file = this.files && this.files[0];
+    this.value = "";
+    if(!file) return;
+    if(demoMode){ toast("You're viewing demo data — exit demo first, so the file merges with your real log."); return; }
+    if(/\.zip$/i.test(file.name) || /zip/i.test(file.type || "")){ handleZipBundle(file); return; }
+    var reader = new FileReader();
+    reader.onload = function(){
+      try { previewCSVText(String(reader.result || ""), file.name, null); }
+      catch(err){ toast("Couldn't read that file — make sure it's a CSV exported from this page or the template."); }
+    };
+    reader.readAsText(file);
+  });
+
+  /* ---------- filled sheets (generated from the entries / uploaded CSV) ---------- */
+  var filledMode = { type:"all" };
+
+  function parkLine(list){
+    var seen = {};
+    list.forEach(function(e){ if(e.park) seen[e.park] = true; });
+    var parks = Object.keys(seen);
+    if(parks.length === 1) return parks[0];
+    if(parks.length > 1) return "Multiple parks — see each report";
+    return "";
+  }
+  function checkBox(on){ return '<span class="box'+(on ? " on" : "")+'"></span>'; }
+  function lineVal(label, value){
+    return '<div class="f"><div class="lab">'+label+'</div><div class="line"><span class="val">'+esc(value || "—")+'</span></div></div>';
+  }
+
+  function filledReportHTML(e){
+    var pc = parseFloat(e.parts_cost), lc = parseFloat(e.labor_cost);
+    var prio = ["Safety","Urgent","Routine","Cosmetic"].map(function(p){
+      return '<span'+(p === "Safety" ? ' class="safety-first"' : "")+'>'+checkBox(e.priority === p)+esc(p)+'</span>';
+    }).join("");
+    return '<div class="sheet filled-sheet">' +
+      '<h3>Repair Report <span class="brand">Camp Host Central · '+esc(e.id)+'</span></h3>' +
+      '<div class="row"><div class="f wide"><div class="lab">Park</div><div class="line"><span class="val">'+esc(e.park || "—")+'</span></div></div>' +
+      lineVal("Site / Asset", e.site_asset) + '</div>' +
+      '<div class="row">' + lineVal("Date", fmtDate(e.date_reported)) + lineVal("Time", e.time_reported) +
+      '<div class="f wide">' + '<div class="lab">Reported by</div><div class="line"><span class="val">'+esc(e.reported_by || "—")+'</span></div></div></div>' +
+      '<div class="row"><div class="f wide"><div class="lab">Priority</div><div class="checks">'+prio+'</div></div></div>' +
+      '<div class="row"><div class="f wide"><div class="lab">Problem — what\'s broken, where exactly</div><div class="fillbox tall">'+esc(e.problem)+'</div></div></div>' +
+      '<div class="row"><div class="f wide"><div class="lab">Action taken</div><div class="fillbox">'+esc(e.action_taken || "—")+'</div></div></div>' +
+      '<div class="row"><div class="f"><div class="lab">Band-aid applied?</div><div class="checks"><span>'+checkBox(e.bandaid === "Yes")+'Yes</span><span>'+checkBox(e.bandaid !== "Yes")+'No</span></div></div>' +
+      lineVal("If yes — proper fix due by", e.bandaid === "Yes" ? fmtDate(e.fix_due_date) : "") + '</div>' +
+      '<div class="row"><div class="f"><div class="lab">Photo taken?</div><div class="checks"><span>'+checkBox(e.photo_taken === "Yes")+'Yes</span><span>'+checkBox(e.photo_taken !== "Yes")+'No</span></div></div>' +
+      '<div class="f wide"><div class="lab">Where the photo is saved</div><div class="line"><span class="val">'+esc(e.photo_location || "—")+'</span></div></div></div>' +
+      '<div class="row">' + lineVal("Status", e.status) + lineVal("Assigned to", e.assigned_to) +
+      lineVal("Parts $", isNaN(pc) ? "" : pc.toFixed(2)) + lineVal("Labor $", isNaN(lc) ? "" : lc.toFixed(2)) +
+      lineVal("Downtime (hrs)", e.downtime_hours) + '</div>' +
+      (e.status === "Deferred"
+        ? '<div class="row"><div class="f wide"><div class="lab">Why deferred</div><div class="line"><span class="val">'+esc(e.deferred_reason || "—")+'</span></div></div>' +
+          lineVal("Revisit by", e.deferred_until ? fmtDate(e.deferred_until) : "") + '</div>'
+        : "") +
+      '<div class="foot"><span>A band-aid is a promise to come back — write the due date down.</span>' +
+      '<span>Generated from the digital log · '+esc(e.id)+'</span></div></div>';
+  }
+
+  function padRows(count, cols){
+    var out = "";
+    for(var i=0;i<count;i++){ out += "<tr>" + "<td></td>".repeat(cols) + "</tr>"; }
+    return out;
+  }
+
+  function filledBandaidHTML(){
+    var list = entries.filter(isOpenBandaid).sort(function(a,b){
+      return (a.fix_due_date || "9999-12-31").localeCompare(b.fix_due_date || "9999-12-31");
+    });
+    if(!list.length){
+      return '<div class="empty no-print"><b>No open band-aids to print.</b><br/>When a temporary fix is logged, it shows up here as a filled Band-Aid Tracker, sorted by promised fix date.</div>';
+    }
+    var rows = list.map(function(e){
+      return '<tr><td class="data-cell"><b>'+esc(e.site_asset)+'</b></td><td class="data-cell">'+esc(fmtDate(e.date_reported))+'</td>' +
+        '<td class="data-cell">'+esc(e.problem)+'</td><td class="data-cell">'+esc(e.action_taken || "—")+'</td>' +
+        '<td class="data-cell"><b>'+(e.fix_due_date ? esc(fmtDate(e.fix_due_date)) : "—")+'</b></td><td class="data-cell"></td></tr>';
+    }).join("");
+    rows += padRows(Math.max(0, 8 - list.length), 6);
+    return '<div class="sheet filled-sheet"><h3>Band-Aid Tracker <span class="brand">Camp Host Central</span></h3>' +
+      '<div class="row"><div class="f wide"><div class="lab">Park</div><div class="line"><span class="val">'+esc(parkLine(list) || "—")+'</span></div></div>' +
+      '<div class="f"><div class="lab">Generated</div><div class="line"><span class="val">'+esc(fmtDate(todayStr()))+'</span></div></div></div>' +
+      '<table><thead><tr><th style="width:15%">Site / Asset</th><th style="width:11%">Date band-aided</th><th style="width:26%">Problem</th>' +
+      '<th style="width:26%">The proper fix</th><th style="width:12%">Due by</th><th style="width:10%">Done ✓</th></tr></thead><tbody>'+rows+'</tbody></table>' +
+      '<div class="foot"><span><b>A band-aid is a promise to come back.</b> Every row here gets its proper fix in the shoulder or off season.</span>' +
+      '<span>Generated from the digital log</span></div></div>';
+  }
+
+  function filledDeferredHTML(){
+    var list = entries.filter(function(e){ return e.status === "Deferred"; }).sort(function(a,b){
+      return (a.date_reported || "9999-12-31").localeCompare(b.date_reported || "9999-12-31");
+    });
+    if(!list.length){
+      return '<div class="empty no-print"><b>Nothing deferred right now.</b><br/>Record deferred maintenance with the button on the Deferred Maintenance board above — or tick “Defer this fix” in the entry form — and it lands on this sheet.</div>';
+    }
+    var rows = list.map(function(e){
+      var plan = "";
+      if(e.deferred_reason) plan += "Why deferred: " + e.deferred_reason;
+      if(e.action_taken) plan += (plan ? " · " : "") + "So far: " + e.action_taken;
+      return '<tr><td class="data-cell">'+esc(fmtDate(e.date_reported))+(e.deferred_until ? '<br/><b>Revisit by '+esc(fmtDate(e.deferred_until))+'</b>' : "")+'</td><td class="data-cell"><b>'+esc(e.site_asset)+'</b></td>' +
+        '<td class="data-cell">'+esc(e.problem)+'</td><td class="data-cell">'+esc(e.priority)+'</td>' +
+        '<td class="data-cell">'+esc(plan || "—")+'</td><td class="data-cell">'+esc(e.assigned_to || "—")+'</td></tr>';
+    }).join("");
+    rows += padRows(Math.max(0, 10 - list.length), 6);
+    return '<div class="sheet filled-sheet"><h3>Deferred Maintenance <span class="brand">Camp Host Central</span></h3>' +
+      '<div class="row"><div class="f wide"><div class="lab">Park</div><div class="line"><span class="val">'+esc(parkLine(list) || "—")+'</span></div></div>' +
+      '<div class="f"><div class="lab">Generated</div><div class="line"><span class="val">'+esc(fmtDate(todayStr()))+'</span></div></div></div>' +
+      '<table><thead><tr><th style="width:11%">Date reported</th><th style="width:15%">Site / Asset</th><th style="width:27%">Problem</th>' +
+      '<th style="width:10%">Priority</th><th style="width:24%">Why deferred / action so far</th><th style="width:13%">Assigned to</th></tr></thead><tbody>'+rows+'</tbody></table>' +
+      '<div class="foot"><span>Deferred is a decision, not a disappearance — every item here has a season it comes back in.</span>' +
+      '<span>Estimated total (parts + labor): <b>' + money(list.reduce(function(sum, e){ return sum + entryCost(e); }, 0)) + '</b> · Generated from the digital log</span></div></div>';
+  }
+
+  function updateFilledPrintBar(){
+    var has = !!$("filledPreview").querySelector(".filled-sheet");
+    $("printFilledBtn").disabled = !has;
+    var names = {
+      all: "All filled sheets — every problem as its own Repair Report" +
+        (entries.some(isOpenBandaid) ? ", plus the filled Band-Aid Tracker" : "") +
+        (entries.some(isDeferred) ? ", plus the filled Deferred Maintenance sheet" : "") + ".",
+      one: "Just " + (filledMode.id || "that problem") + " as a filled Repair Report — the page you hand a contractor."
+    };
+    $("filledPrintWhat").textContent = has
+      ? (names[filledMode.type] || names.all)
+      : "Nothing on this sheet yet — add an entry or upload a CSV and it fills in here.";
+    document.querySelectorAll("[data-filled]").forEach(function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-filled") === filledMode.type);
+    });
+    $("filledOneBtn").classList.toggle("active", filledMode.type === "one");
+  }
+
+  function refreshFilled(){
+    /* keep the one-problem picker in step with the log */
+    var pick = $("filledPick");
+    var prev = pick.value;
+    if(!entries.length){
+      pick.innerHTML = '<option value="">No entries yet</option>';
+    } else {
+      pick.innerHTML = entries.map(function(e){
+        var label = e.id + " — " + e.site_asset + (e.problem ? " — " + e.problem.slice(0,42) : "");
+        return '<option value="'+esc(e.id)+'">'+esc(label)+'</option>';
+      }).join("");
+      var stillThere = entries.some(function(e){ return e.id === prev; });
+      if(stillThere) pick.value = prev;
+    }
+
+    var host = $("filledPreview");
+    if(filledMode.type === "bandaid"){ host.innerHTML = filledBandaidHTML(); updateFilledPrintBar(); return; }
+    if(filledMode.type === "deferred"){ host.innerHTML = filledDeferredHTML(); updateFilledPrintBar(); return; }
+    if(filledMode.type === "one"){
+      var one = null;
+      entries.forEach(function(e){ if(e.id === filledMode.id) one = e; });
+      host.innerHTML = one ? filledReportHTML(one)
+        : '<div class="empty no-print"><b>That entry is no longer in the log.</b><br/>Pick another problem above, or print all repair reports.</div>';
+      updateFilledPrintBar();
+      return;
+    }
+    /* default: every problem as its own filled report, with the filled
+       Band-Aid Tracker and Deferred Maintenance sheets stacked after them */
+    if(entries.length){
+      var stack = entries.map(filledReportHTML).join("");
+      if(entries.some(isOpenBandaid)) stack += filledBandaidHTML();
+      if(entries.some(isDeferred)) stack += filledDeferredHTML();
+      host.innerHTML = stack;
+    } else {
+      host.innerHTML = '<div class="empty no-print"><b>Nothing to print yet.</b><br/>Add an entry with the form above, or upload a CSV log — the filled sheets are generated from whatever is in the log.</div>';
+    }
+    updateFilledPrintBar();
+  }
+
+  function setPrintBanner(text){
+    $("printBannerText").textContent = text;
+    $("printBanner").classList.add("show");
+  }
+  function showFilled(mode, scroll){
+    filledMode = mode;
+    openPanel("filledBody");
+    document.body.setAttribute("data-print", "filled");
+    var names = { all:"all the filled sheets — every problem as its own filled Repair Report, with the tracker and deferred sheets stacked after them", one:"that one problem as a filled Repair Report" };
+    setPrintBanner("Showing " + (names[mode.type] || "the filled sheets") + " in the Filled sheets section below — download it there (or with the button here) and it opens as its own printable page.");
+    refreshFilled();
+    if(scroll) $("filledPrintBar").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  document.querySelectorAll("[data-filled]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      showFilled({type: btn.getAttribute("data-filled")}, true);
+    });
+  });
+  $("filledOneBtn").addEventListener("click", function(){
+    var id = $("filledPick").value;
+    if(!id){ toast("No entry to print yet — add one or upload a CSV first."); return; }
+    showFilled({type:"one", id:id}, true);
+  });
+
+  /* ---------- printing: hand over the sheet as its own printable page ---------- */
+  var SHEET_CSS = [
+    'body{margin:0;padding:24px;background:#fff;color:#1c1c1c;font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}',
+    'h3{font-family:Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif}',
+    '.bar{max-width:820px;margin:0 auto 16px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:#e2ecdc;border:1px solid #2e5a38;border-radius:8px;padding:10px 14px;font-size:14px}',
+    '.bar button{background:#2e5a38;color:#fff;border:0;border-radius:7px;padding:8px 16px;font-weight:700;cursor:pointer;font:inherit}',
+    '.sheet{background:#fff;color:#1c1c1c;border:1px solid #c9c2ae;padding:26px 26px 20px;margin:0 auto 22px;max-width:820px;font-size:14px}',
+    '.sheet h3{font-size:21px;border-bottom:2.5px solid #1c1c1c;padding-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin:0}',
+    '.sheet h3 .brand{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#555}',
+    '.sheet .row{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}',
+    '.sheet .f{flex:1 1 180px}',
+    '.sheet .f.wide{flex:2 1 300px}',
+    '.sheet .lab{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#444}',
+    '.sheet .line{border-bottom:1.5px solid #888;min-height:24px}',
+    '.sheet .line .val{font-weight:600}',
+    '.sheet .writebox{border:1.5px solid #888;border-radius:3px;margin-top:4px;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,#cfcfcf 27px,#cfcfcf 28px)}',
+    '.sheet .writebox.h3{height:84px}.sheet .writebox.h2{height:56px}',
+    '.sheet .fillbox{border:1.5px solid #888;border-radius:3px;margin-top:4px;padding:8px 10px;min-height:52px;white-space:pre-wrap;word-break:break-word}',
+    '.sheet .fillbox.tall{min-height:80px}',
+    '.sheet .checks{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;font-size:14px}',
+    '.sheet .box{display:inline-block;width:14px;height:14px;border:1.8px solid #333;border-radius:2px;vertical-align:-2px;margin-right:5px}',
+    '.sheet .box.on{background:#333;box-shadow:inset 0 0 0 2.5px #fff}',
+    '.sheet table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;table-layout:fixed}',
+    '.sheet table th{border:1.5px solid #666;padding:6px 7px;text-align:left;background:#f0ede2;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;overflow-wrap:break-word}',
+    '.sheet table td{border:1.5px solid #666;padding:6px 7px;height:30px;overflow-wrap:break-word}',
+    '.sheet table td.data-cell{height:auto;vertical-align:top}',
+    '.sheet .foot{margin-top:14px;border-top:1.5px solid #888;padding-top:8px;font-size:12.5px;color:#333;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}',
+    '.sheet .safety-first{font-weight:700}',
+    '.sheet h4{font-family:Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif;font-size:16px;margin:20px 0 0}',
+    '@media print{body{padding:0}.bar{display:none}.sheet{border:0;margin:0 auto;page-break-after:always}}'
+  ].join("\n");
+
+  function printableDoc(title, sheetsHTML){
+    return '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8" />\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1" />\n' +
+      '<title>' + esc(title) + '</title>\n<style>\n' + SHEET_CSS + '\n</style>\n</head>\n<body>\n' +
+      '<div class="bar"><span><b>' + esc(title) + '</b> — this page is just the sheet, ready to print or save as a PDF.</span>' +
+      '<button type="button" onclick="window[\'prin\'+\'t\']()">Print / Save as PDF</button></div>\n' +
+      sheetsHTML + '\n' +
+      '<scr' + 'ipt>window.addEventListener("load",function(){setTimeout(function(){try{window["prin"+"t"]();}catch(e){}},400);});</scr' + 'ipt>\n' +
+      '</body>\n</html>';
+  }
+  function downloadHTML(name, html){
+    var blob = new Blob([html], {type:"text/html;charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+  function filledFileName(){
+    if(filledMode.type === "one") return "repair-report-" + (filledMode.id || "entry").toLowerCase() + ".html";
+    if(filledMode.type === "bandaid") return "band-aid-tracker-filled.html";
+    if(filledMode.type === "deferred") return "deferred-maintenance-filled.html";
+    return "repair-reports-filled.html";
+  }
+  function filledTitle(){
+    if(filledMode.type === "one") return "Repair Report " + (filledMode.id || "");
+    if(filledMode.type === "bandaid") return "Band-Aid Tracker — filled";
+    if(filledMode.type === "deferred") return "Deferred Maintenance — filled";
+    return "Repair Reports — filled";
+  }
+  function downloadFilledSheet(){
+    if(!$("filledPreview").querySelector(".filled-sheet")){
+      toast("Nothing to print yet — add an entry or upload a CSV first.");
+      return;
+    }
+    document.body.setAttribute("data-print", "filled");
+    downloadHTML(filledFileName(), printableDoc(filledTitle(), $("filledPreview").innerHTML));
+    toast("Printable sheet downloaded — open the file and it brings up the print dialog on its own.");
+  }
+  $("printFilledBtn").addEventListener("click", downloadFilledSheet);
+  $("printNowBtn").addEventListener("click", downloadFilledSheet);
+  $("printReportBtn").addEventListener("click", function(){
+    document.body.setAttribute("data-print", "report");
+    downloadHTML("repair-report-blank.html", printableDoc("Repair Report — blank", $("sheet-report").outerHTML));
+    toast("Blank Repair Report downloaded — open the file to print a stack for the shop and office.");
+  });
+
+  var sheetNames = { report:"Repair Report" };
+  document.querySelectorAll("[data-print-target]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = btn.getAttribute("data-print-target");
+      document.body.setAttribute("data-print", target);
+      $("printBannerText").textContent = "Showing the " + sheetNames[target] + " on its own — download it and it opens as its own printable page.";
+      $("printBanner").classList.add("show");
+      $("printBanner").scrollIntoView({behavior:"smooth", block:"center"});
+    });
+  });
+  $("printAllBtn").addEventListener("click", function(){
+    openPanel("printBody");
+    document.body.removeAttribute("data-print");
+    $("printBannerText").textContent = "Print selection cleared — the paper Repair Report below is the sheet that downloads.";
+    document.getElementById("printables").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  /* ---------- demo data: walled off from the real log ---------- */
+  function demoEntries(){
+    function d(id, off, site, prio, problem, action, bandaid, dueOff, status, parts, labor, defReason, defUntilOff, assigned){
+      return { id:id, date_reported:datePlus(off), time_reported:"", park:"Demo — Honeycomb Campground",
+        site_asset:site, reported_by:"Demo data", priority:prio, problem:problem, action_taken:action,
+        bandaid:bandaid, fix_due_date:(dueOff === null ? "" : datePlus(dueOff)), photo_taken:"No", photo_location:"",
+        status:status, assigned_to:assigned || "", parts_cost:parts, labor_cost:labor, downtime_hours:"",
+        deferred_reason:defReason || "", deferred_until:(defUntilOff === null ? "" : datePlus(defUntilOff)),
+        photo_file:"", updated_at:(datePlus(off) + "T09:00:00.000Z") };
+    }
+    return [
+      d("DEMO-1", -2, "Site 12 pedestal", "Urgent", "50-amp outlet scorched, breaker trips under load", "Swapped in a spare breaker and taped the outlet off", "Yes", 5, "Band-Aid Applied", "18", "40", "", null, "Jerry"),
+      d("DEMO-2", -20, "Site 42 pedestal", "Routine", "Pedestal door hinge rusted through", "Door wired shut for the season", "No", null, "Open", "12", "", "", null, ""),
+      d("DEMO-3", -6, "Site 42 pedestal", "Urgent", "Loose neutral lug — lights flicker in the rig", "", "No", null, "Open", "", "", "", null, "Jerry"),
+      d("DEMO-4", -30, "Bathhouse A", "Routine", "Water heater element failing, showers run lukewarm", "Turned the thermostat up as a stopgap", "No", null, "Deferred", "240", "180", "Full replacement waits for off-season budget", 75, "Jerry"),
+      d("DEMO-5", -1, "Cabin 3 steps", "Safety", "Second step rotted through, flexes under weight", "Steps blocked off with cones and tape", "No", null, "Open", "35", "", "", null, ""),
+      d("DEMO-6", -45, "Dump station", "Routine", "Rinse hose bib leaking at the threads", "Replaced the hose bib and re-taped the threads", "No", null, "Completed", "22", "30", "", null, "Crew")
+    ];
+  }
+  $("demoBtn").addEventListener("click", function(){
+    if(demoMode){ toast("Already viewing demo data — exit from the banner above the entry form."); return; }
+    realSnapshot = JSON.stringify({ entries: entries, nextNum: nextNum });
+    entries = demoEntries();
+    demoMode = true;
+    if(editingId) resetForm();
+    $("demoBanner").hidden = false;
+    render();
+    $("demoBanner").scrollIntoView({behavior:"smooth", block:"center"});
+    toast("Demo data loaded — your real log is untouched on this device.");
+  });
+  $("exitDemoBtn").addEventListener("click", function(){
+    if(!demoMode) return;
+    var snap = JSON.parse(realSnapshot || '{"entries":[],"nextNum":1}');
+    entries = snap.entries;
+    nextNum = snap.nextNum;
+    realSnapshot = null;
+    demoMode = false;
+    resetForm();
+    $("demoBanner").hidden = true;
+    render();
+    toast("Back to your real log — " + entries.length + (entries.length === 1 ? " entry" : " entries") + ", saved on this device.");
+  });
+
+  /* ---------- season close-out report: everything open, in one printable sheet ---------- */
+  function closeoutTable(title, list, cols, rowFn, emptyText){
+    var head = cols.map(function(c){ return '<th style="width:'+c[1]+'%">'+c[0]+'</th>'; }).join("");
+    var rows = list.length ? list.map(rowFn).join("")
+      : '<tr><td class="data-cell" colspan="'+cols.length+'">'+emptyText+'</td></tr>';
+    return '<h4>'+title+'</h4><table><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+  function closeoutHTML(){
+    var open = entries.filter(isOpen);
+    var bas = entries.filter(isOpenBandaid).sort(function(a,b){
+      return (a.fix_due_date || "9999-12-31").localeCompare(b.fix_due_date || "9999-12-31");
+    });
+    var defs = entries.filter(isDeferred);
+    function costCell(e){ var c = entryCost(e); return c ? money(c) : "—"; }
+    function sum(list){ return list.reduce(function(s, e){ return s + entryCost(e); }, 0); }
+    var html = '<div class="sheet filled-sheet"><h3>Season Close-Out Report <span class="brand">Camp Host Central</span></h3>' +
+      '<div class="row"><div class="f wide"><div class="lab">Park</div><div class="line"><span class="val">'+esc(parkLine(entries) || "—")+'</span></div></div>' +
+      '<div class="f"><div class="lab">Generated</div><div class="line"><span class="val">'+esc(fmtDate(todayStr()))+'</span></div></div></div>' +
+      '<p style="margin:12px 0 0"><b>'+open.length+' still open · '+bas.length+' outstanding band-aids · '+defs.length+' deferred</b> — still-open work valued at <b>'+money(sum(open))+'</b>, deferred work at <b>'+money(sum(defs))+'</b>.</p>';
+    html += closeoutTable("Still open", open,
+      [["Date",11],["Site / Asset",16],["Problem",33],["Priority",10],["Status",13],["Est. cost",17]],
+      function(e){
+        return '<tr><td class="data-cell">'+esc(fmtDate(e.date_reported))+'</td><td class="data-cell"><b>'+esc(e.site_asset)+'</b></td>' +
+          '<td class="data-cell">'+esc(e.problem)+'</td><td class="data-cell">'+esc(e.priority)+'</td>' +
+          '<td class="data-cell">'+esc(e.status)+'</td><td class="data-cell">'+costCell(e)+'</td></tr>';
+      }, "Nothing open — a clean slate.");
+    html += closeoutTable("Outstanding band-aids", bas,
+      [["Site / Asset",15],["Date band-aided",12],["Problem",28],["The proper fix",28],["Due by",10],["Est. cost",7]],
+      function(e){
+        return '<tr><td class="data-cell"><b>'+esc(e.site_asset)+'</b></td><td class="data-cell">'+esc(fmtDate(e.date_reported))+'</td>' +
+          '<td class="data-cell">'+esc(e.problem)+'</td><td class="data-cell">'+esc(e.action_taken || "—")+'</td>' +
+          '<td class="data-cell"><b>'+(e.fix_due_date ? esc(fmtDate(e.fix_due_date)) : "—")+'</b></td><td class="data-cell">'+costCell(e)+'</td></tr>';
+      }, "No open band-aids.");
+    html += closeoutTable("Deferred maintenance", defs,
+      [["Date",11],["Site / Asset",15],["Problem",27],["Why deferred",24],["Revisit by",11],["Est. cost",12]],
+      function(e){
+        return '<tr><td class="data-cell">'+esc(fmtDate(e.date_reported))+'</td><td class="data-cell"><b>'+esc(e.site_asset)+'</b></td>' +
+          '<td class="data-cell">'+esc(e.problem)+'</td><td class="data-cell">'+esc(e.deferred_reason || "—")+'</td>' +
+          '<td class="data-cell">'+(e.deferred_until ? "<b>"+esc(fmtDate(e.deferred_until))+"</b>" : "—")+'</td><td class="data-cell">'+costCell(e)+'</td></tr>';
+      }, "Nothing deferred.");
+    html += '<div class="foot"><span>Walk it, price it, schedule it — this is the shoulder-season plan on one page.</span>' +
+      '<span>Generated from the digital log</span></div></div>';
+    return html;
+  }
+  $("closeoutBtn").addEventListener("click", function(){
+    if(!entries.length){ toast("The log is empty — nothing to close out yet."); return; }
+    downloadHTML("season-close-out.html", printableDoc("Season Close-Out Report", closeoutHTML()));
+    toast("Season close-out downloaded — open the file and it brings up the print dialog on its own.");
+  });
+
+  /* ---------- collapsible panels: everything secondary opens from its button ---------- */
+  function openPanel(bodyId){
+    var body = $(bodyId);
+    if(!body || !body.hidden) return;
+    body.hidden = false;
+    document.querySelectorAll('[aria-controls="'+bodyId+'"]').forEach(function(t){
+      t.setAttribute("aria-expanded","true");
+    });
+  }
+  document.querySelectorAll(".panel-toggle").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var body = $(btn.getAttribute("aria-controls"));
+      if(!body) return;
+      var open = body.hidden;
+      body.hidden = !open;
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+  $("printFormsLink").addEventListener("click", function(){ openPanel("printBody"); });
+
+  loadLocal();
+  render();
+  refreshPhotos().then(function(changed){ if(changed) render(); });
+})();
+</script>
+</body>
+</html>
