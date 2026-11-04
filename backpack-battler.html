@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#173d30" />
+  <link rel="icon" href="data:," />
+  <title>Backpack Battler: Campground</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Nunito+Sans:opsz,wght@6..12,500;6..12,700;6..12,900&display=swap');
+    :root{
+      color-scheme:light dark;
+      --bg:#eef2df;--panel:#fffdf2;--panel2:#e5ead4;--ink:#17261e;--muted:#526258;
+      --forest:#173d30;--forest2:#24543d;--moss:#668b48;--lime:#a8c964;--sun:#f0b541;
+      --red:#c94c3a;--red2:#8f302c;--blue:#3c8293;--grid:#c5ad7d;--grid-dark:#9b7c4f;
+      --line:#203c2f;--shadow:#15342824;--slot:#d8c497;--slot2:#cbb183;
+      --white:#fffdf2;
+    }
+    @media(prefers-color-scheme:dark){:root{
+      --bg:#10251d;--panel:#193329;--panel2:#203f32;--ink:#f3f0dc;--muted:#b9c5b6;
+      --forest:#0d241c;--forest2:#285b43;--moss:#86aa5f;--lime:#b9d873;--sun:#f5c45b;
+      --red:#e76a56;--red2:#a13e35;--blue:#65a7b5;--grid:#7d6542;--grid-dark:#57452f;
+      --line:#0a1b14;--shadow:#00000045;--slot:#6d5739;--slot2:#5a472f;--white:#fff8df;
+    }}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink)}
+    body{font-family:"Nunito Sans",sans-serif;font-weight:700;overflow-x:hidden}
+    button{font:inherit}
+    button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+    .app{max-width:1180px;margin:0 auto;padding:12px clamp(10px,2vw,24px) 40px}
+    .hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .hud-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .stat{display:flex;align-items:center;gap:7px;background:var(--panel);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);padding:7px 10px;border-radius:9px;min-height:42px}
+    .stat svg{width:20px;height:20px;stroke-width:2.5}.stat strong{font-size:16px}.stat small{color:var(--muted);font-weight:900}
+    .night{font-family:"Changa One",sans-serif;letter-spacing:.4px;font-size:19px;color:var(--forest2)}
+    @media(prefers-color-scheme:dark){.night{color:var(--lime)}}
+    .icon-btn{width:42px;height:42px;border:2px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);box-shadow:0 3px 0 var(--line);display:grid;place-items:center;cursor:pointer}
+    .icon-btn:active,.btn:active,.shop-buy:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+    .icon-btn svg{width:21px;height:21px}
+
+    .arena{position:relative;min-height:312px;overflow:hidden;border:3px solid var(--line);border-radius:14px;background:linear-gradient(#79b6b9 0 58%,#78934d 58%);box-shadow:0 6px 0 var(--line);margin-bottom:16px;isolation:isolate}
+    .arena:before{content:"";position:absolute;inset:0 0 42% 0;opacity:.4;background:radial-gradient(circle at 12% 18%,#fff7 0 3px,transparent 4px),radial-gradient(circle at 75% 12%,#fff5 0 2px,transparent 3px),linear-gradient(150deg,transparent 70%,#ffffff1f 71%);background-size:110px 90px,150px 120px,100% 100%}
+    .hills{position:absolute;left:-8%;right:-8%;bottom:38%;height:43%;background:var(--forest2);clip-path:polygon(0 100%,0 74%,8% 44%,14% 73%,23% 24%,29% 65%,37% 37%,45% 78%,53% 42%,60% 68%,69% 15%,76% 71%,84% 36%,93% 72%,100% 42%,100% 100%);opacity:.92;z-index:-1}
+    .ground{position:absolute;inset:58% 0 0;background:linear-gradient(#73904b,#566f39)}
+    .ground:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(100deg,transparent 0 26px,#2d4d2922 27px 29px)}
+    .weather{position:absolute;top:11px;left:11px;z-index:4;background:#10271dd9;color:#fff;padding:7px 10px;border:1px solid #fff8;border-radius:7px;font-size:12px;display:flex;gap:7px;align-items:center}
+    .weather svg{width:17px;height:17px}
+    .stage-title{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:3;color:#fff;text-shadow:0 2px 0 #173d30;font-family:"Changa One";font-size:18px;white-space:nowrap}
+    .fighter{position:absolute;bottom:38px;width:36%;z-index:2;display:flex;flex-direction:column;align-items:center}.fighter.player{left:5%}.fighter.enemy{right:5%}
+    .sprite{height:112px;width:150px;display:grid;place-items:center;filter:drop-shadow(0 7px 0 #18301c55);transform-origin:50% 90%}.sprite svg{width:100%;height:100%}
+    .fighter.attacking .sprite{animation:bop .22s ease}.fighter.hit .sprite{animation:hit .25s ease}.fighter.heal .sprite{animation:heal .5s ease}
+    @keyframes bop{50%{transform:translateX(16px) rotate(4deg)}}@keyframes hit{25%{transform:translateX(-8px);filter:brightness(2) sepia(1) saturate(5)}75%{transform:translateX(7px)}}@keyframes heal{50%{filter:drop-shadow(0 0 14px #d4ff89);transform:translateY(-4px)}}
+    .enemy.attacking .sprite{animation-name:bopEnemy}@keyframes bopEnemy{50%{transform:translateX(-16px) rotate(-4deg)}}
+    .nameplate{width:min(230px,100%);background:#10271de3;color:#fff;border:2px solid #06120d;border-radius:8px;padding:6px 8px;text-align:center;box-shadow:0 3px 0 #06120d}
+    .fighter-name{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px;gap:6px}.fighter-name strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .hpbar{height:10px;border:1px solid #07160f;background:#3a1d1a;border-radius:3px;overflow:hidden}.hpfill{height:100%;width:100%;background:linear-gradient(90deg,#e55945,#f19b50);transition:width .22s}
+    .player .hpfill{background:linear-gradient(90deg,#6ca649,#b7d85f)}
+    .combat-log{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;max-width:52%;background:#0c1d16d9;color:#fff;border:1px solid #ffffff55;border-radius:7px;padding:7px 12px;text-align:center;font-size:12px;min-width:260px}
+    .burst{position:absolute;z-index:8;font-family:"Changa One";font-size:26px;color:#fff;text-shadow:2px 2px 0 #772c25;animation:float .8s ease-out forwards;pointer-events:none}
+    .burst.heal-burst{color:#ddff8d;text-shadow:2px 2px #27451f}@keyframes float{from{opacity:1;transform:translateY(0) scale(.8)}to{opacity:0;transform:translateY(-50px) scale(1.2)}}
+    .battle-tools{position:absolute;right:10px;top:10px;z-index:5}.speed-btn{border:1px solid #ffffff99;background:#10271dd9;color:#fff;border-radius:6px;padding:6px 8px;cursor:pointer;font-size:12px;font-weight:900}
+
+    .prep-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--forest);color:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 4px 0 var(--line);margin-bottom:14px}
+    .prep-copy h1{font-family:"Changa One";font-size:clamp(20px,3vw,28px);margin:0 0 2px;font-weight:400;letter-spacing:.3px}.prep-copy p{margin:0;color:#dce8d7;font-size:13px}
+    .btn{border:2px solid #1d2d20;border-radius:8px;background:var(--sun);color:#2b2515;padding:10px 15px;box-shadow:0 3px 0 #7b5620;cursor:pointer;font-weight:900;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .btn svg{width:18px;height:18px}.btn:disabled{filter:grayscale(1);opacity:.55;cursor:not-allowed}.btn.secondary{background:var(--panel2);color:var(--ink);box-shadow:0 3px 0 var(--line)}
+    .layout{display:grid;grid-template-columns:minmax(360px,1.06fr) minmax(360px,.94fr);gap:16px;align-items:start}
+    .section{background:var(--panel);border:2px solid var(--line);border-radius:13px;box-shadow:0 5px 0 var(--line);overflow:hidden}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:2px solid var(--line);background:var(--panel2)}
+    .section-head h2{font-family:"Changa One";font-weight:400;margin:0;font-size:20px}.section-head p{margin:0;font-size:12px;color:var(--muted)}
+    .bag-wrap{padding:14px;background:linear-gradient(140deg,var(--grid),var(--grid-dark));position:relative}
+    .bag-wrap:before{content:"";position:absolute;inset:6px;border:2px dashed #4a361f77;border-radius:12px;pointer-events:none}
+    .bag-grid{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-width:510px;margin:0 auto}
+    .slot{aspect-ratio:1;border:2px solid #6b4d2c;background:var(--slot);border-radius:7px;min-width:0;position:relative;cursor:pointer;box-shadow:inset 0 2px 0 #ffffff47;display:grid;place-items:center;transition:background .12s,transform .12s}
+    .slot:hover{background:var(--slot2)}.slot.selected{outline:4px solid var(--sun);z-index:2;transform:scale(.96)}.slot.drop-hint{animation:hint 1s infinite}@keyframes hint{50%{box-shadow:inset 0 0 0 3px var(--sun)}}
+    .item{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:4px}.item svg{width:55%;height:55%;overflow:visible;filter:drop-shadow(0 2px 0 #0003)}.item-name{font-size:8px;line-height:1.05;text-align:center;color:#2c2114;font-weight:900;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tier{position:absolute;top:2px;right:3px;font-size:8px;color:#33210e;letter-spacing:-1px}.cooldown{position:absolute;left:4px;right:4px;bottom:3px;height:3px;background:#0003;border-radius:2px;overflow:hidden}.cooldown i{display:block;height:100%;width:0;background:#fff784}.item.ready{animation:ready .18s ease}@keyframes ready{50%{filter:brightness(1.5);transform:scale(1.05)}}
+    .bag-foot{padding:9px 14px;border-top:2px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+    .bag-foot button{border:0;background:none;color:var(--red);font:inherit;font-weight:900;cursor:pointer;padding:4px}
+    .synergies{padding:12px 14px;border-top:2px solid var(--line)}.synergies h3{font-size:13px;margin:0 0 8px}.synergy-list{display:flex;gap:7px;flex-wrap:wrap}.synergy{font-size:11px;padding:5px 8px;border-radius:5px;background:var(--panel2);color:var(--muted);border:1px solid transparent}.synergy.active{background:#dcecb0;color:#26351d;border-color:#6a8945}.synergy strong{font-weight:900}
+    @media(prefers-color-scheme:dark){.synergy.active{background:#405a2c;color:#f3f0dc;border-color:#93b966}.item-name,.tier{color:#2c2114}}
+
+    .shop{padding:12px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.shop-card{min-width:0;background:var(--panel2);border:2px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}.shop-art{aspect-ratio:1.15;display:grid;place-items:center;background:linear-gradient(145deg,#b7cc89,#7b9d62);position:relative}.shop-art svg{width:56%;height:56%;filter:drop-shadow(0 3px 0 #0003)}.shop-card h3{font-size:11px;line-height:1.05;margin:7px 6px 2px;min-height:23px}.shop-card p{font-size:9px;line-height:1.2;color:var(--muted);margin:0 6px 7px;flex:1}.shop-buy{border:0;border-top:2px solid var(--line);padding:7px 3px;background:var(--sun);color:#322510;font-weight:900;font-size:11px;cursor:pointer}.shop-buy:disabled{filter:grayscale(1);opacity:.5}.sold{opacity:.45}.sold .shop-art:after{content:"PACKED";position:absolute;inset:auto 0 8px;background:#13271dde;color:#fff;text-align:center;font-size:9px;padding:3px;transform:rotate(-7deg)}
+    .shop-actions{padding:0 12px 12px;display:flex;gap:8px}.shop-actions .btn{font-size:12px;padding:8px 10px}.shop-actions .tip{margin-left:auto;align-self:center;font-size:10px;color:var(--muted);text-align:right}
+    .guide{margin-top:14px;padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.guide-step{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--muted)}.guide-step b{display:grid;place-items:center;flex:0 0 26px;height:26px;border-radius:50%;background:var(--forest);color:#fff;font-family:"Changa One";font-size:14px}
+
+    .modal-backdrop{position:fixed;inset:0;background:#07130dbd;z-index:50;display:grid;place-items:center;padding:18px}.modal-backdrop.hidden{display:none}.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:3px solid var(--line);border-radius:14px;box-shadow:0 8px 0 #06120d;padding:clamp(18px,4vw,28px)}.modal h2{font-family:"Changa One";font-size:clamp(28px,7vw,40px);font-weight:400;margin:0 0 8px;line-height:1}.modal .lead{font-size:15px;color:var(--muted);margin:0 0 19px}.rules{display:grid;gap:10px;margin:18px 0}.rule{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:center}.rule-icon{width:38px;height:38px;background:var(--panel2);border:2px solid var(--line);border-radius:8px;display:grid;place-items:center}.rule-icon svg{width:22px;height:22px}.rule p{margin:0;font-size:13px;color:var(--muted)}.rule strong{display:block;color:var(--ink)}.modal-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.modal-actions .btn{flex:1}.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}.result-stat{background:var(--panel2);border:1px solid var(--line);padding:10px;text-align:center;border-radius:7px}.result-stat strong{display:block;font-family:"Changa One";font-size:24px}.result-stat small{color:var(--muted)}
+    .toast{position:fixed;left:50%;bottom:24px;z-index:80;transform:translate(-50%,20px);opacity:0;background:#10271d;color:#fff;border:2px solid #fff7;padding:9px 14px;border-radius:8px;box-shadow:0 4px 14px #0006;font-size:12px;transition:.2s;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+
+    @media(max-width:780px){
+      .app{padding:9px 9px 30px}.layout{grid-template-columns:1fr}.arena{min-height:285px}.sprite{height:93px;width:120px}.fighter{width:42%;bottom:42px}.fighter.player{left:2%}.fighter.enemy{right:2%}.stage-title{top:48px;font-size:16px}.combat-log{min-width:0;width:84%;max-width:none;bottom:9px}.shop{grid-template-columns:repeat(3,1fr)}.shop-card:nth-child(n+4){margin-top:2px}.prep-banner{align-items:flex-start}.prep-copy p{max-width:250px}.guide{grid-template-columns:1fr}.bag-grid{gap:4px}.slot{border-width:1.5px}.stat{padding:6px 8px}.hud{align-items:flex-start}.hud-group{gap:6px}.shop-actions .tip{display:none}
+    }
+    @media(max-width:430px){.arena{min-height:268px}.weather{font-size:10px;top:8px;left:8px}.battle-tools{top:7px;right:7px}.fighter{bottom:40px}.sprite{height:82px;width:105px}.nameplate{padding:5px}.fighter-name{font-size:10px}.prep-banner{flex-direction:column}.prep-banner .btn{width:100%}.shop{gap:6px;padding:9px}.section-head{padding:10px 11px}.bag-wrap{padding:11px}.item-name{font-size:7px}.result-stats{grid-template-columns:1fr 1fr}.result-stat:last-child{grid-column:1/-1}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hud" aria-label="Run status">
+      <div class="hud-group">
+        <div class="stat night" id="nightStat">NIGHT 1 / 8</div>
+        <div class="stat" title="Camp health"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 21s-8-4.7-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.3-8 11-8 11Z"/></svg><strong id="hpStat">36</strong><small>HP</small></div>
+        <div class="stat" title="Coins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M9 9.5c0-1 1.1-1.8 2.6-1.8s2.7.6 2.7 1.7-1.1 1.5-2.7 1.9-2.8.9-2.8 2 1.2 2 2.8 2 2.8-.8 2.8-1.9M12 5.8v12.4"/></svg><strong id="coinStat">14</strong></div>
+      </div>
+      <div class="hud-group">
+        <div class="stat"><small>POWER</small><strong id="powerStat">0</strong></div>
+        <button class="icon-btn" id="helpBtn" aria-label="How to play" title="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 0 1 4.6 1c0 2-2.3 2.2-2.3 4M12 18h.01"/></svg></button>
+        <button class="icon-btn" id="restartBtn" aria-label="Restart run" title="Restart run"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10a8 8 0 1 1 1.7 7.7M4 4v6h6"/></svg></button>
+      </div>
+    </section>
+
+    <section class="arena" aria-label="Campground battle arena">
+      <div class="hills"></div><div class="ground"></div>
+      <div class="weather" id="weatherBadge"></div>
+      <div class="stage-title" id="stageTitle">PINE HOLLOW</div>
+      <div class="battle-tools"><button class="speed-btn" id="speedBtn" type="button">1× SPEED</button></div>
+      <div class="fighter player" id="playerFighter">
+        <div class="sprite" aria-hidden="true">
+          <svg viewBox="0 0 160 120"><path d="M19 104h124" stroke="#294329" stroke-width="7" stroke-linecap="round"/><path d="m35 99 45-67 45 67Z" fill="#e8b14a" stroke="#173a2d" stroke-width="5"/><path d="m80 32 1 67" stroke="#173a2d" stroke-width="4"/><path d="m81 66 22 33H81Z" fill="#c95b3f"/><path d="M23 93h28M33 93l-7-19M33 93l8-19" stroke="#513820" stroke-width="5" stroke-linecap="round"/><path d="M25 72h18" stroke="#f4c44c" stroke-width="5"/><circle cx="33" cy="67" r="7" fill="#f2bd40" stroke="#513820" stroke-width="3"/></svg>
+        </div>
+        <div class="nameplate"><div class="fighter-name"><strong>YOUR CAMPSITE</strong><span id="playerHpText">36 / 36</span></div><div class="hpbar"><div class="hpfill" id="playerHpFill"></div></div></div>
+      </div>
+      <div class="fighter enemy" id="enemyFighter">
+        <div class="sprite" id="enemySprite" aria-hidden="true"></div>
+        <div class="nameplate"><div class="fighter-name"><strong id="enemyName">Campfire Moth</strong><span id="enemyHpText">24 / 24</span></div><div class="hpbar"><div class="hpfill" id="enemyHpFill"></div></div></div>
+      </div>
+      <div class="combat-log" id="combatLog" aria-live="polite">Pack your gear, then start the campfire.</div>
+    </section>
+
+    <section class="prep-banner">
+      <div class="prep-copy"><h1 id="phaseTitle">Pack before sundown.</h1><p id="phaseDesc">Buy gear, arrange smart combos, and survive tonight's visitor.</p></div>
+      <button class="btn" id="battleBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 22c5 0 8-3.6 8-8.1 0-3.2-1.8-5.8-4.5-8.5.1 2.1-.8 3.7-2 4.4.1-3.6-2.2-6.6-5.1-8.3.3 3.5-4.4 6.3-4.4 12.4C4 18.4 7.1 22 12 22Z"/><path d="M12 20c-2 0-3.2-1.5-3.2-3.3 0-2 1.5-3.2 2.5-4.7.3 1.5 1.2 2 1.8 2.7.7.8 1.1 1.5 1.1 2.4 0 1.6-.9 2.9-2.2 2.9Z"/></svg><span>START CAMPFIRE</span></button>
+    </section>
+
+    <div class="layout">
+      <section class="section">
+        <div class="section-head"><div><h2>Your backpack</h2><p id="bagHint">Tap an item, then an empty slot to move it.</p></div><p id="capacity">0 / 24 slots</p></div>
+        <div class="bag-wrap"><div class="bag-grid" id="bagGrid" aria-label="Backpack item grid"></div></div>
+        <div class="bag-foot"><span id="selectionLabel">No gear selected</span><button id="sellBtn" disabled>Sell selected</button></div>
+        <div class="synergies"><h3>PACK COMBOS</h3><div class="synergy-list" id="synergyList"></div></div>
+      </section>
+
+      <div>
+        <section class="section">
+          <div class="section-head"><div><h2>Trading post</h2><p>Fresh stock each night</p></div><p id="shopTimer">Open until battle</p></div>
+          <div class="shop" id="shop"></div>
+          <div class="shop-actions"><button class="btn secondary" id="rerollBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.8-2L20 9M4 15l2.1 2a7 7 0 0 0 11.8-2"/></svg>Reroll · 1</button><span class="tip">Sell gear for half its price.</span></div>
+        </section>
+        <section class="section guide" aria-label="Quick game guide">
+          <div class="guide-step"><b>1</b><span>Buy useful gear from the trading post.</span></div>
+          <div class="guide-step"><b>2</b><span>Place matching gear side by side for combos.</span></div>
+          <div class="guide-step"><b>3</b><span>Battle automatically. Survive all eight nights.</span></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-backdrop" id="introModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+      <h2 id="introTitle">The woods wake up after dark.</h2>
+      <p class="lead">Pack a clever kit, light the fire, and outlast eight increasingly strange nights.</p>
+      <div class="rules">
+        <div class="rule"><div class="rule-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v13H4zM8 7V4h8v3M8 11h8M8 15h3"/></svg></div><p><strong>Shop, then arrange</strong>Every item acts on its own. Adjacent gear can unlock powerful combos.</p></div>
+        <div class="rule"><div class="rule-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 4-4 16M6 8l4-4 4 4M10 20l4-4 4 4"/></svg></div><p><strong>Watch the rhythm</strong>Weapons deal damage, supplies heal, and utility gear improves nearby items.</p></div>
+        <div class="rule"><div class="rule-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 6-7 10-7 10Z"/></svg></div><p><strong>Protect the campsite</strong>Camp health carries over. Win battles for coins and a small recovery.</p></div>
+      </div>
+      <div class="modal-actions"><button class="btn" id="playBtn">PACK THE BAG</button></div>
+    </div>
+  </div>
+  <div class="modal-backdrop hidden" id="resultModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><h2 id="resultTitle"></h2><p class="lead" id="resultText"></p><div class="result-stats" id="resultStats"></div><div class="modal-actions" id="resultActions"></div></div></div>
+  <div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  'use strict';
+  const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+  const icon={
+    hatchet:'<svg viewBox="0 0 48 48"><path d="M29 7c7 0 11 4 12 10l-13 7-7-9Z" fill="#91a7a1" stroke="#263b34" stroke-width="3"/><path d="m27 19-15 24" stroke="#744625" stroke-width="6" stroke-linecap="round"/><path d="m29 7-8 8 7 9 13-7" fill="none" stroke="#263b34" stroke-width="3"/></svg>',
+    lantern:'<svg viewBox="0 0 48 48"><path d="M17 13c0-7 14-7 14 0" fill="none" stroke="#303d36" stroke-width="3"/><path d="M15 17h18l3 25H12Z" fill="#e8aa35" stroke="#303d36" stroke-width="3"/><path d="M18 22h12l2 14H16Z" fill="#fff1a0"/><path d="M14 17h20" stroke="#303d36" stroke-width="4"/></svg>',
+    skillet:'<svg viewBox="0 0 48 48"><circle cx="19" cy="28" r="12" fill="#46514d" stroke="#202d28" stroke-width="3"/><circle cx="19" cy="28" r="7" fill="#67746f"/><path d="m28 20 13-12" stroke="#202d28" stroke-width="6" stroke-linecap="round"/></svg>',
+    firstaid:'<svg viewBox="0 0 48 48"><rect x="7" y="12" width="34" height="29" rx="5" fill="#e5e8dd" stroke="#263b34" stroke-width="3"/><path d="M18 12V7h12v5" fill="none" stroke="#263b34" stroke-width="3"/><path d="M21 19h7v6h6v7h-6v6h-7v-6h-6v-7h6Z" fill="#d54e41"/></svg>',
+    coffee:'<svg viewBox="0 0 48 48"><path d="M9 18h27v19a7 7 0 0 1-7 7H16a7 7 0 0 1-7-7Z" fill="#d67742" stroke="#382b22" stroke-width="3"/><path d="M36 23h4c6 0 6 10 0 10h-4M17 13c-4-4 3-5 0-9M26 13c-4-4 3-5 0-9" fill="none" stroke="#382b22" stroke-width="3" stroke-linecap="round"/></svg>',
+    compass:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="#e3c46a" stroke="#3a392d" stroke-width="3"/><circle cx="24" cy="24" r="13" fill="#f4edd3"/><path d="m28 14-2 12-12 8 8-12Z" fill="#c94c3a" stroke="#3a392d" stroke-width="2"/><circle cx="24" cy="24" r="2" fill="#3a392d"/></svg>',
+    rope:'<svg viewBox="0 0 48 48"><circle cx="24" cy="25" r="15" fill="none" stroke="#b8874e" stroke-width="7"/><circle cx="24" cy="25" r="7" fill="none" stroke="#5e4328" stroke-width="2"/><path d="M34 36c7 5 3 9-2 6" fill="none" stroke="#b8874e" stroke-width="5" stroke-linecap="round"/></svg>',
+    bell:'<svg viewBox="0 0 48 48"><path d="M13 34h22c-3-3-4-7-4-14 0-9-14-9-14 0 0 7-1 11-4 14Z" fill="#e7b447" stroke="#453921" stroke-width="3"/><path d="M20 37c1 6 7 6 8 0M24 10V6" fill="none" stroke="#453921" stroke-width="3" stroke-linecap="round"/></svg>',
+    firewood:'<svg viewBox="0 0 48 48"><path d="m7 36 30-22M11 15l28 24" stroke="#7a482a" stroke-width="9" stroke-linecap="round"/><path d="m7 36 30-22M11 15l28 24" stroke="#3e2e22" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="36" r="5" fill="#c49052" stroke="#3e2e22" stroke-width="2"/><circle cx="40" cy="40" r="5" fill="#c49052" stroke="#3e2e22" stroke-width="2"/></svg>',
+    snack:'<svg viewBox="0 0 48 48"><path d="M11 8h26l-3 34H14Z" fill="#e8d9a0" stroke="#3b3929" stroke-width="3"/><path d="M12 15h24M17 23c5-5 10-5 15 0-5 5-10 5-15 0Z" fill="#91aa50" stroke="#3b3929" stroke-width="2"/></svg>',
+    spray:'<svg viewBox="0 0 48 48"><path d="M17 17h17v26H14V20Z" fill="#81b689" stroke="#263b34" stroke-width="3"/><path d="M20 17V9h14M30 9v5M34 9h7" fill="none" stroke="#263b34" stroke-width="3"/><path d="M20 25h10v10H20Z" fill="#e9e2b7"/></svg>'
+  };
+  const ITEMS={
+    hatchet:{name:'Trail Hatchet',cost:5,type:'weapon',power:7,cd:1450,desc:'7 damage every 1.45s',icon:'hatchet'},
+    lantern:{name:'Bright Lantern',cost:4,type:'light',power:4,cd:1050,desc:'4 damage every 1.05s',icon:'lantern'},
+    skillet:{name:'Iron Skillet',cost:4,type:'weapon',power:5,cd:1300,desc:'5 damage every 1.3s',icon:'skillet'},
+    firstaid:{name:'First-Aid Kit',cost:5,type:'heal',power:4,cd:2900,desc:'Restores 4 camp health',icon:'firstaid'},
+    coffee:{name:'Camp Coffee',cost:3,type:'boost',power:0,cd:0,desc:'Adjacent gear acts 22% faster',icon:'coffee'},
+    compass:{name:'Lucky Compass',cost:4,type:'boost',power:0,cd:0,desc:'Adjacent attacks gain 20% crit',icon:'compass'},
+    rope:{name:'Climbing Rope',cost:3,type:'guard',power:1,cd:0,desc:'Reduces each hit by 1',icon:'rope'},
+    bell:{name:'Bear Bell',cost:3,type:'weapon',power:2,cd:700,desc:'2 damage every 0.7s',icon:'bell'},
+    firewood:{name:'Dry Firewood',cost:2,type:'boost',power:0,cd:0,desc:'Adds 4 damage to adjacent lanterns',icon:'firewood'},
+    snack:{name:'Trail Snacks',cost:2,type:'food',power:0,cd:0,desc:'Heal 3 after a victory',icon:'snack'},
+    spray:{name:'Bug Spray',cost:3,type:'guard',power:0,cd:0,desc:'Slows enemy attacks by 12%',icon:'spray'}
+  };
+  const ENEMIES=[
+    {name:'Campfire Moth',hp:28,dmg:3,cd:1700,reward:5,kind:'moth'},
+    {name:'Snack-Snatching Raccoon',hp:45,dmg:5,cd:1650,reward:6,kind:'raccoon'},
+    {name:'Mosquito Cloud',hp:58,dmg:3,cd:850,reward:7,kind:'mosquito'},
+    {name:'Muddy Boar',hp:82,dmg:8,cd:1750,reward:8,kind:'boar'},
+    {name:'Storm Sprite',hp:104,dmg:7,cd:1250,reward:9,kind:'storm'},
+    {name:'Trail Troll',hp:132,dmg:11,cd:1750,reward:10,kind:'troll'},
+    {name:'Sasquatch Scout',hp:165,dmg:12,cd:1500,reward:12,kind:'sasquatch'},
+    {name:'Old Mossback',hp:215,dmg:15,cd:1450,reward:20,kind:'boss'}
+  ];
+  const WEATHER=[
+    {name:'Clear Skies',key:'clear',desc:'No modifiers'},
+    {name:'Soft Rain',key:'rain',desc:'Lanterns act 12% slower'},
+    {name:'Cool Night',key:'cool',desc:'Healing is 25% stronger'},
+    {name:'Full Moon',key:'moon',desc:'Enemy acts 10% faster'},
+    {name:'Tailwind',key:'wind',desc:'Bear bells act 15% faster'}
+  ];
+  const SYNERGIES=[
+    ['Skillet Supper','skillet','snack'],['Morning Rush','coffee','weapon'],['True North','compass','attack'],['First Responder','firstaid','rope'],['Blazing Beacon','lantern','firewood']
+  ];
+  let state, battle=null, raf=null, speed=1, selected=null, toastTimer;
+  function freshState(){return {night:1,maxNights:8,coins:14,hp:36,maxHp:36,bag:Array(24).fill(null),shop:[],weather:WEATHER[0],phase:'prep',wins:0,totalDamage:0};}
+  function rand(a){return a[Math.floor(Math.random()*a.length)]}
+  function newShop(){
+    const keys=Object.keys(ITEMS), result=[];
+    while(result.length<5){let k=rand(keys); if(!result.includes(k)||Math.random()<.25)result.push(k)}
+    state.shop=result.map(k=>({key:k,sold:false}));
+  }
+  function weatherIcon(key){
+    const p={clear:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',rain:'<path d="M6 16a5 5 0 1 1 2-9 6 6 0 0 1 11 3 3 3 0 0 1-1 6H6ZM8 19l-1 3M13 19l-1 3M18 19l-1 3"/>',cool:'<path d="M12 2v20M4 7l16 10M20 7 4 17M9 4l3 3 3-3M9 20l3-3 3 3"/>',moon:'<path d="M20 16A9 9 0 0 1 8 4a9 9 0 1 0 12 12Z"/>',wind:'<path d="M3 8h11c4 0 4-5 1-5-2 0-2 1-2 2M3 12h16c4 0 4 6 0 6-2 0-2-1-2-2M3 16h9"/>'};
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+p[key]+'</svg>';
+  }
+  function enemySVG(kind){
+    const all={
+      moth:'<svg viewBox="0 0 160 120"><path d="M80 25C45 1 18 24 35 61c9 18 29 13 45-4 16 17 36 22 45 4 17-37-10-60-45-36Z" fill="#d69a4f" stroke="#283a2e" stroke-width="5"/><path d="M80 25v70" stroke="#283a2e" stroke-width="8"/><path d="M80 28 65 10M80 28l15-18" stroke="#283a2e" stroke-width="3"/><circle cx="63" cy="42" r="8" fill="#f2cf65"/><circle cx="99" cy="42" r="8" fill="#f2cf65"/></svg>',
+      raccoon:'<svg viewBox="0 0 160 120"><path d="M36 91c-19-2-20-20-7-29 9-7 12-19 7-36l24 12c13-6 27-6 40 0l24-12c-5 17-2 29 7 36 13 9 12 27-7 29-25 4-63 4-88 0Z" fill="#85918a" stroke="#26372f" stroke-width="5"/><path d="M47 52c21-16 45-16 66 0l-13 27H60Z" fill="#293832"/><ellipse cx="63" cy="62" rx="8" ry="6" fill="#f4e8ca"/><ellipse cx="97" cy="62" rx="8" ry="6" fill="#f4e8ca"/><path d="m74 77 6 5 6-5" fill="#111c17"/></svg>',
+      mosquito:'<svg viewBox="0 0 160 120"><g fill="#293a32" stroke="#d4e2c7" stroke-width="2"><circle cx="45" cy="45" r="8"/><circle cx="92" cy="30" r="8"/><circle cx="115" cy="68" r="8"/><circle cx="65" cy="82" r="8"/></g><g stroke="#293a32" stroke-width="3"><path d="M45 45 30 35m15 10 18-12m29-3L79 16m13 14 17-14m6 52-17-12m17 12 16-13M65 82 49 68m16 14 20-14"/></g><g fill="none" stroke="#eef1d8" stroke-width="4"><ellipse cx="36" cy="40" rx="13" ry="7"/><ellipse cx="54" cy="40" rx="13" ry="7"/><ellipse cx="83" cy="25" rx="13" ry="7"/><ellipse cx="101" cy="25" rx="13" ry="7"/><ellipse cx="106" cy="63" rx="13" ry="7"/><ellipse cx="124" cy="63" rx="13" ry="7"/><ellipse cx="56" cy="77" rx="13" ry="7"/><ellipse cx="74" cy="77" rx="13" ry="7"/></g></svg>',
+      boar:'<svg viewBox="0 0 160 120"><path d="M28 74c0-34 29-53 69-43 31 8 42 38 22 59-17 17-74 13-91-16Z" fill="#79563a" stroke="#2f352b" stroke-width="5"/><path d="m91 38 30-24-3 36" fill="#79563a" stroke="#2f352b" stroke-width="5"/><path d="M100 61c31-12 44 20 21 32-16 8-31-5-21-32Z" fill="#a27351" stroke="#2f352b" stroke-width="4"/><path d="M106 90c-8 11-16 2-12-5M127 88c8 9 14 0 10-6" fill="#fff0ce" stroke="#2f352b" stroke-width="3"/><circle cx="111" cy="68" r="3"/><circle cx="126" cy="68" r="3"/></svg>',
+      storm:'<svg viewBox="0 0 160 120"><path d="M37 70c-21-16-7-39 17-36 6-22 39-25 51-6 25-5 37 22 20 38-16 15-71 17-88 4Z" fill="#66808a" stroke="#26373a" stroke-width="5"/><path d="m81 65-13 23h15l-6 23 24-32H86l9-14Z" fill="#f3c84f" stroke="#5b4921" stroke-width="3"/><circle cx="61" cy="57" r="4" fill="#fff"/><circle cx="105" cy="57" r="4" fill="#fff"/></svg>',
+      troll:'<svg viewBox="0 0 160 120"><path d="M42 100c-16-30-14-65 7-81l18 18c9-5 18-5 27 0l18-18c21 16 23 51 7 81Z" fill="#617b4d" stroke="#253525" stroke-width="5"/><path d="M58 58c14-10 31-10 45 0M62 82c12 8 25 8 37 0" fill="none" stroke="#253525" stroke-width="5"/><circle cx="66" cy="59" r="4" fill="#f5d76e"/><circle cx="98" cy="59" r="4" fill="#f5d76e"/><path d="m76 63-7 12h16" fill="none" stroke="#253525" stroke-width="4"/></svg>',
+      sasquatch:'<svg viewBox="0 0 160 120"><path d="M47 103c-11-25-12-57 3-77 13-17 49-17 62 0 15 20 14 52 3 77Z" fill="#8b6541" stroke="#2e3529" stroke-width="5"/><path d="M57 42c8-21 39-21 47 0l-8 29H65Z" fill="#b18a62"/><path d="M60 78c13 8 28 8 41 0" fill="none" stroke="#382b22" stroke-width="5"/><circle cx="67" cy="53" r="4" fill="#1d2721"/><circle cx="94" cy="53" r="4" fill="#1d2721"/></svg>',
+      boss:'<svg viewBox="0 0 160 120"><path d="M31 102c-8-28-5-66 18-78l16 12c10-5 20-5 30 0l16-12c23 12 26 50 18 78Z" fill="#495d38" stroke="#203125" stroke-width="6"/><path d="M49 61c16-20 47-20 63 0l-9 32H58Z" fill="#6f8250"/><path d="M58 49c14-10 30-10 44 0" stroke="#263827" stroke-width="7"/><circle cx="64" cy="61" r="5" fill="#efc64f"/><circle cx="98" cy="61" r="5" fill="#efc64f"/><path d="m73 74 8 6 8-6M65 90c11 7 22 7 33 0" fill="none" stroke="#263827" stroke-width="5"/></svg>'
+    }; return all[kind];
+  }
+  function init(){state=freshState();newShop();renderAll();$('#introModal').classList.remove('hidden')}
+  function renderAll(){renderHud();renderEnemy();renderBag();renderShop();renderSynergies();renderPhase()}
+  function renderHud(){
+    $('#nightStat').textContent='NIGHT '+state.night+' / '+state.maxNights;$('#hpStat').textContent=Math.max(0,Math.ceil(state.hp));$('#coinStat').textContent=state.coins;
+    const power=state.bag.filter(Boolean).reduce((n,k)=>n+(ITEMS[k].power||1),0);$('#powerStat').textContent=power;
+    $('#playerHpText').textContent=Math.max(0,Math.ceil(state.hp))+' / '+state.maxHp;$('#playerHpFill').style.width=Math.max(0,state.hp/state.maxHp*100)+'%';
+    $('#weatherBadge').innerHTML=weatherIcon(state.weather.key)+'<span><strong>'+state.weather.name+'</strong> · '+state.weather.desc+'</span>';
+  }
+  function renderEnemy(){const e=ENEMIES[state.night-1];$('#enemyName').textContent=e.name;$('#enemySprite').innerHTML=enemySVG(e.kind);let hp=battle?battle.enemyHp:e.hp;$('#enemyHpText').textContent=Math.max(0,Math.ceil(hp))+' / '+e.hp;$('#enemyHpFill').style.width=Math.max(0,hp/e.hp*100)+'%'}
+  function renderBag(){
+    const grid=$('#bagGrid');grid.innerHTML='';
+    state.bag.forEach((k,i)=>{const s=document.createElement('button');s.className='slot'+(selected===i?' selected':'')+(selected!==null&&!k?' drop-hint':'');s.type='button';s.dataset.i=i;s.setAttribute('aria-label',k?ITEMS[k].name:'Empty backpack slot');
+      if(k){let it=ITEMS[k];s.innerHTML='<div class="item" data-type="'+it.type+'">'+icon[it.icon]+'<span class="item-name">'+it.name.replace('Trail ','').replace('Bright ','').replace('Climbing ','')+'</span><div class="cooldown"><i id="cd-'+i+'"></i></div></div>'}
+      s.addEventListener('click',()=>slotClick(i));grid.appendChild(s)});
+    $('#capacity').textContent=state.bag.filter(Boolean).length+' / 24 slots';
+    if(selected!==null&&state.bag[selected]){$('#selectionLabel').textContent=ITEMS[state.bag[selected]].name+' selected';$('#sellBtn').disabled=state.phase!=='prep'}else{$('#selectionLabel').textContent='No gear selected';$('#sellBtn').disabled=true}
+  }
+  function slotClick(i){
+    if(state.phase!=='prep')return toast('Your bag is locked during battle.');
+    if(selected===null){if(state.bag[i])selected=i}
+    else if(i===selected){selected=null}
+    else if(!state.bag[i]){state.bag[i]=state.bag[selected];state.bag[selected]=null;selected=null}
+    else{const temp=state.bag[i];state.bag[i]=state.bag[selected];state.bag[selected]=temp;selected=i}
+    renderBag();renderSynergies();
+  }
+  function renderShop(){
+    const root=$('#shop');root.innerHTML='';
+    state.shop.forEach((entry,idx)=>{let it=ITEMS[entry.key],c=document.createElement('article');c.className='shop-card'+(entry.sold?' sold':'');c.innerHTML='<div class="shop-art">'+icon[it.icon]+'</div><h3>'+it.name+'</h3><p>'+it.desc+'</p><button class="shop-buy" '+(entry.sold||state.phase!=='prep'||state.coins<it.cost?'disabled':'')+'>'+it.cost+' COINS</button>';
+      c.querySelector('button').addEventListener('click',()=>buy(idx));root.appendChild(c)});
+    $('#rerollBtn').disabled=state.phase!=='prep'||state.coins<1;$('#shopTimer').textContent=state.phase==='prep'?'Open until battle':'Closed for the night';
+  }
+  function buy(idx){
+    const e=state.shop[idx],it=ITEMS[e.key],empty=state.bag.indexOf(null);if(e.sold||state.coins<it.cost)return;if(empty<0)return toast('Your backpack is full.');
+    state.coins-=it.cost;state.bag[empty]=e.key;e.sold=true;selected=empty;renderAll();toast(it.name+' packed. Arrange it for a combo!');
+  }
+  function neighbors(i){let r=Math.floor(i/6),c=i%6,res=[];if(r>0)res.push(i-6);if(r<3)res.push(i+6);if(c>0)res.push(i-1);if(c<5)res.push(i+1);return res}
+  function adjacent(i,pred){return neighbors(i).some(n=>state.bag[n]&&pred(state.bag[n]))}
+  function comboActive(name){
+    if(name==='Skillet Supper')return state.bag.some((k,i)=>k==='skillet'&&adjacent(i,x=>x==='snack'));
+    if(name==='Morning Rush')return state.bag.some((k,i)=>k==='coffee'&&adjacent(i,x=>ITEMS[x].type==='weapon'||ITEMS[x].type==='light'||ITEMS[x].type==='heal'));
+    if(name==='True North')return state.bag.some((k,i)=>k==='compass'&&adjacent(i,x=>['weapon','light'].includes(ITEMS[x].type)));
+    if(name==='First Responder')return state.bag.some((k,i)=>k==='firstaid'&&adjacent(i,x=>x==='rope'));
+    if(name==='Blazing Beacon')return state.bag.some((k,i)=>k==='lantern'&&adjacent(i,x=>x==='firewood'));
+  }
+  function renderSynergies(){const r=$('#synergyList');r.innerHTML='';SYNERGIES.forEach(s=>{let active=comboActive(s[0]);let el=document.createElement('span');el.className='synergy'+(active?' active':'');el.innerHTML=(active?'● ':'○ ')+'<strong>'+s[0]+'</strong>';r.appendChild(el)})}
+  function renderPhase(){
+    const prep=state.phase==='prep';$('#battleBtn').disabled=!prep||!state.bag.some(k=>k&&['weapon','light'].includes(ITEMS[k].type));$('#battleBtn').querySelector('span').textContent=prep?'START CAMPFIRE':'BATTLE IN PROGRESS';
+    $('#phaseTitle').textContent=prep?'Pack before sundown.':'Hold the campsite!';$('#phaseDesc').textContent=prep?'Buy gear, arrange smart combos, and survive tonight’s visitor.':'Your packed gear is working automatically.';
+  }
+  function itemStats(k,i){
+    const it=ITEMS[k];let power=it.power,cd=it.cd,crit=0,heal=it.type==='heal';
+    if(adjacent(i,x=>x==='coffee')&&cd)cd*=.78;
+    if(adjacent(i,x=>x==='compass')&&['weapon','light'].includes(it.type))crit=.2;
+    if(k==='lantern'&&adjacent(i,x=>x==='firewood'))power+=4;
+    if(k==='skillet'&&adjacent(i,x=>x==='snack'))power+=3;
+    if(k==='firstaid'&&adjacent(i,x=>x==='rope'))power+=2;
+    if(state.weather.key==='rain'&&k==='lantern')cd*=1.12;
+    if(state.weather.key==='wind'&&k==='bell')cd*=.85;
+    if(state.weather.key==='cool'&&heal)power=Math.ceil(power*1.25);
+    return {power,cd,crit,heal};
+  }
+  function startBattle(){
+    if(state.phase!=='prep')return;if(!state.bag.some(k=>k&&['weapon','light'].includes(ITEMS[k].type)))return toast('Pack at least one damage item first.');
+    selected=null;state.phase='battle';const e=ENEMIES[state.night-1],now=performance.now();
+    battle={enemyHp:e.hp,enemyMax:e.hp,enemyNext:now+e.cd,last:now,started:now,items:{}};state.bag.forEach((k,i)=>{if(k&&ITEMS[k].cd)battle.items[i]=now+itemStats(k,i).cd*(.5+Math.random()*.25)});
+    renderAll();$('#combatLog').textContent=e.name+' approaches the fire…';raf=requestAnimationFrame(tick);
+  }
+  function tick(now){if(!battle||state.phase!=='battle')return;const e=ENEMIES[state.night-1];
+    for(const key in battle.items){const i=+key,k=state.bag[i],st=itemStats(k,i),next=battle.items[i],pct=Math.min(100,Math.max(0,(1-(next-now)/(st.cd/speed))*100));const bar=$('#cd-'+i);if(bar)bar.style.width=pct+'%';
+      if(now>=next){activateItem(i,k,st);battle.items[i]=now+st.cd/speed}}
+    let enemyCd=e.cd*(state.weather.key==='moon'?.9:1);const sprays=state.bag.filter(x=>x==='spray').length;enemyCd*=1+Math.min(.36,sprays*.12);
+    if(now>=battle.enemyNext){enemyAttack(e);battle.enemyNext=now+enemyCd/speed}
+    renderBattleBars();if(battle.enemyHp<=0)return battleWon();if(state.hp<=0)return battleLost();raf=requestAnimationFrame(tick);
+  }
+  function activateItem(i,k,st){
+    const el=$$('.slot')[i];if(el){const item=el.querySelector('.item');item.classList.remove('ready');void item.offsetWidth;item.classList.add('ready')}
+    if(st.heal){if(state.hp<state.maxHp){const amt=Math.min(st.power,state.maxHp-state.hp);state.hp+=amt;burst('+'+Math.ceil(amt),true,'player');animateFighter('playerFighter','heal');$('#combatLog').textContent=ITEMS[k].name+' restores '+Math.ceil(amt)+' camp health.'}}
+    else{let dmg=st.power,crit=Math.random()<st.crit;if(crit)dmg*=2;battle.enemyHp-=dmg;state.totalDamage+=dmg;burst((crit?'CRIT ':'')+'-'+dmg,false,'enemy');animateFighter('playerFighter','attacking');animateFighter('enemyFighter','hit');$('#combatLog').textContent=ITEMS[k].name+(crit?' lands a critical hit for ':' deals ')+dmg+' damage.'}
+  }
+  function enemyAttack(e){const ropes=state.bag.filter(x=>x==='rope').length,armor=Math.min(4,ropes),dmg=Math.max(1,e.dmg-armor);state.hp-=dmg;burst('-'+dmg,false,'player');animateFighter('enemyFighter','attacking');animateFighter('playerFighter','hit');$('#combatLog').textContent=e.name+' hits the campsite for '+dmg+(armor?' ('+armor+' blocked).':'.')}
+  function animateFighter(id,cls){const el=$('#'+id);el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),450)}
+  function burst(text,heal,side){const a=$('.arena'),b=document.createElement('div');b.className='burst'+(heal?' heal-burst':'');b.textContent=text;b.style.left=side==='enemy'?'76%':'24%';b.style.top='40%';a.appendChild(b);setTimeout(()=>b.remove(),850)}
+  function renderBattleBars(){const e=ENEMIES[state.night-1];$('#enemyHpText').textContent=Math.max(0,Math.ceil(battle.enemyHp))+' / '+e.hp;$('#enemyHpFill').style.width=Math.max(0,battle.enemyHp/e.hp*100)+'%';renderHud()}
+  function battleWon(){cancelAnimationFrame(raf);const e=ENEMIES[state.night-1];battle=null;state.phase='result';state.wins++;state.coins+=e.reward;let snackHeal=state.bag.filter(x=>x==='snack').length*3,rest=3,healed=Math.min(state.maxHp-state.hp,snackHeal+rest);state.hp+=healed;renderHud();showResult(true,e.reward,healed)}
+  function battleLost(){cancelAnimationFrame(raf);battle=null;state.phase='result';state.hp=0;renderHud();showResult(false,0,0)}
+  function showResult(win,reward,healed){
+    const last=state.night===state.maxNights, modal=$('#resultModal');modal.classList.remove('hidden');
+    if(win&&last){$('#resultTitle').textContent='Campground champion!';$('#resultText').textContent='Old Mossback retreats into the pines. Your fire is still burning after all eight nights.'}
+    else if(win){$('#resultTitle').textContent='Night '+state.night+' survived.';$('#resultText').textContent='The visitor slips back into the woods. The trading post will restock for tomorrow.'}
+    else{$('#resultTitle').textContent='The fire went out.';$('#resultText').textContent='Your campsite took too much damage on night '+state.night+'. Repack and try a different set of combos.'}
+    $('#resultStats').innerHTML='<div class="result-stat"><strong>'+state.wins+'</strong><small>Nights cleared</small></div><div class="result-stat"><strong>'+state.totalDamage+'</strong><small>Total damage</small></div><div class="result-stat"><strong>'+(win?'+'+reward:state.night)+'</strong><small>'+(win?'Coins earned':'Night reached')+'</small></div>';
+    const acts=$('#resultActions');acts.innerHTML='';let btn=document.createElement('button');btn.className='btn';
+    if(!win||last){btn.textContent='START A NEW RUN';btn.onclick=()=>{modal.classList.add('hidden');init();$('#introModal').classList.add('hidden')}}
+    else{btn.textContent='CONTINUE TO NIGHT '+(state.night+1);btn.onclick=()=>nextNight()}
+    acts.appendChild(btn);
+  }
+  function nextNight(){state.night++;state.phase='prep';state.weather=state.night===1?WEATHER[0]:rand(WEATHER);newShop();selected=null;speed=1;$('#speedBtn').textContent='1× SPEED';$('#resultModal').classList.add('hidden');$('#combatLog').textContent='A new shape moves between the trees…';renderAll()}
+  function sellSelected(){if(selected===null||!state.bag[selected]||state.phase!=='prep')return;const k=state.bag[selected],gain=Math.max(1,Math.floor(ITEMS[k].cost/2));state.bag[selected]=null;selected=null;state.coins+=gain;renderAll();toast('Sold for '+gain+' coin'+(gain===1?'':'s')+'.')}
+  function reroll(){if(state.coins<1||state.phase!=='prep')return;state.coins--;newShop();renderAll();toast('The trader brings out another crate.')}
+  function toast(msg){clearTimeout(toastTimer);const t=$('#toast');t.textContent=msg;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),2100)}
+  function showHelp(){$('#introModal').classList.remove('hidden')}
+  $('#playBtn').addEventListener('click',()=>$('#introModal').classList.add('hidden'));
+  $('#helpBtn').addEventListener('click',showHelp);$('#battleBtn').addEventListener('click',startBattle);$('#sellBtn').addEventListener('click',sellSelected);$('#rerollBtn').addEventListener('click',reroll);
+  $('#speedBtn').addEventListener('click',()=>{speed=speed===1?2:1;$('#speedBtn').textContent=speed+'× SPEED'});
+  $('#restartBtn').addEventListener('click',()=>{if(raf)cancelAnimationFrame(raf);battle=null;state=freshState();newShop();selected=null;renderAll();toast('Fresh backpack. Fresh start.')});
+  init();
+})();
+</script>
+</body>
+</html>
