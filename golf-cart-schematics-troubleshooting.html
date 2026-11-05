@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Golf Cart Schematics &amp; Troubleshooting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f4f2ec;
+        --panel: #fffdf8;
+        --panel-2: #eceade;
+        --ink: #1d2420;
+        --ink-soft: #4c564f;
+        --line: #cfcabd;
+        --accent: #1e6b3c;
+        --accent-ink: #ffffff;
+        --amber: #9a6206;
+        --amber-bg: #fdf0d3;
+        --amber-line: #d9a83c;
+        --red: #b03227;
+        --red-bg: #fbe7e3;
+        --red-line: #d97a6d;
+        --green-bg: #e2f0e4;
+        --green-line: #7db489;
+        --wire: #8a6d1f;
+        --svg-block: #fffdf8;
+        --svg-line: #6d675a;
+        --shadow: 0 1px 3px rgba(30, 35, 25, .14);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #131613;
+          --panel: #1d211d;
+          --panel-2: #262b26;
+          --ink: #eceee8;
+          --ink-soft: #a9b3a9;
+          --line: #3a403a;
+          --accent: #3fae66;
+          --accent-ink: #0c140d;
+          --amber: #e2aa4e;
+          --amber-bg: #2e2716;
+          --amber-line: #8a6a24;
+          --red: #e88a7d;
+          --red-bg: #33201d;
+          --red-line: #7c443c;
+          --green-bg: #1d2f21;
+          --green-line: #3f7049;
+          --wire: #c9a544;
+          --svg-block: #242824;
+          --svg-line: #8f968c;
+          --shadow: 0 1px 3px rgba(0, 0, 0, .5);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+      main { max-width: 880px; margin: 0 auto; padding: 0 14px 64px; }
+
+      /* ---------- tab bar ---------- */
+      .tabbar {
+        position: sticky; top: 0; z-index: 40;
+        background: var(--bg);
+        border-bottom: 2px solid var(--line);
+        max-width: 880px; margin: 0 auto;
+        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+        padding: 10px 14px;
+      }
+      .tabbtn {
+        min-height: 52px; border: 2px solid var(--line); border-radius: 10px;
+        background: var(--panel); color: var(--ink);
+        font: 700 16px "Archivo", sans-serif; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 7px;
+      }
+      .tabbtn[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .tabbtn:focus-visible, button:focus-visible, select:focus-visible { outline: 3px solid var(--amber-line); outline-offset: 2px; }
+
+      section.page { display: none; padding-top: 18px; }
+      section.page.active { display: block; }
+      h1 { font-size: 26px; line-height: 1.15; margin: 4px 0 6px; font-weight: 800; letter-spacing: -.01em; }
+      h2 { font-size: 21px; margin: 26px 0 10px; font-weight: 800; }
+      h3 { font-size: 17px; margin: 18px 0 8px; font-weight: 700; }
+      p.lede { color: var(--ink-soft); margin: 0 0 14px; font-size: 16px; }
+      p { margin: 0 0 10px; }
+      ul { margin: 6px 0 12px; padding-left: 22px; }
+      li { margin-bottom: 5px; }
+
+      /* ---------- safety strip ---------- */
+      .safety {
+        border: 2px solid var(--red-line); background: var(--red-bg);
+        border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
+      }
+      .safety strong { color: var(--red); display: block; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+      .safety ul { margin: 0; padding-left: 20px; font-size: 14.5px; }
+      .safety li { margin-bottom: 3px; }
+
+      /* ---------- symptom picker ---------- */
+      .symptom-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+      @media (min-width: 620px) { .symptom-grid { grid-template-columns: 1fr 1fr; } }
+      .symptom-btn {
+        text-align: left; min-height: 64px; padding: 13px 15px;
+        border: 2px solid var(--line); border-radius: 12px;
+        background: var(--panel); color: var(--ink); cursor: pointer;
+        font: 600 16.5px/1.3 "Archivo", sans-serif; box-shadow: var(--shadow);
+        display: flex; align-items: center; gap: 12px; width: 100%;
+      }
+      .symptom-btn .n {
+        flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+        background: var(--panel-2); border: 2px solid var(--line);
+        display: flex; align-items: center; justify-content: center;
+        font: 700 15px "IBM Plex Mono", monospace;
+      }
+      .symptom-btn.danger { border-color: var(--red-line); }
+      .symptom-btn.danger .n { background: var(--red-bg); border-color: var(--red-line); color: var(--red); }
+      .symptom-btn:active { transform: translateY(1px); }
+
+      /* ---------- wizard ---------- */
+      .wiz-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+      .wiz-title { font-weight: 800; font-size: 19px; flex: 1 1 auto; }
+      .wiz-step-count { font: 600 13px "IBM Plex Mono", monospace; color: var(--ink-soft); }
+      .progress { height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin-bottom: 16px; border: 1px solid var(--line); }
+      .progress > div { height: 100%; background: var(--accent); width: 0%; transition: width .25s ease; }
+      .step-card {
+        border: 2px solid var(--line); border-radius: 14px; background: var(--panel);
+        padding: 18px; box-shadow: var(--shadow);
+      }
+      .step-kicker { font: 700 12.5px "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+      .step-card h3 { margin-top: 0; font-size: 20px; }
+      .expect {
+        border: 2px solid var(--green-line); background: var(--green-bg);
+        border-radius: 10px; padding: 10px 13px; margin: 12px 0;
+        font-size: 15.5px;
+      }
+      .expect strong { display: block; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 2px; }
+      .expect .mono { font-size: 15px; }
+      .branch-q { font-weight: 700; font-size: 17px; margin: 14px 0 10px; }
+      .yn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .yn-btn {
+        min-height: 58px; border-radius: 12px; cursor: pointer;
+        font: 800 18px "Archivo", sans-serif; border: 2px solid var(--line);
+        background: var(--panel-2); color: var(--ink);
+      }
+      .yn-btn.yes { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .next-btn {
+        width: 100%; min-height: 58px; border-radius: 12px; cursor: pointer;
+        font: 800 18px "Archivo", sans-serif; border: 2px solid var(--accent);
+        background: var(--accent); color: var(--accent-ink); margin-top: 6px;
+      }
+      .wiz-nav { display: flex; gap: 10px; margin-top: 14px; }
+      .ghost-btn {
+        min-height: 50px; padding: 0 18px; border-radius: 10px; cursor: pointer;
+        font: 700 15.5px "Archivo", sans-serif; border: 2px solid var(--line);
+        background: var(--panel); color: var(--ink);
+      }
+      .result-card { border: 2px solid var(--amber-line); background: var(--amber-bg); border-radius: 14px; padding: 18px; }
+      .result-card.severe { border-color: var(--red-line); background: var(--red-bg); }
+      .result-card h3 { margin-top: 0; font-size: 20px; }
+      .result-card .culprit {
+        display: inline-block; font: 700 13px "IBM Plex Mono", monospace;
+        border: 2px solid currentColor; border-radius: 99px; padding: 3px 12px; margin-bottom: 10px;
+        letter-spacing: .04em; text-transform: uppercase;
+      }
+      .path-trail { font: 500 13px "IBM Plex Mono", monospace; color: var(--ink-soft); margin-top: 14px; word-break: break-word; }
+
+      /* ---------- model cards / schematics ---------- */
+      .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+      .chip {
+        min-height: 46px; padding: 0 16px; border-radius: 99px; cursor: pointer;
+        border: 2px solid var(--line); background: var(--panel); color: var(--ink);
+        font: 700 15px "Archivo", sans-serif;
+      }
+      .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .model-card {
+        border: 2px solid var(--line); border-radius: 14px; background: var(--panel);
+        margin-bottom: 20px; overflow: hidden; box-shadow: var(--shadow);
+      }
+      .model-head { padding: 16px 18px 4px; }
+      .model-head h3 { margin: 0 0 2px; font-size: 21px; }
+      .model-years { color: var(--ink-soft); font: 600 13.5px "IBM Plex Mono", monospace; }
+      .badge {
+        display: inline-block; font: 700 12px "IBM Plex Mono", monospace; letter-spacing: .05em;
+        text-transform: uppercase; border: 1.5px solid var(--line); border-radius: 6px;
+        padding: 2px 8px; margin: 8px 6px 0 0; background: var(--panel-2);
+      }
+      .badge.star { border-color: var(--amber-line); background: var(--amber-bg); color: var(--amber); }
+      .diagram-wrap { padding: 8px 10px 0; }
+      .diagram-wrap svg { width: 100%; height: auto; display: block; }
+      .diagram-note { font-size: 13px; color: var(--ink-soft); padding: 6px 18px 0; font-style: italic; }
+      .spec-table { width: 100%; border-collapse: collapse; margin: 12px 0 4px; font-size: 15px; }
+      .spec-table th, .spec-table td { text-align: left; padding: 8px 18px; vertical-align: top; border-top: 1px solid var(--line); }
+      .spec-table th { width: 34%; font-weight: 700; color: var(--ink-soft); font-size: 13.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 10px; }
+      .fail-box { margin: 12px 18px 18px; border: 2px solid var(--amber-line); background: var(--amber-bg); border-radius: 10px; padding: 12px 15px; }
+      .fail-box strong { display: block; margin-bottom: 4px; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; color: var(--amber); }
+      .fail-box ul { margin: 0; font-size: 15px; }
+
+      /* ---------- reference ---------- */
+      .ref-card { border: 2px solid var(--line); border-radius: 14px; background: var(--panel); padding: 18px; margin-bottom: 20px; box-shadow: var(--shadow); }
+      .ref-card h3 { margin-top: 0; }
+      .data-table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 8px 0; }
+      .data-table th, .data-table td { padding: 7px 10px; border-top: 1px solid var(--line); text-align: right; font-family: "IBM Plex Mono", monospace; }
+      .data-table th:first-child, .data-table td:first-child { text-align: left; font-family: "Archivo", sans-serif; font-weight: 700; }
+      .data-table thead th { border-top: none; color: var(--ink-soft); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+      .data-table tr.low td { color: var(--red); font-weight: 600; }
+      .code-table td:first-child { font-family: "IBM Plex Mono", monospace; font-weight: 600; white-space: nowrap; }
+      .code-table td { text-align: left !important; font-family: "Archivo", sans-serif !important; }
+      .code-table td.c { font-family: "IBM Plex Mono", monospace !important; text-align: center !important; }
+      .soc-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+      dl.glossary { margin: 0; }
+      dl.glossary dt { font: 700 15.5px "IBM Plex Mono", monospace; margin-top: 12px; }
+      dl.glossary dd { margin: 2px 0 0; color: var(--ink-soft); font-size: 15px; }
+      .tip { border-left: 5px solid var(--accent); background: var(--panel-2); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 12px 0; font-size: 15px; }
+      .hidden { display: none !important; }
+      @media (prefers-reduced-motion: reduce) { .progress > div { transition: none; } }
+    </style>
+  </head>
+  <body>
+    <nav class="tabbar" role="tablist" aria-label="Main sections">
+      <button class="tabbtn" role="tab" data-tab="troubleshoot" aria-selected="true">🔧 Troubleshoot</button>
+      <button class="tabbtn" role="tab" data-tab="schematics" aria-selected="false">Schematics</button>
+      <button class="tabbtn" role="tab" data-tab="reference" aria-selected="false">Reference</button>
+    </nav>
+    <main>
+      <!-- ================= TROUBLESHOOT ================= -->
+      <section class="page active" id="page-troubleshoot">
+        <h1>What&rsquo;s the cart doing?</h1>
+        <p class="lede">Pick the symptom. The wizard walks you through meter tests in order &mdash; pack and connections first, parts last &mdash; with the exact reading you should see at each step.</p>
+
+        <div class="safety" role="note">
+          <strong>⚠ Shop safety &mdash; read once, every time</strong>
+          <ul>
+            <li>Run tests with the <b>rear wheels off the ground on jack stands</b> &mdash; a cart that suddenly wakes up will move.</li>
+            <li>Switch to <b>TOW</b> (Run/Tow or Tow/Maintenance) before disconnecting any cable on sepex/IQ carts.</li>
+            <li>No rings, watches, or dangling sleeves around battery terminals. A shorted pack will weld a wrench.</li>
+            <li>Batteries vent hydrogen and hold sulfuric acid &mdash; no sparks or smoking at the pack, eye protection on.</li>
+            <li>Chock the front wheels and set the brake before you crawl anywhere near it.</li>
+          </ul>
+        </div>
+
+        <div id="symptom-picker">
+          <div class="symptom-grid" id="symptom-grid"></div>
+          <div class="tip"><b>Before any of these:</b> put your meter across the main pack + and &minus; and eyeball every cable end. Half of all &ldquo;dead carts&rdquo; are a discharged pack or one green, fuzzy cable lug &mdash; the wizard starts there on purpose.</div>
+        </div>
+
+        <div id="wizard" class="hidden">
+          <div class="wiz-head">
+            <span class="wiz-title" id="wiz-title"></span>
+            <span class="wiz-step-count" id="wiz-count"></span>
+          </div>
+          <div class="progress" aria-hidden="true"><div id="wiz-progress"></div></div>
+          <div id="wiz-body"></div>
+          <div class="wiz-nav">
+            <button class="ghost-btn" id="wiz-back">← Back a step</button>
+            <button class="ghost-btn" id="wiz-restart">Start over</button>
+          </div>
+          <div class="path-trail" id="wiz-trail"></div>
+        </div>
+      </section>
+
+      <!-- ================= SCHEMATICS ================= -->
+      <section class="page" id="page-schematics">
+        <h1>Schematic library</h1>
+        <p class="lede">Simplified power-flow diagrams for the common older carts &mdash; the battery pack, solenoid, controller (or resistor bank), motor, and the switches that wake it all up. Drawn as clean reference diagrams from standard circuit architecture, not traced from factory manuals.</p>
+        <div class="filter-row" id="brand-filters" role="group" aria-label="Filter by brand">
+          <button class="chip" data-brand="all" aria-pressed="true">All carts</button>
+          <button class="chip" data-brand="ezgo" aria-pressed="false">EZGO</button>
+          <button class="chip" data-brand="clubcar" aria-pressed="false">Club Car</button>
+          <button class="chip" data-brand="yamaha" aria-pressed="false">Yamaha</button>
+        </div>
+        <div id="model-list"></div>
+      </section>
+
+      <!-- ================= REFERENCE ================= -->
+      <section class="page" id="page-reference">
+        <h1>Shop reference</h1>
+        <p class="lede">The numbers you reach for mid-job: state-of-charge voltages, EZGO PDS beep codes, bench tests, and what the terminal letters actually mean.</p>
+        <div id="reference-body"></div>
+      </section>
+    </main>
+
+    <script>
+      "use strict";
+      /* ============================ TABS ============================ */
+      var tabBtns = document.querySelectorAll(".tabbtn");
+      tabBtns.forEach(function (b) {
+        b.addEventListener("click", function () {
+          tabBtns.forEach(function (x) { x.setAttribute("aria-selected", "false"); });
+          b.setAttribute("aria-selected", "true");
+          document.querySelectorAll("section.page").forEach(function (s) { s.classList.remove("active"); });
+          document.getElementById("page-" + b.getAttribute("data-tab")).classList.add("active");
+          window.scrollTo(0, 0);
+        });
+      });
+
+      /* ===================== TROUBLESHOOTER DATA ===================== */
+      /* Node kinds: "test" = do the test, answer the branch question.
+                     "step" = do this, then Continue.
+                     "fix"  = diagnosis + fix (terminal).              */
+      var FLOWS = {
+        dead: {
+          label: "Totally dead — no click, nothing",
+          start: "a1",
+          nodes: {
+            a1: { kind: "test", title: "Read the whole pack first",
+              body: "Meter on DC volts, probes on the main pack positive and negative — where the two heavy cables leave the battery pack. Let the cart sit (no charger, no driving for an hour if you can) for a true rested reading.",
+              expect: "36V pack: 38.2V full · 36.3V at 50% · 48V pack: 50.9V full · 48.4V at 50%",
+              q: "Is the pack above 34.5V (36V cart) or 46.0V (48V cart)?",
+              yes: "a2", no: "a1x" },
+            a1x: { kind: "fix", culprit: "Discharged or failed battery pack",
+              body: "The cart isn't broken — it's starved. Charge the pack fully, let it rest an hour, and read it again. Then read each battery on its own: one battery sitting 0.5V or more below its siblings is a suspect — load-test or replace it. If the pack charges up but dies overnight, test for a parasitic drain and check the charger is actually finishing (see the charger symptom). Never run a flooded pack below 50% (36.3V / 48.4V) — that's what kills batteries early." },
+            a2: { kind: "test", title: "Power leaving the pack?",
+              body: "Keep the black probe on pack negative. Touch the red probe to the battery side of the main solenoid's big terminal. While you're there, pull each pack cable end and look for green corrosion, a lug you can twist by hand, or a melted terminal.",
+              expect: "Full pack voltage at the solenoid's battery-side big terminal",
+              q: "Do you read full pack voltage at the solenoid?",
+              yes: "a3", no: "a2x" },
+            a2x: { kind: "fix", culprit: "Open main power path — cable, fuse, or reed switch",
+              body: "Voltage exists at the pack but never reaches the solenoid. Walk the heavy cable: pack + → main fuse (if fitted) → solenoid. On EZGO carts, check the reed switch inside the charger receptacle — it's a small magnetic switch in the interlock wire and it cracks or sticks; a dead reed switch makes the cart act stone dead. On Club Car 48V, check the fuse at the receptacle and the OBC connections. Clean or replace what's open, then retest." },
+            a3: { kind: "test", title: "Is the activation circuit alive?",
+              body: "Key ON, direction selected (not Neutral), Run/Tow in RUN. Press the pedal and measure voltage at the solenoid's small positive terminal (the activation wire from the key switch / microswitch chain).",
+              expect: "Pack voltage at the solenoid small + terminal with the pedal pressed",
+              q: "Is activation voltage present at the small terminal?",
+              yes: "a4", no: "a3x" },
+            a3x: { kind: "fix", culprit: "Activation circuit open — switch chain fault",
+              body: "Power is fine; the wake-up signal never arrives. Work the chain in order: ① Run/Tow left in TOW (PDS, DCS, IQ carts — the #1 'dead cart' call). ② Key switch — test for voltage in and out. ③ F/R microswitches (series carts, under the seat or on the switch). ④ Pedal microswitch in the floor box. ⑤ Any broken or rodent-chewed small wire along the way. The failed link is the fix — switches are cheap, controllers are not." },
+            a4: { kind: "test", title: "Ground side of the coil",
+              body: "Put the meter directly across the solenoid's two small terminals and press the pedal. On sepex carts (PDS, DCS, IQ) the controller supplies the ground side; on series carts it's a plain ground wire.",
+              expect: "Full pack voltage measured across the two small terminals, pedal pressed",
+              q: "Do you read full pack voltage across the coil — and still no click?",
+              yes: "a4x", no: "a4y" },
+            a4x: { kind: "fix", culprit: "Solenoid coil failed (open)",
+              body: "Full voltage across the coil and silence means the coil itself is open — the solenoid is dead even though everything feeding it is good. Replace it with the correct voltage coil (36V and 48V solenoids are not interchangeable) and match the duty rating — golf cart solenoids are continuous-duty, an automotive starter solenoid will cook." },
+            a4y: { kind: "fix", culprit: "Missing ground / controller driver side",
+              body: "You have + voltage at the coil but not a complete circuit. On series carts: trace and clean the small ground wire from the coil. On sepex carts (PDS/DCS/IQ): the controller switches the ground — check the coil wiring back to the controller plug first; if the wiring is sound and the controller never pulls the coil down, run the PDS diagnostic mode (Reference tab) — code 2-4 points at the solenoid driver circuit." }
+          }
+        },
+
+        click: {
+          label: "Solenoid clicks, cart won't move",
+          start: "b1",
+          nodes: {
+            b1: { kind: "test", title: "Pack voltage under load",
+              body: "Rear wheels up on stands. Meter across the main pack. Press the pedal and watch the voltage while the solenoid is clicked in.",
+              expect: "Pack should hold roughly 32V+ (36V cart) or 43V+ (48V cart) with the pedal down",
+              q: "Does the pack voltage crash well below that when you press the pedal?",
+              yes: "b1x", no: "b2" },
+            b1x: { kind: "fix", culprit: "Pack or cable can't carry load",
+              body: "A pack that reads fine at rest but collapses under load has a weak battery or a bad connection doing it. Load-test or voltage-drop each battery one at a time with the pedal pressed — the one that dives is the bad one. Also wiggle each interconnect cable under load; a cable end that gets hot or a voltage that jumps around is a corroded lug. Fix the battery/cable before you blame anything electronic." },
+            b2: { kind: "test", title: "Solenoid voltage-drop test",
+              body: "Meter across the solenoid's two BIG terminals (one probe on each), pedal pressed so it's clicked in. You're measuring what the contacts waste.",
+              expect: "Under 0.5V drop across the closed solenoid",
+              q: "Is the drop across the big terminals more than about 0.5V?",
+              yes: "b2x", no: "b3" },
+            b2x: { kind: "fix", culprit: "Burned solenoid contacts",
+              body: "Classic: it clicks, so everyone assumes it works — but the contact faces are pitted and burned and can't pass motor current. A solenoid that clicks can absolutely still be bad. Replace it (correct voltage, continuous duty). While it's out, check the resistor/diode across the coil or big terminals if your cart uses them." },
+            b3: { kind: "test", title: "Controller output test",
+              body: "Meter between the controller's B− terminal and its output (M− on EZGO/Curtis series, A1/motor output on your diagram). Pedal pressed slowly: output voltage should climb from near zero toward pack voltage as you press.",
+              expect: "Output voltage rises smoothly toward pack voltage as the pedal goes down",
+              q: "Does the controller output rise as you press the pedal?",
+              yes: "b3x", no: "b4" },
+            b3x: { kind: "fix", culprit: "Power dies between controller and motor — or the motor itself",
+              body: "The controller is doing its job, so test the motor. Wheels up, TOW on, pack disconnected: continuity between A1–A2 (armature), and between S1–S2 (series field) or F1–F2 (sepex field). No continuity between any terminal and the motor case — continuity to the case means a shorted motor. Open armature circuit = worn-out brushes is the usual cause on an older cart. Also continuity-check the heavy cables controller→motor before condemning the motor." },
+            b4: { kind: "test", title: "Throttle signal test",
+              body: "Confirm the controller is being told to go. EZGO ITS: the plunger must move freely through the sensor in the pedal box and the ITS voltage must change with pedal travel. Club Car MCOR: sweep should be smooth with no dead spots. Check the pedal microswitch actually closes too.",
+              expect: "Throttle signal changes smoothly across the whole pedal stroke",
+              q: "Is the throttle signal missing, stuck, or jumpy?",
+              yes: "b4x", no: "b4y" },
+            b4x: { kind: "fix", culprit: "Throttle input fault",
+              body: "Replace or repair the throttle sender: ITS sensor/plunger (EZGO), MCOR (Club Car — replace as a unit), V-glide wiper and resistor board (older Club Car), or the pedal microswitch. On a PDS cart, run diagnostic mode first — code 1-2 confirms an ITS fault, and code 1-4 just means the pedal was down at key-on: release it and retry before buying parts." },
+            b4y: { kind: "fix", culprit: "Controller failure (after inputs check out)",
+              body: "Pack holds under load, solenoid passes current, throttle signal is clean, motor tests good — that leaves the controller. Before you order one: re-check every pin in the controller plug for corrosion or a pushed-back terminal, and confirm controller B+ and B− are solid under load. On PDS carts, diagnostic code 1-1 confirms controller failure. Match the replacement to the drive type — series and sepex controllers are not interchangeable." }
+          }
+        },
+
+        slow: {
+          label: "Moves, but slow / weak on hills",
+          start: "c1",
+          nodes: {
+            c1: { kind: "test", title: "Start with state of charge",
+              body: "Rested pack reading (no charger or driving for at least an hour). A cart at half charge feels gutless on hills even though everything works.",
+              expect: "36V: 37.5V ≈ 80% · 36.3V = 50% — 48V: 50.0V ≈ 80% · 48.4V = 50%",
+              q: "Is the pack below about 80% charge (37.5V / 50.0V)?",
+              yes: "c1x", no: "c2" },
+            c1x: { kind: "fix", culprit: "You're driving on a half-empty pack",
+              body: "Charge it fully and retest before replacing anything. If it won't reach a full rested charge (38.2V / 50.9V), one battery is usually holding the pack down — read each battery individually; one sitting 0.5V+ below its siblings is the suspect. Also check water levels in flooded batteries (plates covered, fill with distilled water after charging) and confirm the charger is finishing its cycle, not timing out early." },
+            c2: { kind: "test", title: "One weak battery under load",
+              body: "Drive the cart (or load it on stands) and read each battery's voltage one at a time under load. Good batteries sag together; a bad one falls off a cliff by comparison.",
+              expect: "All batteries within a few tenths of a volt of each other under the same load",
+              q: "Does one battery sag far more than the rest?",
+              yes: "c2x", no: "c3" },
+            c2x: { kind: "fix", culprit: "One failing battery dragging the pack down",
+              body: "That battery is your hill problem. Confirm with a load tester or hydrometer (flooded cells: one cell reading far below the others confirms it). Replace it — and know the trade-off: dropping one new battery into an old pack works, but the old pack will pull it down to their level over time. On a work cart, one battery now and a planned pack later is a fair call; just don't expect new-pack performance." },
+            c3: { kind: "test", title: "Mechanical drag check",
+              body: "Wheels up, Tow/neutral, brake off. Spin each wheel by hand and push the cart on flat ground. Check tire pressure too — low tires quietly eat hill power.",
+              expect: "Wheels spin freely with no grinding, scraping, or brake drag; cart pushes easily",
+              q: "Does anything drag, grind, or feel seized?",
+              yes: "c3x", no: "c4" },
+            c3x: { kind: "fix", culprit: "Mechanical drag",
+              body: "Usual suspects: a brake adjusted too tight or a hung-up brake cable, a dry/failing wheel bearing, low tire pressure, or a cart that's simply overloaded (lift kits, big tires, and rear seats all gear the cart taller and steal hill torque). Fix the drag first — no battery or controller upgrade out-pulls a dragging brake." },
+            c4: { kind: "test", title: "Is it capped at one steady slow speed?",
+              body: "Limp mode feels different from weakness: the cart runs smoothly but tops out at one low speed (about 5 mph on a PDS with a speed-sensor fault) and won't go faster no matter what.",
+              expect: "Weak cart = fades on hills · Limp mode = smooth but hard-capped top speed",
+              q: "Is top speed hard-capped at a steady crawl, like limp mode?",
+              yes: "c4x", no: "c4y" },
+            c4x: { kind: "fix", culprit: "Speed sensor fault — cart is in limp mode",
+              body: "On a PDS, run diagnostic mode (Reference tab): code 1-3 confirms it. The speed sensor and its magnet live on the motor end bell — check the sensor plug first (corrosion and broken wires are common), then the magnet for cracks. IQ Club Cars do the same trick. No code reader needed; the beeps are the reader." },
+            c4y: { kind: "fix", culprit: "Resistance under load or thermal cutback",
+              body: "After a hard run, carefully feel each cable end, the solenoid, and the F/R switch (series carts) — a hot spot is a high-resistance spot, and resistance is stolen power and stolen hill climb. Clean and tighten it. If the cart starts strong and fades after 10–20 minutes as the controller gets hot, that's thermal cutback (PDS code 2-3): check controller mounting/heatsink and don't oversize tires on a stock controller. Worn motor brushes round out the list on high-hour carts." }
+          }
+        },
+
+        onedir: {
+          label: "Runs in one direction only",
+          start: "d1",
+          nodes: {
+            d1: { kind: "test", title: "Which kind of drive system?",
+              body: "Series carts have a lever F/R switch (under the seat on TXT/Marathon, beside the seat on Club Car DS) and the switch itself carries motor current. Sepex carts (PDS, DCS, IQ, G19/G22) have a light-duty dash rocker — the controller does the reversing.",
+              expect: "Lever = series · Dash rocker = sepex",
+              q: "Is it a series cart with the heavy lever F/R switch?",
+              yes: "d2", no: "d3" },
+            d2: { kind: "test", title: "Inspect the F/R switch contacts",
+              body: "TOW on / pack disconnected for the look, then test live if needed. The F/R switch has separate contact sets for Forward and Reverse — the set for the dead direction is usually visibly pitted, burned, or has a melted cable lug. Check the two microswitches on the switch body too.",
+              expect: "Both direction contact sets clean, flat, and making full contact; lugs tight",
+              q: "Is the dead direction's contact set burned or its cable lug melted?",
+              yes: "d2x", no: "d2y" },
+            d2x: { kind: "fix", culprit: "F/R switch burned in one direction",
+              body: "The switch carried full motor current through one bad contact until it cooked. Options: rebuild with a contact/board kit if the housing and cam are sound, or replace the switch (heavy-duty versions exist and are worth it on work carts). Fix the root cause too — a loose lug or corroded cable end at the switch is usually what generated the heat. Check the cables to the motor S1/S2 terminals while you're in there." },
+            d2y: { kind: "fix", culprit: "Microswitch or motor field wiring (series)",
+              body: "Contacts look good? Test the F/R microswitch for the dead direction — if it never tells the solenoid circuit to wake up in Reverse, you get exactly this. Last stop: continuity of the S1 and S2 cables from switch to motor and the field winding itself (S1–S2 continuity). An open field cable end hiding under heat-shrink is a classic." },
+            d3: { kind: "test", title: "Swap test at the dash rocker (sepex)",
+              body: "On a PDS/DCS/IQ, the rocker is a cheap low-current switch. Note the wire positions, then swap the Forward and Reverse wires at the rocker and try again.",
+              expect: "If the rocker is bad, the dead direction follows the swap (the other direction now fails)",
+              q: "Did the working direction follow the wires when you swapped them?",
+              yes: "d3x", no: "d3y" },
+            d3x: { kind: "fix", culprit: "Dash F/R rocker switch failed",
+              body: "Five-minute, low-dollar fix — replace the rocker. While the dash is open, check the rocker's spade terminals for green corrosion, especially on carts that live outside. Put the wires back in their original positions with the new switch." },
+            d3y: { kind: "fix", culprit: "Controller field circuit or F1/F2 wiring (sepex)",
+              body: "The rocker is telling the truth, so follow the field wires: check F1 and F2 from the controller plug to the motor for opens or chafing, and test field continuity (F1–F2) at the motor. On a PDS, diagnostic code 3-4 = field open circuit. If wiring and field winding test good, the controller's field driver for that direction has failed — controller replacement time." }
+          }
+        },
+
+        charger: {
+          label: "Charger won't turn on / won't charge",
+          start: "e1",
+          nodes: {
+            e1: { kind: "test", title: "Is the pack too low for the charger to see?",
+              body: "Most automatic chargers refuse to start if pack voltage is below their sensing threshold — a deeply discharged pack looks like 'no cart plugged in.' Read the pack voltage first.",
+              expect: "36V pack needs roughly 24–28V+ present · 48V pack roughly 34V+ for most chargers to start",
+              q: "Is the pack below that threshold (deeply discharged)?",
+              yes: "e1x", no: "e2" },
+            e1x: { kind: "fix", culprit: "Pack too discharged for the charger to start",
+              body: "Bring the batteries up individually (or in pairs) with an automotive charger — 12V charger across one battery at a time, a few hours each, until the pack total is back over the threshold. Then connect the golf cart charger and let it finish. Afterwards, find out why it got that low: charger left unplugged, a light left on, or a battery failing. A pack left sitting discharged sulfates fast — don't let it sit." },
+            e2: { kind: "test", title: "AC in, connections out",
+              body: "Confirm the outlet is live (plug in a drill or lamp). Plug the charger into the cart first, then the wall. Check the DC plug/receptacle for burn marks and sloppy fit, and the fuse in the charger cord or at the receptacle if fitted.",
+              expect: "Live outlet, snug DC connection, good fuse",
+              q: "Is this a Club Car 48V cart (it has an OBC — onboard computer)?",
+              yes: "e3", no: "e4" },
+            e3: { kind: "test", title: "The OBC runs the charger on Club Car 48V",
+              body: "On PowerDrive/IQ carts the OBC tells the charger when to start and stop — a 'dead charger' is very often the OBC or the charger relay, not the charger. Try the OBC reset: key off, F/R in Neutral, disconnect the pack negative for at least 30 seconds (some procedures say 5 minutes), reconnect, and retry the charger. Full procedure is in the Reference tab.",
+              expect: "After a reset, a healthy OBC lets the charger relay click and charging begin",
+              q: "Did the charger start after the OBC reset?",
+              yes: "e3x", no: "e3y" },
+            e3x: { kind: "fix", culprit: "OBC was locked up — reset cleared it",
+              body: "You're charging again. Watch the first full cycle: if the charger now runs but never shuts off, or shuts off in minutes, the OBC is still suspect — an OBC that can't end a charge will cook a pack. Note the behavior and plan on an OBC test/replacement if it repeats." },
+            e3y: { kind: "fix", culprit: "OBC failure or charger relay (Club Car 48V)",
+              body: "Test the charger on another cart (or test a known-good charger on yours) to split the blame. If the charger works elsewhere, the OBC is the culprit — replacement OBCs are available, and many owners fit an OBC-bypass with a modern smart charger instead; either way the charger and OBC must be a matched strategy, not a mix. Also check the small gray sense wire/fuse at the receptacle before ordering parts." },
+            e4: { kind: "test", title: "Split charger from cart",
+              body: "Borrow-test: put your charger on a known-good cart, or a known-good charger on yours. Also inspect the receptacle contacts on the cart — worn or sprung contacts are common on EZGO and Yamaha plugs, and the EZGO reed switch in the receptacle can kill the interlock.",
+              expect: "A good charger starts within seconds on a good cart and shows charge current",
+              q: "Does your charger fail on the other cart too?",
+              yes: "e4x", no: "e4y" },
+            e4x: { kind: "fix", culprit: "Charger internal fault",
+              body: "In order of likelihood on older transformer chargers: failed relay, blown internal fuse, bad diodes, or a dead capacitor/timer board on electronic units. Many local battery shops bench-test chargers cheap — worth it before parts. If it's a modern electronic charger that clicks but shows a fault light, count the blink code against its label before opening it. Capacitors inside hold a charge — discharge before poking around." },
+            e4y: { kind: "fix", culprit: "Cart-side receptacle / interlock fault",
+              body: "The charger is fine; the cart won't accept it. Replace worn receptacle contacts, repair the DC cord plug, and on EZGO check the reed switch in the receptacle — when it fails the cart also won't run, which is your confirmation clue. Clean, tight, and slightly springy is what receptacle contacts should be." }
+          }
+        },
+
+        cutsout: {
+          label: "Dies under load / cuts out intermittently",
+          start: "f1",
+          nodes: {
+            f1: { kind: "test", title: "Watch pack voltage at the moment it dies",
+              body: "Tape the meter where you can see it (or use long leads, routed safely) and drive the cart until it cuts out. Note the pack voltage right at the failure.",
+              expect: "Healthy pack under load: stays above ~30V (36V cart) / ~40V (48V cart) while pulling",
+              q: "Does pack voltage fall off a cliff right when it dies?",
+              yes: "f1x", no: "f2" },
+            f1x: { kind: "fix", culprit: "Voltage sag — weak battery or bad connection",
+              body: "Same drill as the load test: read each battery under load and find the one that dives; then wiggle-test every interconnect and main cable while watching the meter. A connection that sags only when current flows will pass a resting test all day. Clean to bright metal, tighten, and retest under the same hill or load that killed it." },
+            f2: { kind: "test", title: "Heat tells the truth",
+              body: "Immediately after a cut-out, carefully feel (backs of fingers, quick touches) each cable end, the solenoid body, the F/R switch on series carts, and the controller case.",
+              expect: "Everything warm at most — nothing too hot to touch, no discolored insulation",
+              q: "Is any connection or component noticeably hot or discolored?",
+              yes: "f2x", no: "f3" },
+            f2x: { kind: "fix", culprit: "High-resistance connection heating under load",
+              body: "Heat = resistance = the cut-out. Take that joint apart: expect green corrosion, a lug crimped over insulation, or a nut that was never tight. Clean to bright metal, re-crimp or replace the cable, torque it down. A connection that has been hot usually has damaged strands — a new cable beats a cleaned-up bad one on a work cart." },
+            f3: { kind: "test", title: "Timing: does it recover after cooling?",
+              body: "Note the pattern. Cut-outs that arrive after 10–20 minutes of work and vanish after the cart sits and cools are thermal. Cut-outs over bumps or at one pedal position are mechanical/electrical intermittents.",
+              expect: "Thermal faults keep a schedule; loose-wire faults follow bumps and pedal position",
+              q: "Does it cut out on a time/heat pattern and recover after cooling off?",
+              yes: "f3x", no: "f4" },
+            f3x: { kind: "fix", culprit: "Thermal cutback or solenoid dropping out",
+              body: "On a PDS, pull the codes (Reference tab): 2-3 is controller thermal cutback, 4-3 is the solenoid dropping out under load, 2-1 can flag low voltage seen by the controller. For cutback: check the controller's heatsink mounting, keep fins clean, and lighten the load (big tires + stock controller + hills = heat). For a dropping solenoid: test coil voltage during the event — a coil that loses its ground side points at the controller driver; a coil that keeps voltage but lets go has tired contacts/spring." },
+            f4: { kind: "fix", culprit: "Intermittent throttle or activation wire",
+              body: "Cut-outs tied to bumps or one pedal position: the ITS plunger/sensor gap (EZGO), a worn spot in an MCOR sweep (Club Car), the pedal microswitch, or a chafed activation wire grounding on the frame. Wiggle-test harness sections with the cart awake (wheels up!) until you can make it fail on command — then you've found it. Never chase an intermittent by swapping the controller first; it's almost never the controller." }
+          }
+        },
+
+        runaway: {
+          label: "Runs with key off / won't stop",
+          start: "g0",
+          nodes: {
+            g0: { kind: "step", kicker: "Stop it first", title: "Make the cart safe — now",
+              body: "If it's moving: key OFF, direction switch to NEUTRAL, brake hard, steer somewhere clear. Once stopped: chock the wheels, set the brake, switch Run/Tow to TOW, and disconnect the main pack negative cable. Do not reach for the F/R lever on a moving series cart. Only continue diagnosis with the cart immobilized and the rear wheels up on stands.",
+              next: "g1" },
+            g1: { kind: "test", title: "Welded solenoid test",
+              body: "Pack negative still disconnected for setup, coil wires (small terminals) removed from the solenoid. Meter on continuity/ohms across the two BIG terminals. A healthy open solenoid shows no continuity; a welded one is a permanent connection.",
+              expect: "No continuity across the big terminals with the coil disconnected",
+              q: "Do you read continuity across the big terminals with the coil wires off?",
+              yes: "g1x", no: "g2" },
+            g1x: { kind: "fix", severe: true, culprit: "Welded solenoid — replace it",
+              body: "The contacts fused shut under load (often after a low-voltage, high-current event — a dying pack makes solenoids weld). Replace the solenoid; do not 'fix' it by rapping it with a wrench — it will weld again at the worst moment. Then find the cause: load-test the pack and check for a dragging brake or oversized tires that kept current maxed. Until the new solenoid is in, leave the pack disconnected." },
+            g2: { kind: "test", title: "Stuck command: pedal or microswitch",
+              body: "Reconnect carefully with wheels up and stands set. Key on, foot OFF the pedal: if the cart tries to run, check whether the pedal is physically returning (broken return spring, floor-box debris) and whether the pedal microswitch is stuck closed. On EZGO ITS carts, check the plunger hasn't jammed into the sensor.",
+              expect: "Cart sits still with key on and pedal released; microswitch opens with the pedal up",
+              q: "Does the cart try to run with the key on and your foot off the pedal?",
+              yes: "g2x", no: "g2y" },
+            g2x: { kind: "fix", culprit: "Stuck throttle command",
+              body: "Work it in order: pedal return spring and floor-box linkage → pedal microswitch (stuck or misadjusted) → ITS plunger/sensor (bent plunger holding signal) → MCOR not returning to zero. The part that keeps the 'go' signal alive with the pedal up is the part you replace. Verify with wheels up through ten key-on/key-off cycles before it goes back in service." },
+            g2y: { kind: "fix", severe: true, culprit: "Controller output shorted (or key-circuit short)",
+              body: "If the solenoid isn't welded and there's no throttle command, yet the motor gets power, the controller's output stage has failed shorted — or a chafed wire is feeding the solenoid coil full-time (trace the small coil wires for a short to a hot wire). Confirm by unplugging the controller: if the run condition disappears with it unplugged and the wiring is clean, the controller is done. Replace it and re-verify from scratch — a cart that ran away once gets a full re-check, not a handshake." }
+          }
+        }
+      };
+
+      /* ===================== WIZARD ENGINE ===================== */
+      var wiz = { flow: null, nodeId: null, history: [], answers: [] };
+      var pickerEl = document.getElementById("symptom-picker");
+      var wizardEl = document.getElementById("wizard");
+      var gridEl = document.getElementById("symptom-grid");
+      var bodyEl = document.getElementById("wiz-body");
+
+      var SYMPTOMS = [
+        { id: "dead",    n: "A" }, { id: "click", n: "B" }, { id: "slow", n: "C" },
+        { id: "onedir",  n: "D" }, { id: "charger", n: "E" }, { id: "cutsout", n: "F" },
+        { id: "runaway", n: "G" }
+      ];
+      SYMPTOMS.forEach(function (s) {
+        var b = document.createElement("button");
+        b.className = "symptom-btn" + (s.id === "runaway" ? " danger" : "");
+        b.innerHTML = '<span class="n">' + s.n + "</span><span></span>";
+        b.lastChild.textContent = FLOWS[s.id].label;
+        b.addEventListener("click", function () { startFlow(s.id); });
+        gridEl.appendChild(b);
+      });
+
+      function esc(t) {
+        return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function startFlow(id) {
+        wiz.flow = FLOWS[id]; wiz.nodeId = wiz.flow.start;
+        wiz.history = []; wiz.answers = [];
+        pickerEl.classList.add("hidden");
+        wizardEl.classList.remove("hidden");
+        document.getElementById("wiz-title").textContent = wiz.flow.label;
+        renderNode();
+        wizardEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function totalSteps(flow) { return Object.keys(flow.nodes).length; }
+
+      function renderNode() {
+        var node = wiz.flow.nodes[wiz.nodeId];
+        var stepNum = wiz.history.length + 1;
+        document.getElementById("wiz-count").textContent = node.kind === "fix"
+          ? "Diagnosis reached"
+          : "Step " + stepNum;
+        document.getElementById("wiz-progress").style.width =
+          node.kind === "fix" ? "100%" : Math.min(90, stepNum * 18) + "%";
+        document.getElementById("wiz-back").disabled = wiz.history.length === 0;
+        document.getElementById("wiz-back").style.opacity = wiz.history.length === 0 ? ".45" : "1";
+        document.getElementById("wiz-trail").textContent =
+          wiz.answers.length ? "Your path: " + wiz.answers.join(" → ") : "";
+
+        var html = "";
+        if (node.kind === "fix") {
+          html = '<div class="result-card' + (node.severe ? " severe" : "") + '">'
+            + '<span class="culprit">' + (node.severe ? "⚠ Safety fault — " : "Likely culprit — ") + esc(node.culprit) + "</span>"
+            + "<h3>What to do</h3><p>" + esc(node.body) + "</p>"
+            + '<button class="next-btn" id="wiz-done">Done — back to symptoms</button></div>';
+          bodyEl.innerHTML = html;
+          document.getElementById("wiz-done").addEventListener("click", resetWizard);
+          return;
+        }
+        html = '<div class="step-card">'
+          + '<div class="step-kicker">' + esc(node.kicker || (node.kind === "test" ? "Meter test" : "Action")) + "</div>"
+          + "<h3>" + esc(node.title) + "</h3>"
+          + "<p>" + esc(node.body) + "</p>";
+        if (node.expect) {
+          html += '<div class="expect"><strong>You should see</strong><span class="mono">' + esc(node.expect) + "</span></div>";
+        }
+        if (node.kind === "test") {
+          html += '<p class="branch-q">' + esc(node.q) + "</p>"
+            + '<div class="yn-row">'
+            + '<button class="yn-btn yes" id="wiz-yes">YES</button>'
+            + '<button class="yn-btn" id="wiz-no">NO</button></div>';
+        } else {
+          html += '<button class="next-btn" id="wiz-next">Done — continue →</button>';
+        }
+        html += "</div>";
+        bodyEl.innerHTML = html;
+        if (node.kind === "test") {
+          document.getElementById("wiz-yes").addEventListener("click", function () { advance(node.yes, "Yes: " + node.title); });
+          document.getElementById("wiz-no").addEventListener("click", function () { advance(node.no, "No: " + node.title); });
+        } else {
+          document.getElementById("wiz-next").addEventListener("click", function () { advance(node.next, node.title); });
+        }
+      }
+
+      function advance(nextId, trailText) {
+        wiz.history.push(wiz.nodeId);
+        wiz.answers.push(trailText);
+        wiz.nodeId = nextId;
+        renderNode();
+      }
+
+      function resetWizard() {
+        wiz.flow = null; wiz.nodeId = null; wiz.history = []; wiz.answers = [];
+        wizardEl.classList.add("hidden");
+        pickerEl.classList.remove("hidden");
+        pickerEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      document.getElementById("wiz-back").addEventListener("click", function () {
+        if (!wiz.history.length) return;
+        wiz.nodeId = wiz.history.pop();
+        wiz.answers.pop();
+        renderNode();
+      });
+      document.getElementById("wiz-restart").addEventListener("click", resetWizard);
+      /* ===================== SCHEMATIC DIAGRAMS ===================== */
+      /* Original simplified power-flow diagrams drawn for this app from
+         standard circuit architecture. Not factory manual artwork.     */
+      function block(x, y, w, h, title, sub, fs) {
+        var t = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="8" fill="var(--svg-block)" stroke="var(--svg-line)" stroke-width="2"/>';
+        t += '<text x="' + (x + w / 2) + '" y="' + (y + h / 2 - (sub ? 4 : -4)) + '" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="700" font-size="' + (fs || 12.5) + '" fill="var(--ink)">' + title + "</text>";
+        if (sub) t += '<text x="' + (x + w / 2) + '" y="' + (y + h / 2 + 15) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-soft)">' + sub + "</text>";
+        return t;
+      }
+      function wire(x1, y1, x2, y2, label, labelDy) {
+        var t = '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="var(--wire)" stroke-width="3.5" stroke-linecap="round"/>';
+        if (label) t += '<text x="' + ((x1 + x2) / 2) + '" y="' + (y1 + (labelDy || -8)) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-soft)">' + label + "</text>";
+        return t;
+      }
+      function sig(x1, y1, x2, y2) {
+        return '<path d="M' + x1 + " " + y1 + " L" + x2 + " " + y2 + '" fill="none" stroke="var(--ink-soft)" stroke-width="1.8" stroke-dasharray="5 4"/>';
+      }
+      function motor(cx, cy, terms) {
+        var t = '<circle cx="' + cx + '" cy="' + cy + '" r="46" fill="var(--svg-block)" stroke="var(--svg-line)" stroke-width="2"/>';
+        t += '<text x="' + cx + '" y="' + (cy - 2) + '" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="700" font-size="13" fill="var(--ink)">MOTOR</text>';
+        t += '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink-soft)">' + terms + "</text>";
+        return t;
+      }
+      function diagram(c) {
+        var s = '<svg viewBox="0 0 680 420" role="img" aria-label="Simplified wiring diagram: ' + esc(c.aria) + '">';
+        /* signal components, top row */
+        s += block(168, 26, 92, 42, "KEY SWITCH", "on/off");
+        if (c.variant === "resistor") {
+          s += block(300, 26, 150, 42, "PEDAL + LINKAGE", "mechanical", 11.5);
+        } else {
+          s += block(300, 26, 140, 42, c.throttleShort, "throttle input", 11.5);
+        }
+        if (c.variant === "sepex" || c.variant === "iq") {
+          s += block(478, 26, 150, 42, c.frShort, "low-current signal", 11.5);
+        }
+        /* main power row */
+        s += block(16, 168, 120, 88, "BATTERY PACK", c.packSub, 12);
+        s += wire(136, 212, 168, 212, "B+");
+        s += block(168, 182, 92, 60, "SOLENOID", "main contactor", 11);
+        s += sig(214, 68, 214, 182); /* key switch -> solenoid coil */
+        if (c.variant === "resistor") {
+          s += wire(260, 212, 292, 212, "");
+          s += block(292, 176, 118, 72, "SPEED SWITCH", "wiper board", 11.5);
+          s += sig(375, 68, 375, 176);
+          s += wire(410, 212, 442, 212, "");
+          s += '<rect x="442" y="176" width="108" height="72" rx="8" fill="var(--svg-block)" stroke="var(--svg-line)" stroke-width="2"/>';
+          s += '<polyline points="452,222 462,196 474,228 486,196 498,228 510,196 522,228 534,206 544,216" fill="none" stroke="var(--wire)" stroke-width="2.5"/>';
+          s += '<text x="496" y="192" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="700" font-size="11" fill="var(--ink)">RESISTOR COILS</text>';
+          s += wire(550, 212, 580, 212, "A/S");
+          s += motor(626, 212, "A1 A2 · S1 S2");
+        } else if (c.variant === "series") {
+          s += wire(260, 212, 292, 212, "B+");
+          s += block(292, 164, 132, 96, "CONTROLLER", c.ctrlSub, 12);
+          s += sig(358, 68, 358, 164);
+          s += wire(424, 200, 452, 200, "M−");
+          s += block(452, 176, 96, 72, "F/R SWITCH", "carries current", 11);
+          s += wire(548, 200, 578, 200, "A1");
+          s += wire(424, 236, 452, 236, "");
+          s += '<path d="M452 236 L548 236 L578 224" fill="none" stroke="var(--wire)" stroke-width="3.5" stroke-linecap="round"/>';
+          s += '<text x="500" y="256" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-soft)">S1 / S2 via F/R</text>';
+          s += motor(624, 212, "A1 A2 · S1 S2");
+        } else { /* sepex / iq */
+          s += wire(260, 212, 292, 212, "B+");
+          s += block(292, 158, 140, 108, "CONTROLLER", c.ctrlSub, 12);
+          s += sig(352, 68, 352, 158);
+          s += sig(520, 68, 430, 120);
+          s += wire(432, 190, 572, 190, "A1 / A2 armature");
+          s += wire(432, 240, 572, 240, "F1 / F2 field");
+          s += motor(618, 212, "A1 A2 · F1 F2");
+        }
+        /* OBC row for Club Car 48V */
+        if (c.obc) {
+          s += block(16, 322, 120, 52, "CHARGER", "receptacle", 11.5);
+          s += sig(136, 348, 292, 348);
+          s += block(292, 316, 140, 64, "OBC", "onboard computer", 12);
+          s += sig(362, 316, 362, 266);
+          s += '<text x="452" y="352" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-soft)">OBC controls charging +</text>';
+          s += '<text x="452" y="368" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-soft)">run lockout while plugged in</text>';
+        }
+        /* legend */
+        s += '<line x1="16" y1="398" x2="52" y2="398" stroke="var(--wire)" stroke-width="3.5" stroke-linecap="round"/>';
+        s += '<text x="60" y="402" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-soft)">heavy power cable</text>';
+        s += '<line x1="212" y1="398" x2="248" y2="398" stroke="var(--ink-soft)" stroke-width="1.8" stroke-dasharray="5 4"/>';
+        s += '<text x="256" y="402" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-soft)">signal / activation wire</text>';
+        s += "</svg>";
+        return s;
+      }
+
+      /* ===================== MODEL LIBRARY ===================== */
+      var MODELS = [
+        {
+          id: "pds", brand: "ezgo", star: true,
+          name: "EZGO PDS 36V (TXT)", years: "2000 – ~2010 · Precision Drive System",
+          badges: ["36V", "Sepex", "Curtis 1206MX"],
+          aria: "EZGO PDS 36 volt sepex system",
+          diagram: { variant: "sepex", packSub: "36V · 6 × 6V", ctrlSub: "Curtis 1206MX", throttleShort: "ITS SENSOR", frShort: "F/R ROCKER · RUN/TOW" },
+          specs: [
+            ["System voltage", "36V (six 6V flooded batteries)"],
+            ["Drive type", "Sepex (separately excited) — controller switches the field to reverse"],
+            ["Controller", "Curtis 1206MX — has built-in self-diagnostics with beep codes (see Reference)"],
+            ["Throttle", "ITS (inductive throttle sensor) in the pedal box + pedal microswitch"],
+            ["Key components", "Main solenoid, Run/Tow switch on the controller cover, dash F/R rocker, reverse buzzer, speed sensor + magnet on the motor end bell"]
+          ],
+          failures: [
+            "Speed sensor or cracked magnet → cart limps at ~5 mph (code 1-3)",
+            "Reed switch in the charger receptacle cracks → cart totally dead, no click",
+            "Run/Tow switch left in TOW after service → 'dead cart' that isn't",
+            "ITS plunger/sensor wear → jumpy takeoff or code 1-2, clicks but won't move",
+            "Solenoid drops out under load (code 4-3) or welds (code 3-2) on a weak pack"
+          ]
+        },
+        {
+          id: "txt-series", brand: "ezgo",
+          name: "EZGO TXT 36V Series", years: "1994.5 – 2000s · the workhorse fleet cart",
+          badges: ["36V", "Series", "Curtis 1204 / 1205"],
+          aria: "EZGO TXT 36 volt series system",
+          diagram: { variant: "series", packSub: "36V · 6 × 6V", ctrlSub: "Curtis 1204/1205", throttleShort: "ITS SENSOR" },
+          specs: [
+            ["System voltage", "36V (six 6V flooded batteries)"],
+            ["Drive type", "Series — the under-seat F/R switch carries full motor current and reverses the field"],
+            ["Controller", "Curtis 1204 / 1205 solid-state, no self-diagnostics — your meter is the code reader"],
+            ["Throttle", "ITS (inductive throttle sensor) in the pedal box"],
+            ["Key components", "Main solenoid, lever F/R switch with two microswitches, pedal microswitch, reed switch in charger receptacle"]
+          ],
+          failures: [
+            "F/R switch contacts burn in one direction → runs forward only (or reverse only)",
+            "F/R microswitches fail → intermittent or one-direction no-run",
+            "Reed switch failure → totally dead, mimics a bad key switch",
+            "Solenoid clicks with burned contacts → click, no go (drop-test it: over 0.5V = bad)",
+            "Worn motor brushes on high-hour carts → weak, then nothing"
+          ]
+        },
+        {
+          id: "dcs", brand: "ezgo",
+          name: "EZGO DCS 36V", years: "1995 – 1999 · Drive Control System, PDS predecessor",
+          badges: ["36V", "Sepex", "Pre-PDS"],
+          aria: "EZGO DCS 36 volt sepex system",
+          diagram: { variant: "sepex", packSub: "36V · 6 × 6V", ctrlSub: "Curtis sepex (DCS)", throttleShort: "ITS SENSOR", frShort: "F/R ROCKER · RUN/TOW" },
+          specs: [
+            ["System voltage", "36V (six 6V flooded batteries)"],
+            ["Drive type", "Sepex — first EZGO sepex system; dash rocker + Run/Tow like the PDS that replaced it"],
+            ["Controller", "Curtis DCS sepex controller (no beep-code diagnostics like the later PDS)"],
+            ["Throttle", "ITS (inductive throttle sensor)"],
+            ["Key components", "Main solenoid, Run/Tow switch, dash F/R rocker, reed switch in charger receptacle"]
+          ],
+          failures: [
+            "Controller failure is more common than on PDS — confirm every input before condemning it",
+            "Run/Tow switch faults → dead or intermittent cart",
+            "Reed switch in receptacle → totally dead cart",
+            "Solenoid and ITS wear, same as TXT/PDS of the era",
+            "Connectors at the controller corrode on carts that live outside"
+          ]
+        },
+        {
+          id: "marathon-r", brand: "ezgo",
+          name: "EZGO Marathon 36V — Resistor", years: "Pre-1994 · resistor-coil speed control",
+          badges: ["36V", "Resistor", "No controller"],
+          aria: "EZGO Marathon resistor cart",
+          diagram: { variant: "resistor", packSub: "36V · 6 × 6V" },
+          specs: [
+            ["System voltage", "36V (six 6V flooded batteries)"],
+            ["Drive type", "Resistor — no electronic controller. A pedal-driven wiper sweeps a speed switch board, adding/removing resistor coils"],
+            ["Controller", "None — speed steps are physical. Expect distinct speed 'steps' instead of a smooth curve"],
+            ["Throttle", "Mechanical linkage from pedal to the wiper arm on the speed board"],
+            ["Key components", "Main solenoid (later years add solenoids per speed step), resistor coil bank (glows hot in slow speeds — normal), speed switch board, lever F/R switch"]
+          ],
+          failures: [
+            "Burned or broken resistor coils → a speed step missing, or dead spots in the pedal",
+            "Wiper contact burns/pits on the speed board → jerky, arcing, one-speed behavior",
+            "Coils waste power as heat at part throttle — short range and hot smell at low speed is the design, not a fault",
+            "F/R switch contact wear, same as all series carts",
+            "Linkage wear → wiper never reaches the full-speed contact: cart never tops out"
+          ]
+        },
+        {
+          id: "marathon-ss", brand: "ezgo",
+          name: "EZGO Marathon 36V — Solid State", years: "~1989 – 1994 · electronic controller Marathon",
+          badges: ["36V", "Series", "Curtis 1204"],
+          aria: "EZGO Marathon solid state series system",
+          diagram: { variant: "series", packSub: "36V · 6 × 6V", ctrlSub: "Curtis 1204", throttleShort: "POT BOX / ITS*" },
+          specs: [
+            ["System voltage", "36V (six 6V flooded batteries)"],
+            ["Drive type", "Series motor with an early electronic controller; lever F/R carries motor current"],
+            ["Controller", "Curtis 1204 (early units use a 0–5kΩ pot box throttle — check which one your cart has before testing)"],
+            ["Throttle", "Potentiometer box or ITS depending on year — the two test completely differently"],
+            ["Key components", "Main solenoid, lever F/R switch, throttle pot/ITS, pedal microswitch"]
+          ],
+          failures: [
+            "Pot box wears a dead spot → cart cuts out at one pedal position every time",
+            "F/R switch contacts and microswitches — the usual series-cart wear",
+            "Age: 30+ year-old wiring insulation and connectors cause mystery intermittents",
+            "Controller capacitors age out — weak or dead controller after everything tests good"
+          ]
+        },
+        {
+          id: "ds36", brand: "clubcar",
+          name: "Club Car DS 36V", years: "Resistor/V-glide era through solid-state years",
+          badges: ["36V", "Series", "V-glide / resistor"],
+          aria: "Club Car DS 36 volt",
+          diagram: { variant: "resistor", packSub: "36V · 6 × 6V" },
+          specs: [
+            ["System voltage", "36V (six 6V flooded batteries)"],
+            ["Drive type", "Series. Early carts: resistor coils stepped by a V-glide wiper. Later carts: solid-state controller with V-glide or early MCOR input"],
+            ["Controller", "None (resistor era) or Curtis solid-state (later) — identify which before testing throttle"],
+            ["Throttle", "V-glide: a wiper sweeping resistor studs inside a pie-shaped housing at the pedal linkage"],
+            ["Key components", "Main solenoid (resistor carts use several, one per speed step), V-glide housing, resistor coil bank behind the batteries, lever F/R switch"]
+          ],
+          failures: [
+            "V-glide wiper and resistor studs burn → dead spots, jerky steps, melted housing in bad cases",
+            "Resistor-era carts eat solenoids — one per speed step, and the failed step tells you which",
+            "Resistor coils crack with age and heat cycling → one speed disappears",
+            "Battery trays rot out on these — inspect the frame rails while you're under there",
+            "F/R switch contacts, same series-cart story as EZGO"
+          ]
+        },
+        {
+          id: "ds48", brand: "clubcar",
+          name: "Club Car DS 48V PowerDrive", years: "1995+ · 48V with OBC",
+          badges: ["48V", "Series", "OBC", "MCOR"],
+          aria: "Club Car DS 48 volt PowerDrive with OBC",
+          diagram: { variant: "series", packSub: "48V · 6×8V / 4×12V", ctrlSub: "Curtis 48V series", throttleShort: "MCOR / V-GLIDE", obc: true },
+          specs: [
+            ["System voltage", "48V (six 8V, or four 12V on later carts)"],
+            ["Drive type", "Series motor, solid-state controller; lever F/R switch still carries current"],
+            ["Controller", "Curtis 48V series controller, supervised by the OBC for charging and lockout"],
+            ["Throttle", "V-glide on early carts, MCOR on later ones — MCOR is replaced as a sealed unit"],
+            ["Key components", "OBC (onboard computer) — controls the charger and locks out the cart while charging; main solenoid; charger receptacle with fuse and sense wire"]
+          ],
+          failures: [
+            "OBC failure → charger won't start or won't shut off (it's rarely the charger itself)",
+            "MCOR wear → jerky takeoff, dead spot in the pedal sweep, surging",
+            "Solenoid failure — 48V carts are hard on them; use the correct 48V coil",
+            "Receptacle fuse / gray sense wire fault → no-charge that looks like a dead charger",
+            "One weak 8V battery in six is harder to spot — test individually, not just pack total"
+          ]
+        },
+        {
+          id: "precedent", brand: "clubcar",
+          name: "Club Car Precedent 48V IQ", years: "2004+ · IQ sepex system",
+          badges: ["48V", "Sepex", "IQ", "OBC", "MCOR"],
+          aria: "Club Car Precedent IQ sepex with OBC",
+          diagram: { variant: "iq", packSub: "48V · 6×8V / 4×12V", ctrlSub: "Curtis IQ sepex", throttleShort: "MCOR", frShort: "F/R ROCKER · TOW SW.", obc: true },
+          specs: [
+            ["System voltage", "48V (six 8V, or four 12V)"],
+            ["Drive type", "Sepex — controller reverses the field; dash rocker is a low-current signal switch"],
+            ["Controller", "Curtis IQ controller with speed sensor feedback and programmable settings"],
+            ["Throttle", "MCOR (sealed unit under the floor)"],
+            ["Key components", "OBC (charging + lockout), Tow switch under the seat, speed sensor on the motor, main solenoid"]
+          ],
+          failures: [
+            "Speed sensor failure → limp mode, cart capped at low speed",
+            "MCOR wear → surging, hesitation, dead spots in the pedal",
+            "OBC faults → no-charge or charge-never-ends, same as DS 48V",
+            "Tow switch left in TOW → completely dead cart call",
+            "Solenoid drop-out under load on carts with weak packs"
+          ]
+        },
+        {
+          id: "g1416", brand: "yamaha",
+          name: "Yamaha G14 / G16 (36V & 48V)", years: "1995 – 2002 · G14 36V · G16 36V/48V",
+          badges: ["36V / 48V", "Series"],
+          aria: "Yamaha G14 G16 series system",
+          diagram: { variant: "series", packSub: "36V or 48V", ctrlSub: "Yamaha / Curtis", throttleShort: "THROTTLE SENSOR" },
+          specs: [
+            ["System voltage", "G14: 36V · G16: 36V or 48V — read the pack before ordering any electrical part"],
+            ["Drive type", "Series motor; F/R switch under the seat carries motor current"],
+            ["Controller", "Yamaha (later Curtis) solid-state series controller"],
+            ["Throttle", "Pedal throttle sensor + stop switch (microswitch) in the pedal group"],
+            ["Key components", "Main solenoid, F/R switch assembly, pedal stop switch, charger receptacle"]
+          ],
+          failures: [
+            "Pedal stop switch (microswitch) failure → dead or intermittent cart",
+            "F/R switch contacts — series-cart wear, one direction dies first",
+            "Solenoid failure — verify coil voltage matches the pack (36 vs 48)",
+            "Throttle sensor wear → jerky or cutting out at one pedal position",
+            "Battery cable corrosion hides under the rear body — lift and look"
+          ]
+        },
+        {
+          id: "g1922", brand: "yamaha",
+          name: "Yamaha G19 / G22 (48V)", years: "G19 1996–2002 · G22 2003–2007 · 48V sepex",
+          badges: ["48V", "Sepex", "Run/Tow"],
+          aria: "Yamaha G19 G22 sepex system",
+          diagram: { variant: "sepex", packSub: "48V · 6 × 8V", ctrlSub: "Yamaha sepex (GE/Morica)", throttleShort: "THROTTLE SENSOR", frShort: "F/R ROCKER · RUN/TOW" },
+          specs: [
+            ["System voltage", "48V (six 8V flooded batteries)"],
+            ["Drive type", "Sepex — controller reverses the field; dash rocker is signal-only"],
+            ["Controller", "Yamaha sepex controller (GE/Moric built) with regenerative braking"],
+            ["Throttle", "Pedal throttle sensor + stop switch"],
+            ["Key components", "Main solenoid, Run/Tow switch under the seat, dash F/R rocker, speed sensor on motor"]
+          ],
+          failures: [
+            "Run/Tow switch faults → dead cart, especially after battery service",
+            "Speed sensor issues → limp/slow running",
+            "Solenoid drop-out under load as packs age",
+            "Controller connector corrosion on outdoor carts",
+            "Regen-related confusion: a sepex Yamaha resists rolling in RUN — that's normal, use TOW to push it"
+          ]
+        }
+      ];
+
+      var listEl = document.getElementById("model-list");
+      function renderModels() {
+        listEl.innerHTML = "";
+        MODELS.forEach(function (m) {
+          var card = document.createElement("article");
+          card.className = "model-card";
+          card.setAttribute("data-brand", m.brand);
+          var badges = m.badges.map(function (b) { return '<span class="badge">' + esc(b) + "</span>"; }).join("");
+          if (m.star) badges += '<span class="badge star">★ Your rental-fleet cart family</span>';
+          var specs = m.specs.map(function (r) {
+            return "<tr><th>" + esc(r[0]) + "</th><td>" + esc(r[1]) + "</td></tr>";
+          }).join("");
+          var fails = m.failures.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("");
+          card.innerHTML =
+            '<div class="model-head"><h3>' + esc(m.name) + '</h3><div class="model-years">' + esc(m.years) + "</div>" + badges + "</div>"
+            + '<div class="diagram-wrap">' + diagram(m.diagram) + "</div>"
+            + '<p class="diagram-note">Simplified reference diagram — verify wire colors on the cart before testing.</p>'
+            + '<table class="spec-table">' + specs + "</table>"
+            + '<div class="fail-box"><strong>Common failure points</strong><ul>' + fails + "</ul></div>";
+          listEl.appendChild(card);
+        });
+      }
+      renderModels();
+
+      document.getElementById("brand-filters").addEventListener("click", function (ev) {
+        var btn = ev.target.closest(".chip");
+        if (!btn) return;
+        this.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", "false"); });
+        btn.setAttribute("aria-pressed", "true");
+        var brand = btn.getAttribute("data-brand");
+        listEl.querySelectorAll(".model-card").forEach(function (card) {
+          card.classList.toggle("hidden", brand !== "all" && card.getAttribute("data-brand") !== brand);
+        });
+      });
+      /* ===================== REFERENCE ===================== */
+      var SOC36 = [[100, "38.2"], [90, "37.9"], [80, "37.5"], [70, "37.1"], [60, "36.7"], [50, "36.3"], [40, "35.9"], [30, "35.4"], [20, "35.0"], [10, "34.5"]];
+      var SOC48 = [[100, "50.9"], [90, "50.5"], [80, "50.0"], [70, "49.5"], [60, "49.0"], [50, "48.4"], [40, "47.8"], [30, "47.2"], [20, "46.6"], [10, "46.0"]];
+      function socRows(data) {
+        return data.map(function (r) {
+          return '<tr' + (r[0] <= 40 ? ' class="low"' : "") + "><td>" + r[0] + '%</td><td>' + r[1] + " V</td></tr>";
+        }).join("");
+      }
+      var PDS_CODES = [
+        ["1-1", "Controller failure", "Internal controller fault. Verify all inputs first (pack, throttle, solenoid) — then controller."],
+        ["1-2", "Throttle (ITS) fault", "Solenoid clicks, cart won't move. Test/replace ITS sensor or plunger; check pedal-box wiring."],
+        ["1-3", "Speed sensor fault", "Cart limps slow (~5 mph). Check sensor plug at motor end bell, then the magnet for cracks."],
+        ["1-4", "High pedal disable", "Pedal was pressed at key-on. Release the pedal, cycle the key, retry — often no fault at all."],
+        ["2-1", "Low battery voltage", "Controller saw low pack voltage. Charge, rest, and load-test the pack and each battery."],
+        ["2-3", "Thermal cutback", "Controller overheated and is protecting itself. Check heatsink mounting, load, tire size."],
+        ["2-4", "Solenoid coil / driver fault", "Coil disconnected or controller driver issue. Meter across the small terminals with pedal pressed."],
+        ["3-2", "Welded solenoid", "Contacts fused shut — safety fault. Replace the solenoid; find the low-voltage/high-load cause."],
+        ["3-3", "Solenoid not closing", "Controller commanded it, contactor didn't close. Coil feed, ground side, or dead solenoid."],
+        ["3-4", "Motor field open circuit", "F1/F2 circuit open. Check field wires controller→motor and field continuity at the motor."],
+        ["4-1", "Motor armature open", "A1/A2 circuit open. Brushes are the usual cause on an older cart; check armature cables first."],
+        ["4-3", "Solenoid dropping out under load", "Solenoid lets go while driving. Coil voltage during the event splits coil vs. controller driver."]
+      ];
+      var refHTML = ""
+        /* ---- SOC ---- */
+        + '<div class="ref-card"><h3>Battery state of charge — flooded lead-acid</h3>'
+        + "<p>Rested voltage only: no charger and no driving for at least an hour before you read it. Approximate for flooded packs at room temperature.</p>"
+        + '<div class="soc-toggle" role="group" aria-label="Pack voltage">'
+        + '<button class="chip" id="soc-36" aria-pressed="true">36V pack</button>'
+        + '<button class="chip" id="soc-48" aria-pressed="false">48V pack</button></div>'
+        + '<table class="data-table"><thead><tr><th>Charge</th><th>Pack voltage</th></tr></thead>'
+        + '<tbody id="soc-body">' + socRows(SOC36) + "</tbody></table>"
+        + '<div class="tip"><b>The 50% rule:</b> never discharge a flooded pack below 50% (36.3V / 48.4V) if you want it to live. And read batteries <b>individually</b> too — one battery sitting 0.5V or more below its siblings is a suspect even when the pack total looks fine.</div></div>'
+
+        /* ---- PDS diagnostics ---- */
+        + '<div class="ref-card"><h3>EZGO PDS diagnostic mode &amp; beep codes</h3>'
+        + "<p>The PDS controller talks in beeps through the reverse buzzer — no scanner needed.</p>"
+        + "<p><b>Enter diagnostic mode:</b></p><ul>"
+        + "<li>Key switch <b>OFF</b>, Run/Tow switch in <b>RUN</b>.</li>"
+        + "<li>Move the F/R switch from <b>Neutral to Reverse 5 times</b> within about 10 seconds. (The reverse buzzer must work — no buzzer, no codes.)</li>"
+        + "<li><b>First set of beeps = performance (personality) mode:</b> 1 beep = All-terrain, ~13.5 mph · 2 = Steep hill, ~13.5 mph · 3 = Mild hill, ~14.5 mph · 4 = Freedom, ~19 mph.</li>"
+        + "<li><b>Then fault codes</b> beep in an X-X pattern: beeps, short pause, beeps, long pause, repeat. Count both groups.</li></ul>"
+        + '<table class="data-table code-table"><thead><tr><th>Code</th><th>Meaning</th><th>First move</th></tr></thead><tbody>'
+        + PDS_CODES.map(function (r) { return "<tr><td class='c'>" + r[0] + "</td><td><b>" + esc(r[1]) + "</b></td><td>" + esc(r[2]) + "</td></tr>"; }).join("")
+        + "</tbody></table>"
+        + '<div class="tip">The code chart sticker on the controller cover is the final word — codes vary slightly by year. To exit diagnostic mode, turn the key on or flip Run/Tow to TOW and back.</div></div>'
+
+        /* ---- Component tests ---- */
+        + '<div class="ref-card"><h3>Component tests</h3>'
+        + "<h3>Solenoid — field test (on the cart)</h3><ul>"
+        + "<li><b>Coil:</b> key on, in gear, pedal pressed — you should read full pack voltage across the two <i>small</i> terminals. Voltage present + no click = open coil.</li>"
+        + "<li><b>Contacts:</b> meter across the two <i>big</i> terminals with the solenoid clicked in and pedal pressed. Over ~0.5V drop = burned contacts. A solenoid that clicks can still be bad — this test is how you prove it.</li>"
+        + "<li><b>Welded check:</b> coil wires off — continuity across the big terminals means it's fused shut. Replace, don't tap it free.</li></ul>"
+        + "<h3>Series motor — quick test</h3><ul>"
+        + "<li>Wheels up, Tow mode, pack disconnected.</li>"
+        + "<li>Continuity between <span class='mono'>A1–A2</span> (armature) and between <span class='mono'>S1–S2</span> (field) — both should show low resistance.</li>"
+        + "<li><b>No</b> continuity from any terminal to the motor case. Continuity to the case = shorted motor.</li>"
+        + "<li>Sepex motors: same test with <span class='mono'>F1–F2</span> as the field pair.</li></ul>"
+        + "<h3>Club Car OBC reset (48V PowerDrive / IQ)</h3><ul>"
+        + "<li>Key off, F/R in Neutral, charger unplugged.</li>"
+        + "<li>Disconnect the pack negative cable and leave it off at least 30 seconds (5 minutes is safer).</li>"
+        + "<li>Reconnect, plug the charger in, and watch for the relay click and charge to start.</li>"
+        + "<li>If the charger then runs forever or quits in minutes, the OBC is still faulty — test the charger on another cart before ordering.</li></ul>"
+        + "<h3>EZGO reed switch</h3>"
+        + "<p>Inside the charger receptacle, a small reed switch breaks the activation (interlock) circuit while charging. When it cracks or sticks, the cart is totally dead and the charger may act odd too. It's the cheapest 'dead cart' part there is — check it before the key switch, every time.</p></div>"
+
+        /* ---- Glossary ---- */
+        + '<div class="ref-card"><h3>Terminal &amp; term glossary</h3><dl class="glossary">'
+        + "<dt>A1 / A2</dt><dd>Motor armature terminals — the high-current pair fed by the controller output (via the F/R switch on series carts).</dd>"
+        + "<dt>S1 / S2</dt><dd>Series motor field (shunt/series winding) terminals. The F/R switch swaps these to reverse the cart.</dd>"
+        + "<dt>F1 / F2</dt><dd>Sepex motor field terminals — wired straight to the controller, which reverses field current electronically.</dd>"
+        + "<dt>B+ / B−</dt><dd>Controller battery connections — full pack voltage, always verify these under load, not just at rest.</dd>"
+        + "<dt>M− </dt><dd>Controller output terminal on Curtis series controllers — the switched leg to the motor.</dd>"
+        + "<dt>Series vs. sepex</dt><dd>Series: one current path, F/R switch carries motor current. Sepex (separately excited): controller feeds armature and field separately and does the reversing — dash switch is signal-only.</dd>"
+        + "<dt>ITS</dt><dd>Inductive Throttle Sensor (EZGO) — a plunger moving through a coil in the pedal box; no contacts to wear, but plungers bend and sensors die.</dd>"
+        + "<dt>MCOR</dt><dd>Motor Controller Output Regulator (Club Car) — sealed throttle unit under the floor; wear shows as surging and dead spots. Replaced as a unit.</dd>"
+        + "<dt>V-glide</dt><dd>Club Car's wiper-and-resistor-stud throttle housing (36V and early 48V) — inspect for burned studs and a worn wiper.</dd>"
+        + "<dt>OBC</dt><dd>Onboard Computer (Club Car 48V) — controls charging and locks the cart out while plugged in. The #1 suspect when a PowerDrive/IQ charger 'dies.'</dd>"
+        + "<dt>Run/Tow switch</dt><dd>Sepex/IQ carts: TOW kills control power for towing and service. Always TOW before disconnecting cables; always check it's in RUN on a 'dead cart' call.</dd>"
+        + "<dt>SOC</dt><dd>State of charge — read from rested voltage (chart above). Load and surface charge both lie to you.</dd>"
+        + "</dl></div>"
+
+        + '<div class="ref-card"><h3>About these diagrams</h3>'
+        + "<p>Every diagram in this app is an original, simplified power-flow reference drawn from standard golf cart circuit architecture — battery pack, solenoid, controller or resistor bank, motor, and the activation switches. They show how power and signals move, not factory wire routing. Always verify wire colors and terminal positions on the actual cart (and against its service documentation) before testing or ordering parts — manufacturers changed details mid-year, and 30 years of previous owners changed more.</p></div>";
+
+      document.getElementById("reference-body").innerHTML = refHTML;
+      document.getElementById("soc-36").addEventListener("click", function () {
+        this.setAttribute("aria-pressed", "true");
+        document.getElementById("soc-48").setAttribute("aria-pressed", "false");
+        document.getElementById("soc-body").innerHTML = socRows(SOC36);
+      });
+      document.getElementById("soc-48").addEventListener("click", function () {
+        this.setAttribute("aria-pressed", "true");
+        document.getElementById("soc-36").setAttribute("aria-pressed", "false");
+        document.getElementById("soc-body").innerHTML = socRows(SOC48);
+      });
+</script>
+  </body>
+</html>
